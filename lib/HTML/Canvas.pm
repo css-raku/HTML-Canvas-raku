@@ -4,6 +4,7 @@ class HTML::Canvas {
     has Numeric @.TransformationMatrix[6] is rw = [ 1, 0, 0, 1, 0, 0, ];
     has @.calls;
     has Routine &.callback;
+    use PDF::Content::Ops :OpCode;
 
     has Method %API = BEGIN %(
         :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
@@ -12,6 +13,15 @@ class HTML::Canvas {
         :fillText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) { }),
         :stroke(method () {}),
     );
+
+    method to-pdf(\gfx) {
+        # stub
+        [
+         OpCode::SetStrokeRGB => [1.0, 0.5, 0.3],
+         OpCode::Rectangle => [10, 10, 100, 50],
+         OpCode::Stroke,
+        ]
+    }
 
     method can(Str \name) {
         my @meth = callsame;
