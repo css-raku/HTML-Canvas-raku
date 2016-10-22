@@ -1,12 +1,34 @@
 use v6;
+use PDF::Content::Ops :OpCode;
+use PDF::Content::Util::TransformMatrix;
 
 class HTML::Canvas {
-    has Numeric @.TransformationMatrix[6] is rw = [ 1, 0, 0, 1, 0, 0, ];
+    has Numeric @.TransformationMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has @.calls;
     has Routine &.callback;
-    use PDF::Content::Ops :OpCode;
+
+    method !transform(|c) {
+        my @matrix = PDF::Content::Util::TransformMatrix::transform-matrix(|c);
+        @!TransformationMatrix = PDF::Content::Util::TransformMatrix::multiply(@!TransformationMatrix, @matrix);
+    }
 
     has Method %API = BEGIN %(
+        :scale(method (Numeric $x, Numeric $y) {
+                      self!transform: :scale[$x, $y];
+                  }),
+        :rotate(method (Numeric $angle) {
+                      self!transform: :rotate($angle);
+                  }),
+        :translate(method (Numeric $angle) {
+                      self!transform: :translate($angle);
+                  }),
+        :transform(method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
+                      @!TransformationMatrix = PDF::Content::Util::TransformMatrix::multiply(@!TransformationMatrix, [a, b, c, d, e, f]);
+                      }),
+        :setTransform(method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
+                          my @identity = PDF::Content::Util::TransformMatrix::identity;
+                          @!TransformationMatrix = PDF::Content::Util::TransformMatrix::multiply(@identity, [a, b, c, d, e, f]);
+                      }),
         :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
         :beginPath(method () {}),
         :rect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
