@@ -4,8 +4,8 @@ use PDF::Content::Util::TransformMatrix;
 
 class HTML::Canvas {
     has Numeric @.TransformationMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
-    has @.calls;
-    has Routine &.callback;
+    has Pair @.calls;
+    has Routine $.callback;
 
     method !transform(|c) {
         my @matrix = PDF::Content::Util::TransformMatrix::transform-matrix(|c);
@@ -35,15 +35,6 @@ class HTML::Canvas {
         :fillText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) { }),
         :stroke(method () {}),
     );
-
-    method to-pdf(\gfx) {
-        # stub
-        [
-         OpCode::SetStrokeRGB => [1.0, 0.5, 0.3],
-         OpCode::Rectangle => [10, 10, 100, 50],
-         OpCode::Stroke,
-        ]
-    }
 
     method can(Str \name) {
         my @meth = callsame;

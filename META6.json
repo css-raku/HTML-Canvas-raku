@@ -8,6 +8,7 @@
     "provides"    : {
 
         "HTML::Canvas"          : "HTML/Canvas.pm",
+        "HTML::Canvas::PDF"     : "HTML/Canvas/PDF.pm"
 
      }
 }
