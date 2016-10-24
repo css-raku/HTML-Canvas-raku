@@ -3,11 +3,11 @@ use Test;
 
 use PDF::Content;
 use HTML::Canvas;
-use HTML::Canvas::PDF;
+use HTML::Canvas::Render::PDF;
 
 my PDF::Content $gfx .= new: :!strict;
-my HTML::Canvas::PDF $canvas-pdf .= new( :$gfx );
-my $callback = $canvas-pdf.renderer;
+my HTML::Canvas::Render::PDF $renderer .= new( :$gfx );
+my $callback = $renderer.callback;
 my HTML::Canvas $canvas .= new(:$callback);
 
 $canvas.scale( 2.0, 3.0);
@@ -18,6 +18,6 @@ dies-ok  { $canvas.rect(100,100, 50); }, "incorrect API call - dies";
 dies-ok  { $canvas.foo(42) }, "unknown call - dies";
 
 todo "map rectangle coordinates";
-is-deeply $canvas-pdf.content.lines, $("2 0 0 3 0 0 cm", "100 100 50 20 re", "s");
+is-deeply $renderer.content.lines, $("2 0 0 3 0 0 cm", "100 100 50 20 re", "s");
 
 done-testing;

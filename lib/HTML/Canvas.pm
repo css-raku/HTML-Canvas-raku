@@ -50,6 +50,12 @@ class HTML::Canvas {
         }
         @meth;
     }
+    method render($renderer, :@calls = self.calls) {
+        my $callback = $renderer.callback;
+        my $obj = self.new: :$callback;
+        $obj."{.key}"(|.value)
+            for @calls;
+    }
     method dispatch:<.?>(\name, |c) is raw {
         self.can(name) ?? self."{name}"(|c) !! Nil
     }

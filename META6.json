@@ -7,8 +7,8 @@
     "source-url"  : "git://github.com/p6-pdf/p6-HTML-Canvas.git",
     "provides"    : {
 
-        "HTML::Canvas"          : "HTML/Canvas.pm",
-        "HTML::Canvas::PDF"     : "HTML/Canvas/PDF.pm"
+        "HTML::Canvas"              : "HTML/Canvas.pm",
+        "HTML::Canvas::Render::PDF" : "HTML/Canvas/Render/PDF.pm"
 
      }
 }

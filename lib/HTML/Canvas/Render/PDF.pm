@@ -1,10 +1,10 @@
 use v6;
-class HTML::Canvas::PDF {
+class HTML::Canvas::Render::PDF {
 
     use PDF::Content;
     has PDF::Content $.gfx handles <content> is required;
 
-    method renderer {
+    method callback {
         sub ($op, |c) {
             if $op eq 'scale'|'rotate'|'translate'|'transform'|'setTransform' {
                 die "todo setTransform" if $op eq 'setTransform';
