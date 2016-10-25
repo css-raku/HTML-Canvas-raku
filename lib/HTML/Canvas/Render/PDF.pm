@@ -3,6 +3,7 @@ class HTML::Canvas::Render::PDF {
 
     use PDF::Content;
     has PDF::Content $.gfx handles <content> is required;
+    has $.height is required; # height in points
 
     method callback {
         sub ($op, |c) {
@@ -20,11 +21,14 @@ class HTML::Canvas::Render::PDF {
         $!gfx.transform: |($op => @args);
     }
 
+    constant Pt2Px = 0.75;       # 1px = 0.75 pt;
+    sub pt(Numeric \l) { l * Pt2Px }
+    method !pt-y(Numeric \l) { $!height - l * Pt2Px }
+
     proto method html2pdf(Str \op, *@args) {*};
 
     multi method html2pdf('rect', \x, \y, \w, \h) {
-        warn "todo coordinate transforms + px to pt";
-        $!gfx.Rectangle( x, y, w, h);
+        $!gfx.Rectangle( pt(x), self!pt-y(y), pt(w), pt(h) );
         $!gfx.CloseStroke;
     }
 
