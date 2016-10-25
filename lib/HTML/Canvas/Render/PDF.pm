@@ -29,7 +29,14 @@ class HTML::Canvas::Render::PDF {
 
     multi method html2pdf('rect', \x, \y, \w, \h) {
         $!gfx.Rectangle( pt(x), self!pt-y(y), pt(w), pt(h) );
+    }
+    multi method html2pdf('strokeRect', \x, \y, \w, \h) {
+        $!gfx.Rectangle( pt(x), self!pt-y(y), pt(w), pt(h) );
         $!gfx.CloseStroke;
+    }
+
+    multi method html2pdf($op, *@args) is default {
+        warn "unable to convert to PDF: {$op}({@args.join(", ")})"
     }
 
 }

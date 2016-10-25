@@ -12,9 +12,9 @@ my HTML::Canvas $canvas .= new(:$callback);
 
 $canvas.scale( 2.0, 3.0);
 
-lives-ok { $canvas.rect(100,100, 50,20); }, "basic API call - lives";
-dies-ok  { $canvas.rect(100,100, 50, "blah"); }, "incorrect API call - dies";
-dies-ok  { $canvas.rect(100,100, 50); }, "incorrect API call - dies";
+lives-ok { $canvas.strokeRect(100,100, 50,20); }, "basic API call - lives";
+dies-ok  { $canvas.strokeRect(100,100, 50, "blah"); }, "incorrect API call - dies";
+dies-ok  { $canvas.strokeRect(100,100, 50); }, "incorrect API call - dies";
 dies-ok  { $canvas.foo(42) }, "unknown call - dies";
 
 is-deeply $renderer.content.lines, $("2 0 0 3 0 0 cm", "75 25 37.5 15 re", "s");

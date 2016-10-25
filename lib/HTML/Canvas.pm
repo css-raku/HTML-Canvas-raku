@@ -32,6 +32,7 @@ class HTML::Canvas {
         :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
         :beginPath(method () {}),
         :rect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
+        :strokeRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :fillText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) { }),
         :stroke(method () {}),
     );
