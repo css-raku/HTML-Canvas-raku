@@ -51,6 +51,14 @@ class HTML::Canvas {
         }
         @meth;
     }
+    method js {
+        use JSON::Fast;
+        @!calls.map({
+            my $name = .key;
+            my @args = .value.list.map: {to-json($_)};
+            sprintf '%s(%s);', $name, @args.join(", ");
+        }).join: "\n";
+    }
     method render($renderer, :@calls = self.calls) {
         my $callback = $renderer.callback;
         my $obj = self.new: :$callback;
