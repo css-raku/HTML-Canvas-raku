@@ -17,6 +17,6 @@ dies-ok  { $canvas.strokeRect(100,100, 50, "blah"); }, "incorrect API call - die
 dies-ok  { $canvas.strokeRect(100,100, 50); }, "incorrect API call - dies";
 dies-ok  { $canvas.foo(42) }, "unknown call - dies";
 
-is-deeply $renderer.content.lines, $("2 0 0 3 0 0 cm", "75 25 37.5 15 re", "s");
+is-deeply $renderer.content.lines, $("2 0 0 3 0 0 cm", "75 25 37.5 15 re", "s"), 'renderer.content';
 
 done-testing;

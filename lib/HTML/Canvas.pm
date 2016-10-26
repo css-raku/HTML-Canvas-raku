@@ -1,5 +1,4 @@
 use v6;
-use PDF::Content::Ops :OpCode;
 use PDF::Content::Util::TransformMatrix;
 
 class HTML::Canvas {
@@ -51,12 +50,12 @@ class HTML::Canvas {
         }
         @meth;
     }
-    method js {
+    method js(Str :$context = 'ctx') {
         use JSON::Fast;
         @!calls.map({
             my $name = .key;
             my @args = .value.list.map: {to-json($_)};
-            sprintf '%s(%s);', $name, @args.join(", ");
+            sprintf '%s.%s(%s);', $context, $name, @args.join(", ");
         }).join: "\n";
     }
     method render($renderer, :@calls = self.calls) {
