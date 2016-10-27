@@ -5,6 +5,7 @@ class HTML::Canvas {
     has Numeric @.TransformationMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.calls;
     has Routine $.callback;
+    has $!font;
 
     method !transform(|c) {
         my @matrix = PDF::Content::Util::TransformMatrix::transform-matrix(|c);
@@ -36,14 +37,27 @@ class HTML::Canvas {
         :stroke(method () {}),
     );
 
+    method !add-call(Str \name, *@args) {
+        self.calls.push: ((name) => @args);
+        .(name, |@args, :obj(self)) with self.callback;
+    }
+
+    method font is rw {
+        Proxy.new(
+            FETCH => sub ($) { $!font //= '10px sans-serif' },
+            STORE => sub ($, Str $!font) {
+                self!add-call('font', $!font);
+            }
+        );
+    }
+
     method can(Str \name) {
         my @meth = callsame;
         if !@meth {
             with %API{name} -> &meth {
                 @meth.push: method (*@a) {
                     &meth(self, |@a);
-                    self.calls.push: ((name) => @a);
-                    .(name, |@a, :obj(self)) with self.callback;
+                    self!add-call(name, |@a);
                 };
                 self.^add_method(name, @meth[0]);
             }
@@ -55,7 +69,10 @@ class HTML::Canvas {
         @!calls.map({
             my $name = .key;
             my @args = .value.list.map: {to-json($_)};
-            sprintf '%s.%s(%s);', $context, $name, @args.join(", ");
+            my \fmt = $name eq 'font'
+                ?? '%s.%s = %s;'
+                !! '%s.%s(%s);';
+            sprintf fmt, $context, $name, @args.join(", ");
         }).join: "\n";
     }
     method render($renderer, :@calls = self.calls) {
