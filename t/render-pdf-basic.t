@@ -5,9 +5,9 @@ use PDF::Content;
 use HTML::Canvas;
 use HTML::Canvas::Render::PDF;
 
-my $font = class { }.new;
+my $font-object = class { }.new;
 my PDF::Content $gfx .= new: :!strict;
-my HTML::Canvas::Render::PDF $renderer .= new( :$gfx, :height(100), :$font );
+my HTML::Canvas::Render::PDF $renderer .= new( :$gfx, :height(100), :$font-object );
 my $callback = $renderer.callback;
 my HTML::Canvas $canvas .= new(:$callback);
 

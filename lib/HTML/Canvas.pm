@@ -12,7 +12,7 @@ class HTML::Canvas {
         @!TransformationMatrix = PDF::Content::Util::TransformMatrix::multiply(@!TransformationMatrix, @matrix);
     }
 
-    has Method %API = BEGIN %(
+    our %API is export(:API) = BEGIN %(
         :scale(method (Numeric $x, Numeric $y) {
                       self!transform: :scale[$x, $y];
                   }),
@@ -37,9 +37,9 @@ class HTML::Canvas {
         :stroke(method () {}),
     );
 
-    method !add-call(Str \name, *@args) {
-        self.calls.push: ((name) => @args);
-        .(name, |@args, :obj(self)) with self.callback;
+    method !add-call(Str $name, *@args) {
+        self.calls.push: ($name => @args);
+        .($name, |@args, :obj(self)) with self.callback;
     }
 
     method font is rw {
@@ -49,6 +49,25 @@ class HTML::Canvas {
                 self!add-call('font', $!font);
             }
         );
+    }
+
+    method js(Str :$context = 'ctx', :$sep = "\n") {
+        use JSON::Fast;
+        @!calls.map({
+            my $name = .key;
+            my @args = .value.map: { to-json($_) };
+            my \fmt = $name eq 'font'
+                ?? '%s.%s = %s;'
+                !! '%s.%s(%s);';
+            sprintf fmt, $context, $name, @args.join(", ");
+        }).join: $sep;
+    }
+
+    method render($renderer, :@calls = self.calls) {
+        my $callback = $renderer.callback;
+        my $obj = self.new: :$callback;
+        $obj."{.key}"(|.value)
+            for @calls;
     }
 
     method can(Str \name) {
@@ -63,23 +82,6 @@ class HTML::Canvas {
             }
         }
         @meth;
-    }
-    method js(Str :$context = 'ctx') {
-        use JSON::Fast;
-        @!calls.map({
-            my $name = .key;
-            my @args = .value.list.map: {to-json($_)};
-            my \fmt = $name eq 'font'
-                ?? '%s.%s = %s;'
-                !! '%s.%s(%s);';
-            sprintf fmt, $context, $name, @args.join(", ");
-        }).join: "\n";
-    }
-    method render($renderer, :@calls = self.calls) {
-        my $callback = $renderer.callback;
-        my $obj = self.new: :$callback;
-        $obj."{.key}"(|.value)
-            for @calls;
     }
     method dispatch:<.?>(\name, |c) is raw {
         self.can(name) ?? self."{name}"(|c) !! Nil
