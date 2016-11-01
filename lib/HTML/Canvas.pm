@@ -5,7 +5,7 @@ class HTML::Canvas {
     has Numeric @.TransformationMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.calls;
     has Routine $.callback;
-    has $!font;
+    has $!font-style = '10pt times-roman';
 
     method !transform(|c) {
         my @matrix = PDF::Content::Util::TransformMatrix::transform-matrix(|c);
@@ -44,9 +44,9 @@ class HTML::Canvas {
 
     method font is rw {
         Proxy.new(
-            FETCH => sub ($) { $!font //= '10px sans-serif' },
-            STORE => sub ($, Str $!font) {
-                self!add-call('font', $!font);
+            FETCH => sub ($) { $!font-style },
+            STORE => sub ($, Str $!font-style) {
+                self!add-call('font', $!font-style);
             }
         );
     }

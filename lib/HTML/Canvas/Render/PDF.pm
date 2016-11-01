@@ -34,10 +34,32 @@ class HTML::Canvas::Render::PDF {
         setTransform => method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
             $!gfx.GraphicsMatrix = [a, b, c, d, e, f];
         },
-        font => method (Str \font-expr) {
-            with self.font-object {
-                .css-font-prop = font-expr;
-                $!gfx.font = [ .face, .em ];
+        fillText => method (Str \text, Numeric \x, Numeric \y, Numeric $maxWidth?) {
+            self.font;
+            my $scale;
+            if $maxWidth && $maxWidth > 0 {
+                my Numeric \width = .face.stringwidth(text, .em) with $!font-object;
+                $scale = 100 * $maxWidth / width
+                    if width > $maxWidth;
+            }
+
+            $!gfx.Save;
+            $!gfx.BeginText;
+            $!gfx.HorizScaling = $_ with $scale;
+            $!gfx.text-position = [pt(x), self!pt-y(y)];
+            $!gfx.print(text);
+            $!gfx.EndText;
+            $!gfx.Restore
+        },
+        font => method (Str $font-style?) {
+            my \pdf-font = $!gfx.use-font($!font-object.face);
+
+            with $font-style {
+                $!font-object.css-font-prop = $_;
+                $!gfx.font = [ pdf-font, $!font-object.em ];
+            }
+            else {
+                $!gfx.font //= [ pdf-font, $!font-object.em ];
             }
         },
         rect => method (\x, \y, \w, \h) {
@@ -61,6 +83,15 @@ class HTML::Canvas::Render::PDF {
             }
         }
         @can;
+    }
+
+    method dispatch:<.?>(\name, |c) is raw {
+        self.can(name) ?? self."{name}"(|c) !! Nil
+    }
+    method FALLBACK(\name, |c) {
+        self.can(name)
+            ?? self."{name}"(|c)
+            !! die X::Method::NotFound.new( :method(name), :typename(self.^name) );
     }
 
 }
