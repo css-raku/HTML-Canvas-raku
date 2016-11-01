@@ -14,21 +14,26 @@ class HTML::Canvas::Render::PDF {
             }
             else {
                 %API{$op}:exists
-                    ?? warn "unimplemented Canvas js call: $op"
+                    ?? warn "unimplemented Canvas j2d API call: $op"
                     !! die "unknown Canvas 2d API call: $op";    
             }
         }
     }
 
-    constant Pt2Px = 0.75;       # 1px = 0.75 pt;
-    sub pt(Numeric \l) { l * Pt2Px }
-    method !pt-y(Numeric \l) { $!height - l * Pt2Px }
+    constant Px2Pt = 0.75;       # 1px = 0.75 pt;
+    sub pt(Numeric \l) { l * Px2Pt }
+    method !pt-y(Numeric \l) { $!height - l * Px2Pt }
 
     my %Dispatch = BEGIN %(
-        scale => method (*@args) { $!gfx.transform(|scale => @args) },
-        rotate => method (*@args) { $!gfx.transform(|rotate => @args) },
-        translate => method (*@args) { $!gfx.transform(|translate => @args) },
-        transform => method (*@args) { $!gfx.ConcatMatrix(@args) },
+        scale     => method (Numeric \x, Numeric \y) { $!gfx.transform(|scale => [x, y]) },
+        rotate    => method (Numeric \angle) { $!gfx.transform(|rotate => [ angle, ]) },
+        translate => method (Numeric \x, Numeric \y) { $!gfx.transform(|translate => [x, y]) },
+        transform => method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
+            $!gfx.ConcatMatrix(a, b, c, d, e, f);
+        },
+        setTransform => method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
+            $!gfx.GraphicsMatrix = [a, b, c, d, e, f];
+        },
         font => method (Str \font-expr) {
             with self.font-object {
                 .css-font-prop = font-expr;
