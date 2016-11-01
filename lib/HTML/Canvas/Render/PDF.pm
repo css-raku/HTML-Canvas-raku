@@ -14,15 +14,15 @@ class HTML::Canvas::Render::PDF {
             }
             else {
                 %API{$op}:exists
-                    ?? warn "unimplemented Canvas j2d API call: $op"
+                    ?? warn "unimplemented Canvas 2d API call: $op"
                     !! die "unknown Canvas 2d API call: $op";    
             }
         }
     }
 
-    constant Px2Pt = 0.75;       # 1px = 0.75 pt;
-    sub pt(Numeric \l) { l * Px2Pt }
-    method !pt-y(Numeric \l) { $!height - l * Px2Pt }
+    constant Scale = 1.0;
+    sub pt(Numeric \l) { l * Scale }
+    method !pt-y(Numeric \l) { $!height - l * Scale }
 
     my %Dispatch = BEGIN %(
         scale     => method (Numeric \x, Numeric \y) { $!gfx.transform(|scale => [x, y]) },
@@ -42,12 +42,12 @@ class HTML::Canvas::Render::PDF {
         },
         rect => method (\x, \y, \w, \h) {
             unless $!gfx.fillAlpha =~= 0 {
-                $!gfx.Rectangle( pt(x), self!pt-y(y), pt(w), pt(h) );
+                $!gfx.Rectangle( pt(x), self!pt-y(y + h), pt(w), pt(h) );
                 $!gfx.ClosePath;
             }
         },
         strokeRect => method (\x, \y, \w, \h) {
-            $!gfx.Rectangle( pt(x), self!pt-y(y), pt(w), pt(h) );
+            $!gfx.Rectangle( pt(x), self!pt-y(y + h), pt(w), pt(h) );
             $!gfx.CloseStroke;
         },
     );
