@@ -23,7 +23,7 @@ class HTML::Canvas::Render::PDF {
     sub pt(Numeric \l) { l }
 
     method !coords(Numeric \x, Numeric \y) {
-        #| tranlate back to absolute cordinates
+        #| translate back to absolute cordinates
         my \m = $!gfx.GraphicsMatrix;
         my (\x1, \y1) = PDF::Content::Util::TransformMatrix::dot(m, x, y);
         PDF::Content::Util::TransformMatrix::inverse-dot(m, x1, $!height - y1);
@@ -32,12 +32,12 @@ class HTML::Canvas::Render::PDF {
     my %Dispatch = BEGIN %(
         scale     => method (Numeric \x, Numeric \y) { $!gfx.transform(|scale => [x, y]) },
         rotate    => method (Numeric \angle) { $!gfx.transform(|rotate => [ angle, ]) },
-        translate => method (Numeric \x, Numeric \y) { $!gfx.transform(|translate => [x, y]) },
+        translate => method (Numeric \x, Numeric \y) { $!gfx.transform(|translate => [x, -y]) },
         transform => method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-            $!gfx.ConcatMatrix(a, b, c, d, e, f);
+            $!gfx.ConcatMatrix(a, b, c, d, e, -f);
         },
         setTransform => method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-            $!gfx.GraphicsMatrix = [a, b, c, d, e, f];
+            $!gfx.GraphicsMatrix = [a, b, c, d, e, -f];
         },
         fillText => method (Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?) {
             self.font;
