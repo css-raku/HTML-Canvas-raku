@@ -20,9 +20,14 @@ class HTML::Canvas::Render::PDF {
         }
     }
 
-    constant Scale = 1.0;
-    sub pt(Numeric \l) { l * Scale }
-    method !pt-y(Numeric \l) { $!height - l * Scale }
+    sub pt(Numeric \l) { l }
+
+    method !coords(Numeric \x, Numeric \y) {
+        #| tranlate back to absolute cordinates
+        my \m = $!gfx.GraphicsMatrix;
+        my (\x1, \y1) = PDF::Content::Util::TransformMatrix::dot(m, x, y);
+        PDF::Content::Util::TransformMatrix::inverse-dot(m, x1, $!height - y1);
+    }
 
     my %Dispatch = BEGIN %(
         scale     => method (Numeric \x, Numeric \y) { $!gfx.transform(|scale => [x, y]) },
@@ -34,11 +39,11 @@ class HTML::Canvas::Render::PDF {
         setTransform => method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
             $!gfx.GraphicsMatrix = [a, b, c, d, e, f];
         },
-        fillText => method (Str \text, Numeric \x, Numeric \y, Numeric $maxWidth?) {
+        fillText => method (Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?) {
             self.font;
             my $scale;
             if $maxWidth && $maxWidth > 0 {
-                my Numeric \width = .face.stringwidth(text, .em) with $!font-object;
+                my Numeric \width = .face.stringwidth($text, .em) with $!font-object;
                 $scale = 100 * $maxWidth / width
                     if width > $maxWidth;
             }
@@ -46,8 +51,8 @@ class HTML::Canvas::Render::PDF {
             $!gfx.Save;
             $!gfx.BeginText;
             $!gfx.HorizScaling = $_ with $scale;
-            $!gfx.text-position = [pt(x), self!pt-y(y)];
-            $!gfx.print(text);
+            $!gfx.text-position = self!coords($x, $y);
+            $!gfx.print($text);
             $!gfx.EndText;
             $!gfx.Restore
         },
@@ -64,12 +69,12 @@ class HTML::Canvas::Render::PDF {
         },
         rect => method (\x, \y, \w, \h) {
             unless $!gfx.fillAlpha =~= 0 {
-                $!gfx.Rectangle( pt(x), self!pt-y(y + h), pt(w), pt(h) );
+                $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
                 $!gfx.ClosePath;
             }
         },
         strokeRect => method (\x, \y, \w, \h) {
-            $!gfx.Rectangle( pt(x), self!pt-y(y + h), pt(w), pt(h) );
+            $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
             $!gfx.CloseStroke;
         },
     );
