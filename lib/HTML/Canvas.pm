@@ -26,8 +26,7 @@ class HTML::Canvas {
                       @!transformMatrix = PDF::Content::Util::TransformMatrix::multiply(@!transformMatrix, [a, b, c, d, e, f]);
                       }),
         :setTransform(method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-                          my @identity = PDF::Content::Util::TransformMatrix::identity;
-                          @!transformMatrix = PDF::Content::Util::TransformMatrix::multiply(@identity, [a, b, c, d, e, f]);
+                             @!transformMatrix = [a, b, c, d, e, f];
                       }),
         :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
         :beginPath(method () {}),
