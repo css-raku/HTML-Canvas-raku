@@ -24,9 +24,9 @@ class HTML::Canvas::Render::PDF {
 
     method !coords(Numeric \x, Numeric \y) {
         #| translate back to absolute cordinates
-        my \m = $!gfx.GraphicsMatrix;
-        my (\x1, \y1) = PDF::Content::Util::TransformMatrix::dot(m, x, y);
-        PDF::Content::Util::TransformMatrix::inverse-dot(m, x1, $!height - y1);
+        my \ctm = $!gfx.CTM;
+        my (\x1, \y1) = PDF::Content::Util::TransformMatrix::dot(ctm, x, y);
+        PDF::Content::Util::TransformMatrix::inverse-dot(ctm, x1, $!height - y1);
     }
 
     my %Dispatch = BEGIN %(
@@ -37,7 +37,7 @@ class HTML::Canvas::Render::PDF {
             $!gfx.ConcatMatrix(a, b, c, d, e, -f);
         },
         setTransform => method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-            $!gfx.GraphicsMatrix = [a, b, c, d, e, -f];
+            $!gfx.CTM = [a, b, c, d, e, -f];
         },
         fillText => method (Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?) {
             self.font;

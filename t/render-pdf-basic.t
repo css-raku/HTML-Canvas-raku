@@ -15,7 +15,7 @@ $canvas.scale( 2.0, 2.0);
 $canvas.translate(5, 5);
 
 is-deeply [$canvas.transformMatrix], [2, 0, 0, 2, 5, 5], 'canvas transform';
-is-deeply [$gfx.GraphicsMatrix.list], [2, 0, 0, 2, 5, -5], 'pdf transform';
+is-deeply [$gfx.CTM.list], [2, 0, 0, 2, 5, -5], 'pdf transform';
 
 lives-ok { $canvas.strokeRect(20,20, 10,20); }, "basic API call - lives";
 dies-ok  { $canvas.strokeRect(10,10, 20, "blah"); }, "incorrect API call - dies";
