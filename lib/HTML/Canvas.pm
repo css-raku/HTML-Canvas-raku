@@ -13,6 +13,8 @@ class HTML::Canvas {
     }
 
     our %API is export(:API) = BEGIN %(
+        :_start(method {} ),
+        :_finish(method {} ),
         :scale(method (Numeric $x, Numeric $y) {
                       self!transform: :scale[$x, $y];
                   }),
@@ -65,8 +67,10 @@ class HTML::Canvas {
     method render($renderer, :@calls = self.calls) {
         my $callback = $renderer.callback;
         my $obj = self.new: :$callback;
+        $obj._start;
         $obj."{.key}"(|.value)
             for @calls;
+        $obj._finish;
     }
 
     method can(Str \name) {

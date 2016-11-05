@@ -4,6 +4,7 @@ class HTML::Canvas::Render::PDF {
     use HTML::Canvas :API;
     use PDF::Content;
     has PDF::Content $.gfx handles <content> is required;
+    has $.width is required; # canvas height in points
     has $.height is required; # canvas height in points
     has $.font-object is required;
     has @!ctm = [1, 0, 0, 1, 0, 0]; #| canvas transform matrix
@@ -46,6 +47,13 @@ class HTML::Canvas::Render::PDF {
     }
 
     my %Dispatch = BEGIN %(
+        _start => method {
+            $!gfx.Rectangle(0, 0, pt($!width), pt($!height) );
+            $!gfx.ClosePath;
+            $!gfx.Clip;
+            $!gfx.EndPath;
+        },
+        _finish   => method { },
         scale     => method (Numeric \x, Numeric \y) { self!transform(|scale => [x, y]) },
         rotate    => method (Numeric \angle) { self!transform(|rotate => [ angle, ]) },
         translate => method (Numeric \x, Numeric \y) { self!transform(|translate => [x, -y]) },
