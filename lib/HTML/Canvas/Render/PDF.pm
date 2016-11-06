@@ -4,10 +4,17 @@ class HTML::Canvas::Render::PDF {
     use HTML::Canvas :API;
     use PDF::Content;
     has PDF::Content $.gfx handles <content> is required;
-    has $.width is required; # canvas height in points
-    has $.height is required; # canvas height in points
-    has $.font-object is required;
+    has $.width; # canvas height in points
+    has $.height; # canvas height in points
     has @!ctm = [1, 0, 0, 1, 0, 0]; #| canvas transform matrix
+
+    submethod BUILD(:$!gfx!, :$!width, :$!height) {
+        unless $!width.defined && $!height.defined {
+            my (\x0, \y0, \x1, \y1) = $!gfx.parent.media-box;
+            $!width //= x1 - x0;
+            $!height //= y1 - y0;
+        }
+    }
 
     method callback {
         sub ($op, |c) {
@@ -48,12 +55,16 @@ class HTML::Canvas::Render::PDF {
 
     my %Dispatch = BEGIN %(
         _start => method {
+            $!gfx.Save;
+
             $!gfx.Rectangle(0, 0, pt($!width), pt($!height) );
             $!gfx.ClosePath;
             $!gfx.Clip;
             $!gfx.EndPath;
         },
-        _finish   => method { },
+        _finish   => method {
+            $!gfx.Restore;
+        },
         scale     => method (Numeric \x, Numeric \y) { self!transform(|scale => [x, y]) },
         rotate    => method (Numeric \angle) { self!transform(|rotate => [ angle, ]) },
         translate => method (Numeric \x, Numeric \y) { self!transform(|translate => [x, -y]) },
@@ -80,11 +91,11 @@ class HTML::Canvas::Render::PDF {
             $!gfx.Stroke;
             $!gfx.Restore;
         },
-        fillText => method (Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?) {
-            self.font;
+        fillText => method (Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
+            self.font(:$canvas);
             my $scale;
-            if $maxWidth && $maxWidth > 0 {
-                my Numeric \width = .face.stringwidth($text, .em) with $!font-object;
+            if $maxWidth {
+                my \width = $canvas.measureText($text).width;
                 $scale = 100 * $maxWidth / width
                     if width > $maxWidth;
             }
@@ -97,15 +108,19 @@ class HTML::Canvas::Render::PDF {
             $!gfx.EndText;
             $!gfx.Restore
         },
-        font => method (Str $font-style?) {
-            my \pdf-font = $!gfx.use-font($!font-object.face);
+        measureText => method (Str $text, :$canvas!) {
+            $canvas.measureText($text)
+        },
+        font => method (Str $font-style?, :$canvas!) {
+            my \canvas-font = $canvas.font-object;
+            canvas-font.css-font-prop = $_ with $font-style;
+            my \pdf-font = $!gfx.use-font(canvas-font.face);
 
             with $font-style {
-                $!font-object.css-font-prop = $_;
-                $!gfx.font = [ pdf-font, $!font-object.em ];
+                $!gfx.font = [ pdf-font, canvas-font.em ];
             }
             else {
-                $!gfx.font //= [ pdf-font, $!font-object.em ];
+                $!gfx.font //= [ pdf-font, canvas-font.em ];
             }
         },
         rect => method (\x, \y, \w, \h) {

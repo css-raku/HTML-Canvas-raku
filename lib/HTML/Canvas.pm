@@ -5,6 +5,7 @@ class HTML::Canvas {
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.calls;
     has Routine $.callback;
+    has $.font-object is rw;
     has $!font-style = '10pt times-roman';
 
     method !transform(|c) {
@@ -35,12 +36,21 @@ class HTML::Canvas {
         :rect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :strokeRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :fillText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) { }),
+        :measureText(method (Str $text, :$obj) {
+                            with $!font-object {
+                                my Numeric $width = .face.stringwidth($text, .em);
+                                class { has Numeric $.width }.new: :$width
+                            }
+                            else {
+                                fail "unable to measure text - not font object";
+                            }
+                        } ),
         :stroke(method () {}),
     );
 
     method !add-call(Str $name, *@args) {
         self.calls.push: ($name => @args);
-        .($name, |@args, :obj(self)) with self.callback;
+        .($name, |@args, :canvas(self)) with self.callback;
     }
 
     method font is rw {
