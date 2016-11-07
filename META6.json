@@ -3,13 +3,11 @@
     "name"        : "HTML::Canvas",
     "version"     : "0.0.1",
     "description" : "Implements the HTML Canvas (2D) API",
-    "depends"     : [ "JSON::Fast", "PDF::Content", "CSS::Declarations ],
-    "source-url"  : "git://github.com/p6-pdf/p6-HTML-Canvas.git",
+    "depends"     : [ "JSON::Fast", "PDF::Content", "PDF::Style::Font" ],
+    "source-url"  : "git://github.com/p6-pdf/perl6-HTML-Canvas.git",
     "provides"    : {
 
         "HTML::Canvas"              : "HTML/Canvas.pm",
-        "HTML::Canvas::Render::PDF" : "HTML/Canvas/Render/PDF.pm",
-        "HTML::Canvas::Render::PDF::Font" : "HTML/Canvas/Render/PDF/Font.pm"
-
+        "HTML::Canvas::Render::PDF" : "HTML/Canvas/Render/PDF.pm"
      }
 }

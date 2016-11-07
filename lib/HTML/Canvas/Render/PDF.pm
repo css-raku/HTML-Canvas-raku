@@ -4,6 +4,7 @@ class HTML::Canvas::Render::PDF {
     use HTML::Canvas :API;
     use PDF::Content;
     has PDF::Content $.gfx handles <content> is required;
+    use PDF::Style::Font;
     has $.width; # canvas height in points
     has $.height; # canvas height in points
     has @!ctm = [1, 0, 0, 1, 0, 0]; #| canvas transform matrix
@@ -54,17 +55,14 @@ class HTML::Canvas::Render::PDF {
     }
 
     my %Dispatch = BEGIN %(
-        _start => method {
-            $!gfx.Save;
-
+        _start    => method (:$canvas) {
+            $canvas.font-object //= PDF::Style::Font.new;
             $!gfx.Rectangle(0, 0, pt($!width), pt($!height) );
             $!gfx.ClosePath;
             $!gfx.Clip;
             $!gfx.EndPath;
         },
-        _finish   => method {
-            $!gfx.Restore;
-        },
+        _finish   => method { },
         scale     => method (Numeric \x, Numeric \y) { self!transform(|scale => [x, y]) },
         rotate    => method (Numeric \angle) { self!transform(|rotate => [ angle, ]) },
         translate => method (Numeric \x, Numeric \y) { self!transform(|translate => [x, -y]) },
@@ -113,7 +111,7 @@ class HTML::Canvas::Render::PDF {
         },
         font => method (Str $font-style?, :$canvas!) {
             my \canvas-font = $canvas.font-object;
-            canvas-font.css-font-prop = $_ with $font-style;
+            canvas-font.font-style = $_ with $font-style;
             my \pdf-font = $!gfx.use-font(canvas-font.face);
 
             with $font-style {

@@ -4,10 +4,10 @@ use Test;
 use PDF::Content::PDF;
 use HTML::Canvas;
 use HTML::Canvas::Render::PDF;
-use HTML::Canvas::Render::PDF::Font;
+use PDF::Style::Font;
 
-my HTML::Canvas::Render::PDF::Font $font-object .= new;
-my  PDF::Content::PDF $pdf .= new;
+my PDF::Style::Font $font-object .= new;
+my PDF::Content::PDF $pdf .= new;
 my $gfx = $pdf.add-page.gfx(:!strict);
 my HTML::Canvas::Render::PDF $renderer .= new: :$gfx;
 is $renderer.width, 612, 'renderer default width';
