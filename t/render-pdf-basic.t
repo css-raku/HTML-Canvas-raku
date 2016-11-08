@@ -30,4 +30,11 @@ is-deeply $renderer.content.lines, $("2 0 0 2 0 0 cm", "1 0 0 1 5 -5 cm", "20 36
 
 lives-ok {$pdf.save-as("t/render-pdf-basic.pdf")}, "pdf.save-as";
 
+# also save comparative HTML
+
+my $width = $renderer.width;
+my $height = $renderer.height;
+my $html = "<html><body>{ $canvas.html( :$width, :$height ) }</body></html>";
+"t/render-pdf-basic.html".IO.spurt: $html;
+
 done-testing;

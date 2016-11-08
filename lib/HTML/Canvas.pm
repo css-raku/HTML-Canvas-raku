@@ -74,6 +74,21 @@ class HTML::Canvas {
         }).join: $sep;
     }
 
+    method html( Numeric :$width!, Numeric :$height!, Str :$style, Str :$id = ~ self.WHERE) {
+        use HTML::Entity;
+        my $Style = do with $style { ' style="%s"'.sprintf(encode-entities($style)) } else { '' };
+        my $Js = self.js(:context<ctx>, :sep("\n    "));
+        my $Id = encode-entities($id);
+
+        qq:to"END-HTML";
+        <canvas width="{$width}pt" height="{$height}pt" id="$Id"$Style></canvas>
+        <script>
+            var ctx = document.getElementById("$Id").getContext("2d");
+            $Js
+        </script>
+        END-HTML
+    }
+
     method render($renderer, :@calls = self.calls) {
         my $callback = $renderer.callback;
         my $obj = self.new: :$callback;
