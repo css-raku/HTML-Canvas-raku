@@ -33,8 +33,14 @@ class HTML::Canvas::Render::PDF {
     sub pt(Numeric \l) { l }
 
     method !coords(Numeric \x, Numeric \y) {
-        #| translate back to canvas coordinates
-        my (\x1, \y1) = PDF::Content::Util::TransformMatrix::dot(@!ctm, x, y);
+        #| convert translated canvas coordinates to translated PDF coordinates
+
+        # compute canvas absolute coordinates
+        my @tmc = @!ctm;
+        @tmc[5] *= -1;
+        my (\xc, \yc) = PDF::Content::Util::TransformMatrix::dot(@tmc, x, y);
+
+        # convert back to pdf coordinates in translated user space
         PDF::Content::Util::TransformMatrix::inverse-dot(@!ctm, x1, $!height - y1);
     }
 
