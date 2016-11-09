@@ -3,7 +3,7 @@ class HTML::Canvas::Render::PDF {
 
     use HTML::Canvas :API;
     use PDF::Content;
-    has PDF::Content $.gfx handles <content> is required;
+    has PDF::Content $.gfx handles <content content-dump> is required;
     use PDF::Style::Font;
     has $.width; # canvas height in points
     has $.height; # canvas height in points
@@ -33,15 +33,7 @@ class HTML::Canvas::Render::PDF {
     sub pt(Numeric \l) { l }
 
     method !coords(Numeric \x, Numeric \y) {
-        #| convert translated canvas coordinates to translated PDF coordinates
-
-        # compute canvas absolute coordinates
-        my @tmc = @!ctm;
-        @tmc[5] *= -1;
-        my (\xc, \yc) = PDF::Content::Util::TransformMatrix::dot(@tmc, x, y);
-
-        # convert back to pdf coordinates in translated user space
-        PDF::Content::Util::TransformMatrix::inverse-dot(@!ctm, x1, $!height - y1);
+        (x, -y);
     }
 
     # ref: http://stackoverflow.com/questions/1960786/how-do-you-draw-filled-and-unfilled-circles-with-pdf-primitives
@@ -63,14 +55,20 @@ class HTML::Canvas::Render::PDF {
     my %Dispatch = BEGIN %(
         _start    => method (:$canvas) {
             $canvas.font-object //= PDF::Style::Font.new;
+            $!gfx.Save;
             $!gfx.Rectangle(0, 0, pt($!width), pt($!height) );
             $!gfx.ClosePath;
             $!gfx.Clip;
             $!gfx.EndPath;
+            $!gfx.transform: :translate[0, $!height];
         },
-        _finish   => method { },
+        _finish   => method {
+            $!gfx.Restore;
+        },
         scale     => method (Numeric \x, Numeric \y) { self!transform(|scale => [x, y]) },
-        rotate    => method (Numeric \angle) { self!transform(|rotate => [ angle, ]) },
+        rotate    => method (Numeric \r) {
+            self!transform(|rotate => -r);
+        },
         translate => method (Numeric \x, Numeric \y) { self!transform(|translate => [x, -y]) },
         transform => method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
             self!transform(|matrix => [a, b, c, d, e, -f]);

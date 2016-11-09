@@ -62,9 +62,15 @@ class HTML::Canvas {
         );
     }
 
+    method context(&do-stuff) {
+        self._start;
+        &do-stuff(self);
+        self._finish;
+    }
+
     method js(Str :$context = 'ctx', :$sep = "\n") {
         use JSON::Fast;
-        @!calls.map({
+        @!calls.grep(*.key ne '_start'|'_finish').map({
             my $name = .key;
             my @args = .value.map: { to-json($_) };
             my \fmt = $name eq 'font'

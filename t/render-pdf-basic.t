@@ -15,19 +15,34 @@ is $renderer.height, 792, 'rendered default height';
 my $callback = $renderer.callback;
 my HTML::Canvas $canvas .= new(:$callback, :$font-object);
 
-lives-ok { $canvas.strokeRect(20,20, 10,20); }, "basic API call - lives";
-$canvas.scale( 2.0, 2.0);
-$canvas.translate(-5, -15);
+$canvas.context: -> \ctx {
+    is-deeply [ctx.transformMatrix], [1, 0, 0, 1, 0, 0], 'canvas transform - initial';
+    is-deeply [$gfx.CTM.list], [1, 0, 0, 1, 0, 792], 'pdf transform - initial';
+    ctx.strokeRect(1, 1, 610, 790);
 
-is-deeply [$canvas.transformMatrix], [2, 0, 0, 2, -5, -15], 'canvas transform';
-is-deeply [$gfx.CTM.list], [2, 0, 0, 2, -5, 15], 'pdf transform';
+    lives-ok { ctx.strokeRect(20,20, 10,20); }, "basic API call - lives";
+    ctx.scale( 2.0, 2.0);
+    is-deeply [ctx.transformMatrix], [2, 0, 0, 2, 0, 0], 'canvas transform - scaled';
+    is-deeply [$gfx.CTM.list], [2, 0, 0, 2, 0, 792 * 2], 'pdf transform - scaled';
+    ctx.translate(-5, -15);
 
-lives-ok { $canvas.strokeRect(20,20, 10,20); }, "basic API call - lives";
-dies-ok  { $canvas.strokeRect(10,10, 20, "blah"); }, "incorrect API call - dies";
-dies-ok  { $canvas.strokeRect(10,10, 20); }, "incorrect API call - dies";
-dies-ok  { $canvas.foo(42) }, "unknown call - dies";
-lives-ok { $canvas.font = "32px Arial"; }, 'set font - lives';
-is-deeply $renderer.content.lines, $("20 752 10 20 re", "s", "2 0 0 2 0 0 cm", "1 0 0 1 -5 15 cm", "20 356 10 20 re", "s", "/F1 24 Tf"), 'renderer.content';
+    is-deeply [ctx.transformMatrix], [2, 0, 0, 2, -5, -15], 'canvas transform - scaled';
+    is-deeply [$gfx.CTM.list], [2, 0, 0, 2, -5, 792 * 2  +  15], 'pdf transform - scaled + translated';
+
+    lives-ok { ctx.strokeRect(20,20, 10,20); }, "basic API call - lives";
+    dies-ok  { ctx.strokeRect(10,10, 20, "blah"); }, "incorrect API call - dies";
+    dies-ok  { ctx.strokeRect(10,10, 20); }, "incorrect API call - dies";
+    dies-ok  { ctx.foo(42) }, "unknown call - dies";
+    lives-ok { ctx.font = "24px Arial"; }, 'set font - lives';
+    is-deeply $renderer.content-dump, $("q", "0 0 612 792 re", "h", "W", "n", "1 0 0 1 0 792 cm", "1 -791 610 790 re", "s", "20 -40 10 20 re", "s", "2 0 0 2 0 0 cm", "1 0 0 1 -5 15 cm", "20 -40 10 20 re", "s", "/F1 18 Tf"), 'content to-date';
+
+    ctx.fillText("Hello World",50, 40);
+    ctx.strokeRect(40,20, 10,25);
+    ctx.rotate(.2);
+    ctx.fillText("Hello World",50, 40);
+    ctx.strokeRect(40,20, 4,25);
+    ctx.strokeRect(45,20, 4,25);
+}
 
 lives-ok {$pdf.save-as("t/render-pdf-basic.pdf")}, "pdf.save-as";
 
