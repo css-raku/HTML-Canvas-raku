@@ -48,8 +48,9 @@ class HTML::Canvas {
         :stroke(method () {}),
     );
 
-    method !add-call(Str $name, *@args) {
-        self.calls.push: ($name => @args);
+    method !call(Str $name, *@args) {
+        self.calls.push: ($name => @args)
+            unless $name eq '_start' | '_finish';
         .($name, |@args, :canvas(self)) with self.callback;
     }
 
@@ -57,20 +58,20 @@ class HTML::Canvas {
         Proxy.new(
             FETCH => sub ($) { $!font-style },
             STORE => sub ($, Str $!font-style) {
-                self!add-call('font', $!font-style);
+                self!call('font', $!font-style);
             }
         );
     }
 
-    method context(&do-stuff) {
+    method context(&do-markup) {
         self._start;
-        &do-stuff(self);
+        &do-markup(self);
         self._finish;
     }
 
     method js(Str :$context = 'ctx', :$sep = "\n") {
         use JSON::Fast;
-        @!calls.grep(*.key ne '_start'|'_finish').map({
+        @!calls.map({
             my $name = .key;
             my @args = .value.map: { to-json($_) };
             my \fmt = $name eq 'font'
@@ -98,19 +99,19 @@ class HTML::Canvas {
     method render($renderer, :@calls = self.calls) {
         my $callback = $renderer.callback;
         my $obj = self.new: :$callback;
-        $obj._start;
-        $obj."{.key}"(|.value)
-            for @calls;
-        $obj._finish;
+        $obj.context: {
+            $obj."{.key}"(|.value)
+                for @calls;
+        }
     }
 
     method can(Str \name) {
         my @meth = callsame;
         if !@meth {
-            with %API{name} -> &meth {
+            with %API{name} -> &api {
                 @meth.push: method (*@a) {
-                    &meth(self, |@a);
-                    self!add-call(name, |@a);
+                    &api(self, |@a);
+                    self!call(name, |@a);
                 };
                 self.^add_method(name, @meth[0]);
             }

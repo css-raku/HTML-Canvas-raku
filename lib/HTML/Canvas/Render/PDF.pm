@@ -9,7 +9,7 @@ class HTML::Canvas::Render::PDF {
     has $.height; # canvas height in points
     has @!ctm = [1, 0, 0, 1, 0, 0]; #| canvas transform matrix
 
-    submethod BUILD(:$!gfx!, :$!width, :$!height) {
+    submethod TWEAK {
         unless $!width.defined && $!height.defined {
             my (\x0, \y0, \x1, \y1) = $!gfx.parent.media-box;
             $!width //= x1 - x0;
