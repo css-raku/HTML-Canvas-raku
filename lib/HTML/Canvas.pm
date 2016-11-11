@@ -5,8 +5,18 @@ class HTML::Canvas {
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.calls;
     has Routine $.callback;
+    has Str $!font = '10pt times-roman';
     has $.font-object is rw;
-    has $!font-style = '10pt times-roman';
+    method font-object {
+        Proxy.new(
+            FETCH => sub ($) { $!font-object },
+            STORE => sub ($, $!font-object) {
+                .font-style = $!font with $!font-object;
+            }
+        )
+    }
+
+    has @!gsave;
 
     method !transform(|c) {
         my @matrix = PDF::Content::Util::TransformMatrix::transform-matrix(|c);
@@ -15,7 +25,27 @@ class HTML::Canvas {
 
     our %API is export(:API) = BEGIN %(
         :_start(method {} ),
-        :_finish(method {} ),
+        :_finish(method {
+                        die "'save' unmatched by 'restore' at end of canvas context"
+                            if @!gsave;
+                    } ),
+        :save(method {
+                     my @ctm = @!transformMatrix;
+                     @!gsave.push: {
+                         :$!font,
+                         :@ctm
+                     };
+                 } ),
+        :restore(method {
+                        if @!gsave {
+                            my %state = @!gsave.pop;
+                            @!transformMatrix = %state<ctm>.list;
+                            self.font = %state<font>;
+                        }
+                        else {
+                            warn "restore without preceding save";
+                        }
+                } ),
         :scale(method (Numeric $x, Numeric $y) {
                       self!transform: :scale[$x, $y];
                   }),
@@ -56,9 +86,10 @@ class HTML::Canvas {
 
     method font is rw {
         Proxy.new(
-            FETCH => sub ($) { $!font-style },
-            STORE => sub ($, Str $!font-style) {
-                self!call('font', $!font-style);
+            FETCH => sub ($) { $!font },
+            STORE => sub ($, Str $!font) {
+                .font-style = $!font with $!font-object;
+                self!call('font', $!font);
             }
         );
     }

@@ -52,109 +52,87 @@ class HTML::Canvas::To::PDF {
 	$!gfx.ConcatMatrix( @tm );
     }
 
-    my %Dispatch = BEGIN %(
-        _start    => method (:$canvas) {
-            $canvas.font-object //= PDF::Style::Font.new;
-            $!gfx.Save;
-            $!gfx.Rectangle(0, 0, pt($!width), pt($!height) );
-            $!gfx.ClosePath;
-            $!gfx.Clip;
-            $!gfx.EndPath;
-            $!gfx.transform: :translate[0, $!height];
-        },
-        _finish   => method {
-            $!gfx.Restore;
-        },
-        scale     => method (Numeric \x, Numeric \y) { self!transform(|scale => [x, y]) },
-        rotate    => method (Numeric \r) {
-            self!transform(|rotate => -r);
-        },
-        translate => method (Numeric \x, Numeric \y) { self!transform(|translate => [x, -y]) },
-        transform => method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-            self!transform(|matrix => [a, b, c, d, e, -f]);
-        },
-        setTransform => method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-            my @ctm-inv = PDF::Content::Util::TransformMatrix::inverse(@!ctm);
-            my @diff = PDF::Content::Util::TransformMatrix::multiply([a, b, c, d, e, -f], @ctm-inv);
-                self!transform( |matrix => @diff )
-                    unless PDF::Content::Util::TransformMatrix::is-identity(@diff);
-        },
-        arc => method (Numeric \x, Numeric \y, Numeric \r, Numeric \startAngle, Numeric \endAngle, Bool $anti-clockwise?) {
-            # stub. ignores start and end angle; draws a circle
-            warn "todo: arc start/end angles"
-                unless endAngle - startAngle =~= 2 * pi;
-            $!gfx.ConcatMatrix:  PDF::Content::Util::TransformMatrix::translate(|self!coords(x, y) );
-            draw-circle($!gfx, r);
-        },
-        beginPath => method () {
-            $!gfx.Save;
-        },
-        stroke => method () {
-            $!gfx.Stroke;
-            $!gfx.Restore;
-        },
-        fillText => method (Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
-            self.font(:$canvas);
-            my $scale;
-            if $maxWidth {
-                my \width = $canvas.measureText($text).width;
-                $scale = 100 * $maxWidth / width
-                    if width > $maxWidth;
-            }
+    method _start(:$canvas) {
+        $canvas.font-object //= PDF::Style::Font.new;
+        $!gfx.Save;
+        $!gfx.Rectangle(0, 0, pt($!width), pt($!height) );
+        $!gfx.ClosePath;
+        $!gfx.Clip;
+        $!gfx.EndPath;
+        $!gfx.transform: :translate[0, $!height];
+    }
+    method _finish {
+        $!gfx.Restore;
+    }
+    method save { $!gfx.Save }
+    method restore { $!gfx.Restore }
+    method scale(Numeric \x, Numeric \y) { self!transform(|scale => [x, y]) }
+    method rotate(Numeric \r) { self!transform(|rotate => -r) }
+    method translate(Numeric \x, Numeric \y) { self!transform(|translate => [x, -y]) }
+    method transform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
+        self!transform(|matrix => [a, b, c, d, e, -f]);
+    }
+    method setTransform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
+        my @ctm-inv = PDF::Content::Util::TransformMatrix::inverse(@!ctm);
+        my @diff = PDF::Content::Util::TransformMatrix::multiply([a, b, c, d, e, -f], @ctm-inv);
+        self!transform( |matrix => @diff )
+        unless PDF::Content::Util::TransformMatrix::is-identity(@diff);
+    }
 
-            $!gfx.Save;
-            $!gfx.BeginText;
-            $!gfx.HorizScaling = $_ with $scale;
-            $!gfx.text-position = self!coords($x, $y);
-            $!gfx.print($text);
-            $!gfx.EndText;
-            $!gfx.Restore
-        },
-        measureText => method (Str $text, :$canvas!) {
-            $canvas.measureText($text)
-        },
-        font => method (Str $font-style?, :$canvas!) {
-            my \canvas-font = $canvas.font-object;
-            canvas-font.font-style = $_ with $font-style;
-            my \pdf-font = $!gfx.use-font(canvas-font.face);
-
-            with $font-style {
-                $!gfx.font = [ pdf-font, canvas-font.em ];
-            }
-            else {
-                $!gfx.font //= [ pdf-font, canvas-font.em ];
-            }
-        },
-        rect => method (\x, \y, \w, \h) {
-            unless $!gfx.fillAlpha =~= 0 {
-                $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
-                $!gfx.ClosePath;
-            }
-        },
-        strokeRect => method (\x, \y, \w, \h) {
-            $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
-            $!gfx.CloseStroke;
-        },
-    );
-
-    method can(\name) {
-        my @can = callsame;
-        unless @can {
-            with %Dispatch{name} {
-                @can.push: $_;
-                self.^add_method( name, @can[0] );
-            }
+    method arc(Numeric \x, Numeric \y, Numeric \r, Numeric \startAngle, Numeric \endAngle, Bool $anti-clockwise?) {
+        # stub. ignores start and end angle; draws a circle
+        warn "todo: arc start/end angles"
+            unless endAngle - startAngle =~= 2 * pi;
+        $!gfx.ConcatMatrix:  PDF::Content::Util::TransformMatrix::translate(|self!coords(x, y) );
+        draw-circle($!gfx, r);
+    }
+    method beginPath() {
+        $!gfx.Save;
+    }
+    method stroke() {
+        $!gfx.Stroke;
+        $!gfx.Restore;
+    }
+    method fillText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
+        self.font(:$canvas);
+        my $scale;
+        if $maxWidth {
+            my \width = $canvas.measureText($text).width;
+            $scale = 100 * $maxWidth / width
+            if width > $maxWidth;
         }
-        @can;
-    }
 
-    method dispatch:<.?>(\name, |c) is raw {
-        self.can(name) ?? self."{name}"(|c) !! Nil
+        $!gfx.Save;
+        $!gfx.BeginText;
+        $!gfx.HorizScaling = $_ with $scale;
+        $!gfx.text-position = self!coords($x, $y);
+        $!gfx.print($text);
+        $!gfx.EndText;
+        $!gfx.Restore
     }
-    method FALLBACK(\name, |c) {
-        self.can(name)
-            ?? self."{name}"(|c)
-            !! die X::Method::NotFound.new( :method(name), :typename(self.^name) );
+    method measureText(Str $text, :$canvas!) {
+        $canvas.measureText($text)
+    }
+    method font(Str $font-style?, :$canvas!) {
+        my \canvas-font = $canvas.font-object;
+        my \pdf-font = $!gfx.use-font(canvas-font.face);
+
+        with $font-style {
+            $!gfx.font = [ pdf-font, canvas-font.em ];
+        }
+        else {
+            $!gfx.font //= [ pdf-font, canvas-font.em ];
+        }
+    }
+    method rect(\x, \y, \w, \h) {
+        unless $!gfx.fillAlpha =~= 0 {
+            $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
+            $!gfx.ClosePath;
+        }
+    }
+    method strokeRect(\x, \y, \w, \h) {
+        $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
+        $!gfx.CloseStroke;
     }
 
 }
