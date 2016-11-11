@@ -8,6 +8,6 @@
     "provides"    : {
 
         "HTML::Canvas"              : "HTML/Canvas.pm",
-        "HTML::Canvas::Render::PDF" : "HTML/Canvas/Render/PDF.pm"
+        "HTML::Canvas::To::PDF" : "HTML/Canvas/To/PDF.pm"
      }
 }

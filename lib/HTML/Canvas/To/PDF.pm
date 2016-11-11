@@ -1,5 +1,5 @@
 use v6;
-class HTML::Canvas::Render::PDF {
+class HTML::Canvas::To::PDF {
 
     use HTML::Canvas :API;
     use PDF::Content;
