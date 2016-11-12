@@ -10,11 +10,15 @@ class HTML::Canvas::To::PDF {
     has $.height; # canvas height in points
     has @!ctm = [1, 0, 0, 1, 0, 0]; #| canvas transform matrix
 
-    submethod TWEAK {
+    submethod TWEAK(:$canvas) {
         unless $!width.defined && $!height.defined {
             my (\x0, \y0, \x1, \y1) = $!gfx.parent.media-box;
             $!width //= x1 - x0;
             $!height //= y1 - y0;
+        }
+        with $canvas {
+            .font-object //= PDF::Style::Font.new;
+            .callback.push: self.callback;
         }
     }
 

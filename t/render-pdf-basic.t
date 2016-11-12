@@ -4,16 +4,13 @@ use Test;
 use PDF::Content::PDF;
 use HTML::Canvas;
 use HTML::Canvas::To::PDF;
-use PDF::Style::Font;
 
-my PDF::Style::Font $font-object .= new;
+my HTML::Canvas $canvas .= new;
 my PDF::Content::PDF $pdf .= new;
-my $gfx = $pdf.add-page.gfx(:!strict);
-my HTML::Canvas::To::PDF $renderer .= new: :$gfx;
-is $renderer.width, 612, 'renderer default width';
-is $renderer.height, 792, 'rendered default height';
-my $callback = $renderer.callback;
-my HTML::Canvas $canvas .= new(:$callback, :$font-object);
+my $gfx = $pdf.add-page.gfx;
+my $feed = HTML::Canvas::To::PDF.new: :$gfx, :$canvas;
+is $feed.width, 612, 'renderer default width';
+is $feed.height, 792, 'rendered default height';
 
 $canvas.context: -> \ctx {
     ctx.save;
@@ -35,7 +32,7 @@ $canvas.context: -> \ctx {
     dies-ok  { ctx.strokeRect(10,10, 20); }, "incorrect API call - dies";
     dies-ok  { ctx.foo(42) }, "unknown call - dies";
 
-    is-deeply $renderer.content-dump, $("q", "0 0 612 792 re", "h", "W", "n", "1 0 0 1 0 792 cm", "q", "1 -791 610 790 re", "s", "20 -40 10 20 re", "s", "2 0 0 2 0 0 cm", "1 0 0 1 -5 15 cm", "20 -40 10 20 re", "s"), 'content to-date';
+    is-deeply $feed.content-dump, $("q", "0 0 612 792 re", "h", "W", "n", "1 0 0 1 0 792 cm", "q", "1 -791 610 790 re", "s", "20 -40 10 20 re", "s", "2 0 0 2 0 0 cm", "1 0 0 1 -5 15 cm", "20 -40 10 20 re", "s"), 'content to-date';
 
     lives-ok { ctx.font = "24px Arial"; }, 'set font - lives';
     ctx.fillText("Hello World",50, 40);
@@ -68,13 +65,12 @@ $canvas.context: -> \ctx {
     ctx.restore;
 }
 
-
 lives-ok {$pdf.save-as("t/render-pdf-basic.pdf")}, "pdf.save-as";
 
 # also save comparative HTML
 
-my $width = $renderer.width;
-my $height = $renderer.height;
+my $width = $feed.width;
+my $height = $feed.height;
 my $html = "<html><body>{ $canvas.html( :$width, :$height ) }</body></html>";
 "t/render-pdf-basic.html".IO.spurt: $html;
 

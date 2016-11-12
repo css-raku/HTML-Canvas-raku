@@ -5,7 +5,7 @@ class HTML::Canvas {
     use CSS::Declarations;
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.calls;
-    has Routine $.callback;
+    has Routine @.callback;
 
     has Str $.font = '10pt times-roman';
     method font is rw {
@@ -35,7 +35,7 @@ class HTML::Canvas {
             STORE => sub ($, Str $!fillStyle) {
                 $!css.background-color = $!fillStyle;
                 self.calls.push: (:fillStyle[ $!fillStyle, ]);
-                .('fillStyle', $!css.background-color, :canvas(self)) with self.callback;
+                .('fillStyle', $!css.background-color, :canvas(self)) for @!callback;
             }
         );
     }
@@ -46,7 +46,7 @@ class HTML::Canvas {
             STORE => sub ($, Str $!strokeStyle) {
                 $!css.color = $!strokeStyle;
                 self.calls.push: (:strokeStyle[ $!strokeStyle, ]);
-                .('strokeStyle', $!css.color, :canvas(self)) with self.callback;
+                .('strokeStyle', $!css.color, :canvas(self)) for @!callback;
             }
         );
     }
@@ -135,7 +135,7 @@ class HTML::Canvas {
     method !call(Str $name, *@args) {
         self.calls.push: ($name => @args)
             unless $name eq '_start' | '_finish';
-        .($name, |@args, :canvas(self)) with self.callback;
+        .($name, |@args, :canvas(self)) for @!callback;
     }
 
     method context(&do-markup) {
@@ -172,7 +172,7 @@ class HTML::Canvas {
     }
 
     method render($renderer, :@calls = self.calls) {
-        my $callback = $renderer.callback;
+        my $callback = [$renderer.callback, ];
         my $obj = self.new: :$callback;
         $obj.context: {
             $obj."{.key}"(|.value)
