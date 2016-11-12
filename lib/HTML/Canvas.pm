@@ -1,13 +1,27 @@
 use v6;
-use PDF::Content::Util::TransformMatrix;
 
 class HTML::Canvas {
+    use PDF::Content::Util::TransformMatrix;
+    use CSS::Declarations;
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.calls;
     has Routine $.callback;
-    has Str $!font = '10pt times-roman';
+
+    has Str $.font = '10pt times-roman';
+    method font is rw {
+        Proxy.new(
+            FETCH => sub ($) { $!font },
+            STORE => sub ($, Str $!font) {
+                $!css.font = $!font;
+                .setup with $!font-object;
+                self!call('font', $!font);
+            }
+        );
+    }
+
     has $.font-object is rw;
-    method font-object {
+    has Str $.fillStyle is rw = 'black';
+    method font-object is rw {
         Proxy.new(
             FETCH => sub ($) { $!font-object },
             STORE => sub ($, $!font-object) {
@@ -15,7 +29,18 @@ class HTML::Canvas {
             }
         )
     }
+    method fillStyle is rw {
+        Proxy.new(
+            FETCH => sub ($) { $!fillStyle },
+            STORE => sub ($, Str $!fillStyle) {
+                $!css.color = $!fillStyle;
+                self.calls.push: (:fillStyle[ $!fillStyle, ]);
+                 .('fillStyle', $!css.color, :canvas(self)) with self.callback;
+            }
+        );
+    }
 
+    has CSS::Declarations $!css = CSS::Declarations.new( :color($!fillStyle), :$!font,  );
     has @!gsave;
 
     method !transform(|c) {
@@ -33,14 +58,22 @@ class HTML::Canvas {
                      my @ctm = @!transformMatrix;
                      @!gsave.push: {
                          :$!font,
+                         :$!fillStyle,
+                         :$!css,
                          :@ctm
                      };
+                     $!css = $!css.new: :copy($!css);
                  } ),
         :restore(method {
                         if @!gsave {
                             my %state = @!gsave.pop;
+
                             @!transformMatrix = %state<ctm>.list;
-                            self.font = %state<font>;
+
+                            $!font = %state<font>;
+                            $!fillStyle = %state<fillStyle>;
+                            $!css = %state<css>;
+                            .css = $!css with $!font-object;
                         }
                         else {
                             warn "restore without preceding save";
@@ -61,10 +94,12 @@ class HTML::Canvas {
         :setTransform(method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
                              @!transformMatrix = [a, b, c, d, e, f];
                       }),
-        :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
-        :beginPath(method () {}),
         :rect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :strokeRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
+        :fillRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
+        :beginPath(method () {}),
+        :fill(method () {}),
+        :stroke(method () {}),
         :fillText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) { }),
         :measureText(method (Str $text, :$obj) {
                             with $!font-object {
@@ -75,23 +110,15 @@ class HTML::Canvas {
                                 fail "unable to measure text - not font object";
                             }
                         } ),
-        :stroke(method () {}),
+        :moveTo(method (Numeric \x, Numeric \y) {} ),
+        :lineTo(method (Numeric \x, Numeric \y) {} ),
+        :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
     );
 
     method !call(Str $name, *@args) {
         self.calls.push: ($name => @args)
             unless $name eq '_start' | '_finish';
         .($name, |@args, :canvas(self)) with self.callback;
-    }
-
-    method font is rw {
-        Proxy.new(
-            FETCH => sub ($) { $!font },
-            STORE => sub ($, Str $!font) {
-                .font-style = $!font with $!font-object;
-                self!call('font', $!font);
-            }
-        );
     }
 
     method context(&do-markup) {
@@ -105,7 +132,7 @@ class HTML::Canvas {
         @!calls.map({
             my $name = .key;
             my @args = .value.map: { to-json($_) };
-            my \fmt = $name eq 'font'
+            my \fmt = $name eq 'font'|'fillStyle'
                 ?? '%s.%s = %s;'
                 !! '%s.%s(%s);';
             sprintf fmt, $context, $name, @args.join(", ");

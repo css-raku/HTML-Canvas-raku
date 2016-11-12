@@ -1,6 +1,7 @@
 use v6;
 class HTML::Canvas::To::PDF {
 
+    use Color;
     use HTML::Canvas :API;
     use PDF::Content;
     has PDF::Content $.gfx handles <content content-dump> is required;
@@ -37,13 +38,13 @@ class HTML::Canvas::To::PDF {
     }
 
     # ref: http://stackoverflow.com/questions/1960786/how-do-you-draw-filled-and-unfilled-circles-with-pdf-primitives
-    sub draw-circle(\g, Numeric \r) {
+    sub draw-circle(\g, Numeric \r, \x, \y) {
         my Numeric \magic = r * 0.551784;
-        g.MoveTo(-r, 0);
-        g.CurveTo(-r, magic, -magic, r,  0, r);
-        g.CurveTo(magic, r,  r, magic,  r, 0);
-        g.CurveTo(r, -magic,  magic, -r,  0, -r);
-        g.CurveTo(-magic, -r,  -r, -magic,  -r, 0);
+        g.MoveTo(x - r, y);
+        g.CurveTo(x - r, y + magic,  x - magic, y + r,  x, y + r);
+        g.CurveTo(x + magic, y + r,  x + r, y + magic,  x + r, y);
+        g.CurveTo(x + r, y - magic,  x + magic, y - r,  x, y - r);
+        g.CurveTo(x - magic, y - r,  x - r, y - magic,  x - r, y);
     }
 
     method !transform( |c ) {
@@ -78,20 +79,26 @@ class HTML::Canvas::To::PDF {
         self!transform( |matrix => @diff )
         unless PDF::Content::Util::TransformMatrix::is-identity(@diff);
     }
-
+    method fillStyle(Color $_) {
+        $!gfx.FillColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
+        $!gfx.FillAlpha = .a / 255;
+    }
+    method moveTo(Numeric \x, Numeric \y) { $!gfx.MoveTo(x, y) }
+    method lineTo(Numeric \x, Numeric \y) {
+        $!gfx.LineTo(x, y);
+        $!gfx.Stroke;
+    }
     method arc(Numeric \x, Numeric \y, Numeric \r, Numeric \startAngle, Numeric \endAngle, Bool $anti-clockwise?) {
         # stub. ignores start and end angle; draws a circle
         warn "todo: arc start/end angles"
             unless endAngle - startAngle =~= 2 * pi;
-        $!gfx.ConcatMatrix:  PDF::Content::Util::TransformMatrix::translate(|self!coords(x, y) );
-        draw-circle($!gfx, r);
+        draw-circle($!gfx, r, |self!coords(x, y));
     }
     method beginPath() {
-        $!gfx.Save;
     }
+    method fill() { $!gfx.Fill }
     method stroke() {
         $!gfx.Stroke;
-        $!gfx.Restore;
     }
     method fillText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
         self.font(:$canvas);
@@ -133,6 +140,10 @@ class HTML::Canvas::To::PDF {
     method strokeRect(\x, \y, \w, \h) {
         $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
         $!gfx.CloseStroke;
+    }
+    method fillRect(\x, \y, \w, \h) {
+        $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
+        $!gfx.Fill;
     }
 
 }

@@ -16,6 +16,7 @@ my $callback = $renderer.callback;
 my HTML::Canvas $canvas .= new(:$callback, :$font-object);
 
 $canvas.context: -> \ctx {
+    ctx.save;
     is-deeply [ctx.transformMatrix], [1, 0, 0, 1, 0, 0], 'canvas transform - initial';
     is-deeply [$gfx.CTM.list], [1, 0, 0, 1, 0, 792], 'pdf transform - initial';
     ctx.strokeRect(1, 1, 610, 790);
@@ -33,16 +34,39 @@ $canvas.context: -> \ctx {
     dies-ok  { ctx.strokeRect(10,10, 20, "blah"); }, "incorrect API call - dies";
     dies-ok  { ctx.strokeRect(10,10, 20); }, "incorrect API call - dies";
     dies-ok  { ctx.foo(42) }, "unknown call - dies";
-    lives-ok { ctx.font = "24px Arial"; }, 'set font - lives';
-    is-deeply $renderer.content-dump, $("q", "0 0 612 792 re", "h", "W", "n", "1 0 0 1 0 792 cm", "1 -791 610 790 re", "s", "20 -40 10 20 re", "s", "2 0 0 2 0 0 cm", "1 0 0 1 -5 15 cm", "20 -40 10 20 re", "s", "/F1 18 Tf"), 'content to-date';
 
+    is-deeply $renderer.content-dump, $("q", "0 0 612 792 re", "h", "W", "n", "1 0 0 1 0 792 cm", "q", "1 -791 610 790 re", "s", "20 -40 10 20 re", "s", "2 0 0 2 0 0 cm", "1 0 0 1 -5 15 cm", "20 -40 10 20 re", "s"), 'content to-date';
+
+    lives-ok { ctx.font = "24px Arial"; }, 'set font - lives';
     ctx.fillText("Hello World",50, 40);
     ctx.strokeRect(40,20, 10,25);
     ctx.rotate(.2);
     ctx.fillText("Hello World",50, 40);
     ctx.strokeRect(40,20, 4,25);
     ctx.strokeRect(45,20, 4,25);
+    is ctx.font,  "24px Arial", 'font';
+    ctx.restore;
+
+    is ctx.font,  "10pt times-roman", 'restored font';
+    is-deeply [ctx.transformMatrix], [1, 0, 0, 1, 0, 0], 'restored transformMatrix';
+    is-deeply [$gfx.CTM.list], [1, 0, 0, 1, 0, 792], 'restored $gfx.CTM';
+    
+    ctx.save;
+    ctx.translate(200,0);
+    ctx.moveTo(20, 20);
+    ctx.lineTo(100, 20);
+    ctx.fillStyle = "#999";
+    ctx.beginPath();
+    ctx.arc(100, 100, 75, 0, 2 * pi);
+    ctx.fill();
+    ctx.fillStyle = "orange";
+    ctx.fillRect(20, 20, 50, 50);
+    ctx.font = "24px Helvetica";
+    ctx.fillStyle = "#000";
+    ctx.fillText("Canvas", 50, 130);
+    ctx.restore;
 }
+
 
 lives-ok {$pdf.save-as("t/render-pdf-basic.pdf")}, "pdf.save-as";
 
