@@ -13,7 +13,7 @@ class HTML::Canvas {
             FETCH => sub ($) { $!font },
             STORE => sub ($, Str $!font) {
                 $!css.font = $!font;
-                .setup with $!font-object;
+                .css = $!css with $!font-object;
                 self!call('font', $!font);
             }
         );
@@ -25,7 +25,7 @@ class HTML::Canvas {
         Proxy.new(
             FETCH => sub ($) { $!font-object },
             STORE => sub ($, $!font-object) {
-                .font-style = $!font with $!font-object;
+                .css = $!css with $!font-object;
             }
         )
     }
@@ -40,8 +40,12 @@ class HTML::Canvas {
         );
     }
 
-    has CSS::Declarations $!css = CSS::Declarations.new( :color($!fillStyle), :$!font,  );
+    has CSS::Declarations $.css = CSS::Declarations.new( :color($!fillStyle), :$!font,  );
     has @!gsave;
+
+    method TWEAK {
+        .css = $!css with $!font-object;
+    }
 
     method !transform(|c) {
         my @matrix = PDF::Content::Util::TransformMatrix::transform-matrix(|c);
