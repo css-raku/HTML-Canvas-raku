@@ -42,7 +42,9 @@ $canvas.context: -> \ctx {
     ctx.strokeRect(40,20, 10,25);
     ctx.rotate(.2);
     ctx.fillText("Hello World",50, 40);
+    ctx.strokeStyle = 'red';
     ctx.strokeRect(40,20, 4,25);
+    ctx.strokeStyle = 'blue';
     ctx.strokeRect(45,20, 4,25);
     is ctx.font,  "24px Arial", 'font';
     ctx.restore;
@@ -53,9 +55,8 @@ $canvas.context: -> \ctx {
     
     ctx.save;
     ctx.translate(200,0);
-    ctx.moveTo(20, 20);
-    ctx.lineTo(100, 20);
     ctx.fillStyle = "#999";
+
     ctx.beginPath();
     ctx.arc(100, 100, 75, 0, 2 * pi);
     ctx.fill();

@@ -20,7 +20,6 @@ class HTML::Canvas {
     }
 
     has $.font-object is rw;
-    has Str $.fillStyle is rw = 'black';
     method font-object is rw {
         Proxy.new(
             FETCH => sub ($) { $!font-object },
@@ -29,18 +28,30 @@ class HTML::Canvas {
             }
         )
     }
+    has Str $.fillStyle is rw = 'black';
     method fillStyle is rw {
         Proxy.new(
             FETCH => sub ($) { $!fillStyle },
             STORE => sub ($, Str $!fillStyle) {
-                $!css.color = $!fillStyle;
+                $!css.background-color = $!fillStyle;
                 self.calls.push: (:fillStyle[ $!fillStyle, ]);
-                 .('fillStyle', $!css.color, :canvas(self)) with self.callback;
+                .('fillStyle', $!css.background-color, :canvas(self)) with self.callback;
+            }
+        );
+    }
+    has Str $.strokeStyle is rw = 'black';
+    method strokeStyle is rw {
+        Proxy.new(
+            FETCH => sub ($) { $!strokeStyle },
+            STORE => sub ($, Str $!strokeStyle) {
+                $!css.color = $!strokeStyle;
+                self.calls.push: (:strokeStyle[ $!strokeStyle, ]);
+                .('strokeStyle', $!css.color, :canvas(self)) with self.callback;
             }
         );
     }
 
-    has CSS::Declarations $.css = CSS::Declarations.new( :color($!fillStyle), :$!font,  );
+    has CSS::Declarations $.css = CSS::Declarations.new( :background-color($!fillStyle), :color($!strokeStyle), :$!font,  );
     has @!gsave;
 
     method TWEAK {
@@ -63,6 +74,7 @@ class HTML::Canvas {
                      @!gsave.push: {
                          :$!font,
                          :$!fillStyle,
+                         :$!strokeStyle,
                          :$!css,
                          :@ctm
                      };
@@ -76,6 +88,7 @@ class HTML::Canvas {
 
                             $!font = %state<font>;
                             $!fillStyle = %state<fillStyle>;
+                            $!strokeStyle = %state<strokeStyle>;
                             $!css = %state<css>;
                             .css = $!css with $!font-object;
                         }
@@ -136,7 +149,7 @@ class HTML::Canvas {
         @!calls.map({
             my $name = .key;
             my @args = .value.map: { to-json($_) };
-            my \fmt = $name eq 'font'|'fillStyle'
+            my \fmt = $name eq 'font'|'fillStyle'|'strokeStyle'
                 ?? '%s.%s = %s;'
                 !! '%s.%s(%s);';
             sprintf fmt, $context, $name, @args.join(", ");

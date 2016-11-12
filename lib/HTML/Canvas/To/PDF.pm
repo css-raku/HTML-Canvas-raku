@@ -83,10 +83,13 @@ class HTML::Canvas::To::PDF {
         $!gfx.FillColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
         $!gfx.FillAlpha = .a / 255;
     }
+    method strokeStyle(Color $_) {
+        $!gfx.StrokeColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
+        $!gfx.StrokeAlpha = .a / 255;
+    }
     method moveTo(Numeric \x, Numeric \y) { $!gfx.MoveTo(x, y) }
     method lineTo(Numeric \x, Numeric \y) {
         $!gfx.LineTo(x, y);
-        $!gfx.Stroke;
     }
     method arc(Numeric \x, Numeric \y, Numeric \r, Numeric \startAngle, Numeric \endAngle, Bool $anti-clockwise?) {
         # stub. ignores start and end angle; draws a circle
