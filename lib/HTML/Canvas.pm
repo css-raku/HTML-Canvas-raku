@@ -6,6 +6,7 @@ class HTML::Canvas {
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.calls;
     has Routine @.callback;
+    my subset LValue of Str where 'font'|'strokeStyle'|'fillStyle';
 
     has Str $.font = '10pt times-roman';
     method font is rw {
@@ -144,18 +145,20 @@ class HTML::Canvas {
         self._finish;
     }
 
+    #| generate Javascript
     method js(Str :$context = 'ctx', :$sep = "\n") {
         use JSON::Fast;
         @!calls.map({
             my $name = .key;
             my @args = .value.map: { to-json($_) };
-            my \fmt = $name eq 'font'|'fillStyle'|'strokeStyle'
+            my \fmt = $name ~~ LValue
                 ?? '%s.%s = %s;'
                 !! '%s.%s(%s);';
             sprintf fmt, $context, $name, @args.join(", ");
         }).join: $sep;
     }
 
+    #| lightweight html generation; canvas + javascript
     method html( Numeric :$width!, Numeric :$height!, Str :$style, Str :$id = ~ self.WHERE) {
         use HTML::Entity;
         my $Style = do with $style { ' style="%s"'.sprintf(encode-entities($style)) } else { '' };
@@ -171,12 +174,26 @@ class HTML::Canvas {
         END-HTML
     }
 
+    #| rebuild the canvas, using the given renderer
     method render($renderer, :@calls = self.calls) {
-        my $callback = [$renderer.callback, ];
-        my $obj = self.new: :$callback;
+        my @callback = [ $renderer.callback, ];
+        my %opt = :font-object(.clone)
+            with self.font-object;
+        my $obj = self.new: :@callback, |%opt;
         $obj.context: {
-            $obj."{.key}"(|.value)
-                for @calls;
+            for @calls {
+                with .key -> \call {
+                    my \args = .value;
+                    if call ~~ LValue {
+                        +args
+                            ?? ($obj."{call}"() = args[0])
+                            !! $obj."{call}"();
+                    }
+                    else {
+                        $obj."{call}"(|args);
+                    }
+                }
+            }
         }
     }
 
