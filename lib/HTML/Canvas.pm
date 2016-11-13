@@ -6,8 +6,18 @@ class HTML::Canvas {
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.calls;
     has Routine @.callback;
-    my subset LValue of Str where 'font'|'strokeStyle'|'fillStyle';
+    my subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'strokeStyle';
 
+    has Numeric @.dash-list;
+    has Numeric $.lineDashOffset = 0.0;
+    method lineDashOffset is rw {
+        Proxy.new(
+            FETCH => sub ($) { $!lineDashOffset },
+            STORE => sub ($, $!lineDashOffset) {
+                self!call('lineDashOffset', $!lineDashOffset);
+            }
+        );
+    }
     has Str $.font = '10pt times-roman';
     method font is rw {
         Proxy.new(
@@ -64,7 +74,7 @@ class HTML::Canvas {
         @!transformMatrix = PDF::Content::Util::TransformMatrix::multiply(@!transformMatrix, @matrix);
     }
 
-    our %API is export(:API) = BEGIN %(
+    our %API = BEGIN %(
         :_start(method {} ),
         :_finish(method {
                         die "'save' unmatched by 'restore' at end of canvas context"
@@ -128,11 +138,16 @@ class HTML::Canvas {
                                 fail "unable to measure text - not font object";
                             }
                         } ),
+        :getLineDash(method () { @!dash-list } ),
         :moveTo(method (Numeric \x, Numeric \y) {} ),
         :lineTo(method (Numeric \x, Numeric \y) {} ),
         :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
     );
 
+    # todo: slurping/itemization of @!dash-list?
+    method setLineDash(@!dash-list) {
+        self!call('setLineDash', @!dash-list.item);
+    }
     method !call(Str $name, *@args) {
         self.calls.push: ($name => @args)
             unless $name eq '_start' | '_finish';

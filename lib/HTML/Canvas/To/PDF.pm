@@ -2,7 +2,7 @@ use v6;
 class HTML::Canvas::To::PDF {
 
     use Color;
-    use HTML::Canvas :API;
+    use HTML::Canvas;
     use PDF::Content;
     has PDF::Content $.gfx handles <content content-dump> is required;
     use PDF::Style::Font;
@@ -28,9 +28,7 @@ class HTML::Canvas::To::PDF {
                 self."{$op}"(|c);
             }
             else {
-                %API{$op}:exists
-                    ?? warn "unimplemented Canvas 2d API call: $op"
-                    !! die "unknown Canvas 2d API call: $op";    
+                warn "unimplemented Canvas 2d API call: $op"
             }
         }
     }
@@ -91,6 +89,10 @@ class HTML::Canvas::To::PDF {
         $!gfx.StrokeColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
         $!gfx.StrokeAlpha = .a / 255;
     }
+    method setLineDash(List $pattern, :$canvas) {
+        $!gfx.SetDashPattern($pattern, $canvas.lineDashOffset)
+    }
+    method getLineDash(:$canvas) { $canvas.getLineDash },
     method moveTo(Numeric \x, Numeric \y) { $!gfx.MoveTo(x, y) }
     method lineTo(Numeric \x, Numeric \y) {
         $!gfx.LineTo(x, y);

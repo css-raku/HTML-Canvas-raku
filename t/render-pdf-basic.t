@@ -35,6 +35,7 @@ $canvas.context: -> \ctx {
     is-deeply $feed.content-dump, $("q", "0 0 612 792 re", "h", "W", "n", "1 0 0 1 0 792 cm", "q", "1 -791 610 790 re", "s", "20 -40 10 20 re", "s", "2 0 0 2 0 0 cm", "1 0 0 1 -5 15 cm", "20 -40 10 20 re", "s"), 'content to-date';
 
     lives-ok { ctx.font = "24px Arial"; }, 'set font - lives';
+    is ctx.font,  "24px Arial", 'font';
     ctx.fillText("Hello World",50, 40);
     ctx.strokeRect(40,20, 10,25);
     ctx.rotate(.2);
@@ -42,8 +43,8 @@ $canvas.context: -> \ctx {
     ctx.strokeStyle = 'red';
     ctx.strokeRect(40,20, 4,25);
     ctx.strokeStyle = 'blue';
+    ctx.setLineDash([.8,1]);
     ctx.strokeRect(45,20, 4,25);
-    is ctx.font,  "24px Arial", 'font';
     ctx.restore;
 
     is ctx.font,  "10pt times-roman", 'restored font';
