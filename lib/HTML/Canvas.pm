@@ -129,6 +129,7 @@ class HTML::Canvas {
         :fill(method () {}),
         :stroke(method () {}),
         :fillText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) { }),
+        :strokeText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) { }),
         :measureText(method (Str $text, :$obj) {
                             with $!font-object {
                                 my Numeric $width = .face.stringwidth($text, .em);
@@ -220,8 +221,16 @@ class HTML::Canvas {
                     &api(self, |@a);
                     self!call(name, |@a);
                 };
-                self.^add_method(name, @meth[0]);
             }
+            elsif name ~~ /(set)(.)(.*)/ {
+                # e.g. self.setFont($v) :== self.font = $v;
+                my Str $lval = $1.lc ~ $2;
+                if $lval ~~ LValue {
+                    self.can($lval);
+                    @meth.push: method ($v) { self."$lval"() = $v; }
+                }
+            }
+            self.^add_method(name, @meth[0]) if @meth;
         }
         @meth;
     }

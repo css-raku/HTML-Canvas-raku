@@ -3,6 +3,7 @@ class HTML::Canvas::To::PDF {
 
     use Color;
     use HTML::Canvas;
+    use PDF::Content::Ops :TextMode;
     use PDF::Content;
     has PDF::Content $.gfx handles <content content-dump> is required;
     use PDF::Style::Font;
@@ -109,21 +110,29 @@ class HTML::Canvas::To::PDF {
     method stroke() {
         $!gfx.Stroke;
     }
-    method fillText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
-        self.font(:$canvas);
-        my $scale;
+    method !text(Str $text, Numeric $x, Numeric $y, :$canvas!, Numeric :$maxWidth) {
+        my Numeric $scale;
         if $maxWidth {
             my \width = $canvas.measureText($text).width;
             $scale = 100 * $maxWidth / width
-            if width > $maxWidth;
+                if width > $maxWidth;
         }
 
-        $!gfx.Save;
         $!gfx.BeginText;
         $!gfx.HorizScaling = $_ with $scale;
         $!gfx.text-position = self!coords($x, $y);
         $!gfx.print($text);
         $!gfx.EndText;
+    }
+    method fillText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
+        $!gfx.Save;
+        self!text($text, $x, $y, :$maxWidth, :$canvas);
+        $!gfx.Restore
+    }
+    method strokeText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
+        $!gfx.Save;
+        $!gfx.TextRender = TextMode::OutlineText;
+        self!text($text, $x, $y, :$maxWidth, :$canvas);
         $!gfx.Restore
     }
     method measureText(Str $text, :$canvas!) {
