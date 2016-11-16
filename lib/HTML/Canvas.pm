@@ -253,16 +253,6 @@ class HTML::Canvas {
                     self!call(name, |@a);
                 };
             }
-            elsif name ~~ /(set)(.)(.*)/ {
-                # e.g. self.setFont($v) :== self.font = $v;
-                my Str $lval = $1.lc ~ $2;
-                warn :$lval.perl;
-                if $lval ~~ LValue {
-                    self.can($lval)
-                        or die "nyi: $lval";
-                    @meth.push: method ($v) { self."$lval"() = $v; }
-                }
-            }
             self.^add_method(name, @meth[0]) if @meth;
         }
         @meth;

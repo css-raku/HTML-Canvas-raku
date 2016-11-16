@@ -27,7 +27,7 @@ sub test-page(&markup) {
         }
     }
     todo "clean render of page $page-no"
-        unless $page-no == 3;
+        unless $page-no == 2|3|4;
 
     ok $clean, "completion of page $page-no";
     my $width = $feed.width;
@@ -88,15 +88,15 @@ test-page(-> \ctx {
       ctx.fillText("Testing CSS color names", 20, $y + textHeight);
       $y += textHeight + pad;
 
-      ctx.setFillStyle('red');
+      ctx.fillStyle = 'red';
       ctx.fillText("Red", 20, $y + textHeight);
       $y += textHeight + pad;
 
-      ctx.setFillStyle('green');
+      ctx.fillStyle = 'green';
       ctx.fillText("Green", 20, $y + textHeight);
       $y += textHeight + pad;
 
-      ctx.setStrokeStyle('blue');
+      ctx.strokeStyle = 'blue';
       ctx.strokeText("Blue", 20, $y + textHeight);
       $y += textHeight + pad;
       ctx.restore();
@@ -108,48 +108,48 @@ test-page(-> \ctx {
       ctx.fillText("Testing textBaseline", 20, $y + textHeight);
       $y += textHeight + pad + 30;
 
-      ctx.setStrokeStyle('#dddddd');
+      ctx.strokeStyle = '#dddddd';
       ctx.font = "20pt times";
 
       ctx.moveTo(20,$y);
       ctx.lineTo(150, $y);
       ctx.stroke();
-      ctx.setTextBaseline('alphabetic');
+      ctx.textBaseline = 'alphabetic';
       ctx.fillText("Alphabetic Q", 20, $y);
       $y += 40 + pad;
 
-        ctx.moveTo(20,$y);
+      ctx.moveTo(20,$y);
       ctx.lineTo(150, $y);
       ctx.stroke();
-      ctx.setTextBaseline('ideographic');
+      ctx.textBaseline = 'ideographic';
       ctx.fillText("Ideographic Q", 20, $y);
       $y += 40 + pad;
 
       ctx.moveTo(20,$y);
       ctx.lineTo(150, $y);
       ctx.stroke();
-      ctx.setTextBaseline('top');
+      ctx.textBaseline = 'top';
       ctx.fillText("Top Q", 20, $y);
       $y += 40 + pad;
 
       ctx.moveTo(20,$y);
       ctx.lineTo(150, $y);
       ctx.stroke();
-      ctx.setTextBaseline('bottom');
+      ctx.textBaseline = 'bottom';
       ctx.fillText("Bottom Q", 20, $y);
       $y += 40 + pad;
 
       ctx.moveTo(20,$y);
       ctx.lineTo(150, $y);
       ctx.stroke();
-      ctx.setTextBaseline('middle');
+      ctx.textBaseline = 'middle';
       ctx.fillText("Middle Q", 20, $y);
       $y += 40 + pad;
 
       ctx.moveTo(20,$y);
       ctx.lineTo(150, $y);
       ctx.stroke();
-      ctx.setTextBaseline('hanging');
+      ctx.textBaseline = 'hanging';
       ctx.fillText("Hanging Q", 20, $y);
       $y += 40 + pad;
 
@@ -168,7 +168,7 @@ test-page( -> \ctx {
       ctx.fillRect(20, $y, 20, h);
       $y += h + pad;
 
-      ctx.setFillStyle('#f5f5f5');
+      ctx.fillStyle = '#f5f5f5';
       ctx.fillRect(20, $y, 20, h);
       $y += h + pad;
 
@@ -184,42 +184,51 @@ test-page( -> \ctx {
       ctx.save();
       ctx.fillText("Testing lineCap", 20, $y + textHeight);
       $y += textHeight + pad;
-      ctx.setLineWidth(5);
-      ctx.setLineCap('butt');
+      ctx.lineWidth = 5;
+
+      ctx.beginPath();
+      ctx.lineCap = 'butt';
       ctx.moveTo(20, $y);
       ctx.lineTo(200, $y);
       ctx.stroke();
       $y += pad;
-      ctx.setLineCap('round');
+
+      ctx.beginPath();
+      ctx.lineCap = 'round';
       ctx.moveTo(20, $y);
       ctx.lineTo(200, $y);
       ctx.stroke();
       $y += pad;
-      ctx.setLineCap('square');
+
+      ctx.beginPath();
+      ctx.lineCap = 'square';
       ctx.moveTo(20, $y);
       ctx.lineTo(200, $y);
       ctx.stroke();
       $y += pad;
       ctx.restore();
 
-       # line joins
+      # line joins
       ctx.save();
       ctx.fillText("Testing lineJoin", 20, $y + textHeight);
       $y += textHeight + pad;
-      ctx.setLineWidth(10);
-      ctx.setLineJoin('miter');
+      ctx.beginPath();
+      ctx.lineWidth = 10;
+      ctx.lineJoin = 'miter';
       ctx.moveTo(20, $y);
       ctx.lineTo(200, $y);
       ctx.lineTo(250, $y + 50);
       ctx.stroke();
       $y += pad + 10;
-      ctx.setLineJoin('bevel');
+      ctx.beginPath();
+      ctx.lineJoin = 'bevel';
       ctx.moveTo(20, $y);
       ctx.lineTo(200, $y);
       ctx.lineTo(250, $y + 50);
       ctx.stroke();
       $y += pad + 10;
-      ctx.setLineJoin('round');
+      ctx.beginPath();
+      ctx.lineJoin = 'round';
       ctx.moveTo(20, $y);
       ctx.lineTo(200, $y);
       ctx.lineTo(250, $y + 50);
@@ -232,6 +241,7 @@ test-page( -> \ctx {
       $y += textHeight + pad;
 
       # diamond
+      ctx.beginPath();
       ctx.moveTo(30, $y);
       ctx.lineTo(50, $y + 20);
       ctx.lineTo(30, $y + 40);
@@ -241,6 +251,7 @@ test-page( -> \ctx {
       $y += 50;
 
       # diamond
+      ctx.beginPath();
       ctx.moveTo(30, $y);
       ctx.lineTo(50, $y + 20);
       ctx.lineTo(30, $y + 40);
@@ -260,31 +271,38 @@ test-page( -> \ctx {
       ctx.fillText("Testing arc, stroke, and fill", 20, $y + textHeight);
       $y += textHeight + pad + 20;
 
+      ctx.beginPath();
       ctx.arc(50, $y, 20, -10, 170, False);
       ctx.stroke();
       $y +=  pad + 40;
 
+      ctx.beginPath();
       ctx.arc(50, $y, 20, -10, 170, True);
       ctx.stroke();
       $y +=  pad + 40;
 
+      ctx.beginPath();
       ctx.arc(50, $y, 20, 0, pi, False);
       ctx.stroke();
       $y +=  pad + 40;
 
+      ctx.beginPath();
       ctx.arc(50, $y, 20, 0, pi, True);
       ctx.stroke();
       $y +=  pad + 40;
 
+      ctx.beginPath();
       ctx.arc(50, $y, 20, 0, 2*pi, False);
       ctx.stroke();
       $y +=  pad + 40;
 
+      ctx.beginPath();
       ctx.arc(50, $y, 20, 0, 2*pi, False);
       ctx.fill();
       $y +=  pad + 40;
 
       ctx.arc(50, $y, 20, 0, pi, False);
+      ctx.beginPath();
       ctx.fill();
       $y +=  pad + 40;
 });
@@ -293,45 +311,46 @@ test-page( -> \ctx {
       $y=0;
       # fill and stroke styles
       ctx.fillText("Testing fillStyle and strokeStyle", 20, $y + textHeight);
+      ctx.font = '16pt times-roman';
       $y += textHeight + pad;
 
       # test fill style
-      ctx.setFillStyle('#ff0000');
+      ctx.fillStyle = '#ff0000';
       ctx.fillRect(20, $y, 20, h);
       $y += h + pad;
 
-      ctx.setFillStyle('#00ff00');
+      ctx.fillStyle = '#00ff00';
       ctx.fillRect(20, $y, 20, h);
       $y += h + pad;
 
-      ctx.setFillStyle('#0000ff');
+      ctx.fillStyle = '#0000ff';
       ctx.fillRect(20, $y, 20, h);
       $y += h + pad;
 
        # test stroke style
-      ctx.setStrokeStyle('#ff0000');
+      ctx.strokeStyle = '#ff0000';
       ctx.strokeRect(20, $y, 20, h);
       $y += h + pad;
 
-      ctx.setStrokeStyle('#00ff00');
+      ctx.strokeStyle = '#00ff00';
       ctx.strokeRect(20, $y, 20, h);
       $y += h + pad;
 
-      ctx.setStrokeStyle('#0000ff');
+      ctx.strokeStyle = '#0000ff';
       ctx.strokeRect(20, $y, 20, h);
       $y += h + pad;
 
-      ctx.setStrokeStyle('#000000');
-      ctx.setFillStyle('#000000');
+      ctx.strokeStyle = '#000000';
+      ctx.fillStyle = '#000000';
 
 
       # test save and restore (should be red and large)
       ctx.save();
-      ctx.setFillStyle('#ff0000');
-      ctx.setStrokeStyle('#ff0000');
+      ctx.fillStyle = '#ff0000';
+      ctx.strokeStyle = '#ff0000';
       ctx.save();
-      ctx.setFillStyle('#0000ff');
-      ctx.setStrokeStyle('#0000ff');
+      ctx.fillStyle = '#0000ff';
+      ctx.strokeStyle = '#0000ff';
       ctx.font = "10pt courier";
       ctx.restore();
 
