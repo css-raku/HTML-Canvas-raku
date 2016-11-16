@@ -22,7 +22,9 @@ sub test-page(&markup) {
                 warn "stopped on page $page-no: {.message}";
                 $clean = False;
                 # flush
-                $gfx.Restore while $gfx.gsave;
+                $canvas.beginPath if $canvas.subpath;
+                $canvas.restore while $canvas.gsave;
+                $canvas._finish;
             }
         }
     }

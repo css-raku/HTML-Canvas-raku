@@ -5,6 +5,7 @@ class HTML::Canvas {
     use CSS::Declarations;
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.subpath;
+    has Str @!subpath-new;
     has Pair @.calls;
     has Routine @.callback;
     my subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle';
@@ -95,7 +96,7 @@ class HTML::Canvas {
     }
 
     has CSS::Declarations $.css = CSS::Declarations.new( :background-color($!fillStyle), :color($!strokeStyle), :$!font,  );
-    has @!gsave;
+    has @.gsave;
 
     method TWEAK {
         .css = $!css with $!font-object;
@@ -109,9 +110,12 @@ class HTML::Canvas {
     our %API = BEGIN %(
         :_start(method {} ),
         :_finish(method {
+                        warn "{@!subpath-new.join: ', '} not followed by fill() or stroke() at end of canvas context"
+                            if @!subpath-new;
+                        @!subpath = [];
+
                         die "'save' unmatched by 'restore' at end of canvas context"
                             if @!gsave;
-                        @!subpath = [];
                     } ),
         :save(method {
                      my @ctm = @!transformMatrix;
@@ -158,7 +162,7 @@ class HTML::Canvas {
         :rect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :strokeRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :fillRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
-        :beginPath(method () { @!subpath = [];  }),
+        :beginPath(method () { @!subpath = @!subpath-new = []; }),
         :fill(method () { self!draw-subpath() }),
         :stroke(method () { self!draw-subpath() }),
         :fillText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) { }),
@@ -189,13 +193,18 @@ class HTML::Canvas {
 
         if $name ~~ PathOps {
             #| draw later (via $.fill or $.stroke)
+            @!subpath-new.push: $name;
             @!subpath.push: ($name => @args);
+        }
+        elsif $name eq 'fill'|'stroke' && ! @!subpath {
+            warn "no current path to $name";
         }
         else {
             .($name, |@args, :canvas(self)) for @!callback;
         }
     }
     method !draw-subpath {
+        @!subpath-new = [];
         for @!subpath -> \s {
             .(s.key, |s.value, :canvas(self)) for @!callback;
         }
@@ -221,10 +230,10 @@ class HTML::Canvas {
     }
 
     #| lightweight html generation; canvas + javascript
-    method html( Numeric :$width!, Numeric :$height!, Str :$style, Str :$id = ~ self.WHERE) {
+    method html( Numeric :$width!, Numeric :$height!, Str :$style, Str :$id = ~ self.WHERE, :$sep = "\n    ", |c) {
         use HTML::Entity;
         my $Style = do with $style { ' style="%s"'.sprintf(encode-entities($_)) } else { '' };
-        my $Js = self.js(:context<ctx>, :sep("\n    "));
+        my $Js = self.js(:context<ctx>, :$sep, |c);
         my $Id = encode-entities($id);
 
         qq:to"END-HTML";
