@@ -4,9 +4,11 @@ class HTML::Canvas {
     use PDF::Content::Util::TransformMatrix;
     use CSS::Declarations;
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
+    has Pair @.subpath;
     has Pair @.calls;
     has Routine @.callback;
     my subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle';
+    my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath';
 
     has Numeric $.lineWidth = 1.0;
     method lineWidth is rw {
@@ -75,7 +77,7 @@ class HTML::Canvas {
             FETCH => sub ($) { $!fillStyle },
             STORE => sub ($, Str $!fillStyle) {
                 $!css.background-color = $!fillStyle;
-                self.calls.push: (:fillStyle[ $!fillStyle, ]);
+                @!calls.push: (:fillStyle[ $!fillStyle, ]);
                 .('fillStyle', $!css.background-color, :canvas(self)) for @!callback;
             }
         );
@@ -86,7 +88,7 @@ class HTML::Canvas {
             FETCH => sub ($) { $!strokeStyle },
             STORE => sub ($, Str $!strokeStyle) {
                 $!css.color = $!strokeStyle;
-                self.calls.push: (:strokeStyle[ $!strokeStyle, ]);
+                @!calls.push: (:strokeStyle[ $!strokeStyle, ]);
                 .('strokeStyle', $!css.color, :canvas(self)) for @!callback;
             }
         );
@@ -109,6 +111,7 @@ class HTML::Canvas {
         :_finish(method {
                         die "'save' unmatched by 'restore' at end of canvas context"
                             if @!gsave;
+                        @!subpath = [];
                     } ),
         :save(method {
                      my @ctm = @!transformMatrix;
@@ -155,9 +158,9 @@ class HTML::Canvas {
         :rect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :strokeRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :fillRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
-        :beginPath(method () {}),
-        :fill(method () {}),
-        :stroke(method () {}),
+        :beginPath(method () { @!subpath = [];  }),
+        :fill(method () { self!draw-subpath() }),
+        :stroke(method () { self!draw-subpath() }),
         :fillText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) { }),
         :strokeText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) { }),
         :measureText(method (Str $text, :$obj) {
@@ -181,9 +184,21 @@ class HTML::Canvas {
         self!call('setLineDash', @!dash-list.item);
     }
     method !call(Str $name, *@args) {
-        self.calls.push: ($name => @args)
+        @!calls.push: ($name => @args)
             unless $name eq '_start' | '_finish';
-        .($name, |@args, :canvas(self)) for @!callback;
+
+        if $name ~~ PathOps {
+            #| draw later (via $.fill or $.stroke)
+            @!subpath.push: ($name => @args);
+        }
+        else {
+            .($name, |@args, :canvas(self)) for @!callback;
+        }
+    }
+    method !draw-subpath {
+        for @!subpath -> \s {
+            .(s.key, |s.value, :canvas(self)) for @!callback;
+        }
     }
 
     method context(&do-markup) {

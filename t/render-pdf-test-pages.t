@@ -301,8 +301,8 @@ test-page( -> \ctx {
       ctx.fill();
       $y +=  pad + 40;
 
-      ctx.arc(50, $y, 20, 0, pi, False);
       ctx.beginPath();
+      ctx.arc(50, $y, 20, 0, pi, False);
       ctx.fill();
       $y +=  pad + 40;
 });

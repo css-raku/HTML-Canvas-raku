@@ -93,7 +93,7 @@ class HTML::Canvas::To::PDF {
     method lineWidth(Numeric $width, :$canvas) {
         $!gfx.LineWidth = $width;
     }
-    method lineDash(List $pattern, :$canvas) {
+    method setLineDash(List $pattern, :$canvas) {
         $!gfx.SetDashPattern($pattern, $canvas.lineDashOffset)
     }
     method lineCap(Str $cap-name, :$canvas) {
