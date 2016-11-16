@@ -6,7 +6,17 @@ class HTML::Canvas {
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.calls;
     has Routine @.callback;
-    my subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'strokeStyle';
+    my subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle';
+
+    has Numeric $.lineWidth = 1.0;
+    method lineWidth is rw {
+        Proxy.new(
+            FETCH => sub ($) { $!lineWidth },
+            STORE => sub ($, $!lineWidth) {
+                self!call('lineWidth', $!lineWidth);
+            }
+        );
+    }
 
     has Numeric @.dash-list;
     has Numeric $.lineDashOffset = 0.0;
@@ -15,6 +25,26 @@ class HTML::Canvas {
             FETCH => sub ($) { $!lineDashOffset },
             STORE => sub ($, $!lineDashOffset) {
                 self!call('lineDashOffset', $!lineDashOffset);
+            }
+        );
+    }
+    my subset LineCap of Str where 'butt'|'round'|'square';
+    has LineCap $.lineCap = 'butt';
+    method lineCap is rw {
+        Proxy.new(
+            FETCH => sub ($) { $!lineCap },
+            STORE => sub ($, $!lineCap) {
+                self!call('lineCap', $!lineCap);
+            }
+        );
+    }
+    my subset LineJoin of Str where 'bevel'|'round'|'miter';
+    has LineJoin $.lineJoin = 'bevel';
+    method lineJoin is rw {
+        Proxy.new(
+            FETCH => sub ($) { $!lineJoin },
+            STORE => sub ($, $!lineJoin) {
+                self!call('lineJoin', $!lineJoin);
             }
         );
     }
@@ -143,6 +173,7 @@ class HTML::Canvas {
         :moveTo(method (Numeric \x, Numeric \y) {} ),
         :lineTo(method (Numeric \x, Numeric \y) {} ),
         :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
+        :closePath(method () {}),
     );
 
     # todo: slurping/itemization of @!dash-list?
@@ -225,8 +256,10 @@ class HTML::Canvas {
             elsif name ~~ /(set)(.)(.*)/ {
                 # e.g. self.setFont($v) :== self.font = $v;
                 my Str $lval = $1.lc ~ $2;
+                warn :$lval.perl;
                 if $lval ~~ LValue {
-                    self.can($lval);
+                    self.can($lval)
+                        or die "nyi: $lval";
                     @meth.push: method ($v) { self."$lval"() = $v; }
                 }
             }

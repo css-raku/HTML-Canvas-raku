@@ -3,7 +3,7 @@ class HTML::Canvas::To::PDF {
 
     use Color;
     use HTML::Canvas;
-    use PDF::Content::Ops :TextMode;
+    use PDF::Content::Ops :TextMode, :LineCaps, :LineJoin;
     use PDF::Content;
     has PDF::Content $.gfx handles <content content-dump> is required;
     use PDF::Style::Font;
@@ -90,14 +90,25 @@ class HTML::Canvas::To::PDF {
         $!gfx.StrokeColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
         $!gfx.StrokeAlpha = .a / 255;
     }
-    method setLineDash(List $pattern, :$canvas) {
+    method lineWidth(Numeric $width, :$canvas) {
+        $!gfx.LineWidth = $width;
+    }
+    method lineDash(List $pattern, :$canvas) {
         $!gfx.SetDashPattern($pattern, $canvas.lineDashOffset)
     }
-    method getLineDash(:$canvas) { $canvas.getLineDash },
-    method moveTo(Numeric \x, Numeric \y) { $!gfx.MoveTo(x, y) }
-    method lineTo(Numeric \x, Numeric \y) {
-        $!gfx.LineTo(x, y);
+    method lineCap(Str $cap-name, :$canvas) {
+        my LineCaps $lc = %( :butt(ButtCaps), :round(RoundCaps),  :square(SquareCaps)){$cap-name};
+        $!gfx.LineCap = $lc;
     }
+    method lineJoin(Str $cap-name, :$canvas) {
+        my LineJoin $lj = %( :miter(MiterJoin), :round(RoundJoin),  :bevel(BevelJoin)){$cap-name};
+        $!gfx.LineJoin = $lj;
+    }
+    method moveTo(Numeric \x, Numeric \y) { $!gfx.MoveTo( |self!coords(x, y)) }
+    method lineTo(Numeric \x, Numeric \y) {
+        $!gfx.LineTo( |self!coords(x, y));
+    }
+    method closePath() { $!gfx.ClosePath }
     method arc(Numeric \x, Numeric \y, Numeric \r, Numeric \startAngle, Numeric \endAngle, Bool $anti-clockwise?) {
         # stub. ignores start and end angle; draws a circle
         warn "todo: arc start/end angles"
@@ -138,16 +149,11 @@ class HTML::Canvas::To::PDF {
     method measureText(Str $text, :$canvas!) {
         $canvas.measureText($text)
     }
-    method font(Str $font-style?, :$canvas!) {
+    method font(Str $font-style, :$canvas!) {
         my \canvas-font = $canvas.font-object;
         my \pdf-font = $!gfx.use-font(canvas-font.face);
 
-        with $font-style {
-            $!gfx.font = [ pdf-font, canvas-font.em ];
-        }
-        else {
-            $!gfx.font //= [ pdf-font, canvas-font.em ];
-        }
+        $!gfx.font = [ pdf-font, canvas-font.em ];
     }
     method rect(\x, \y, \w, \h) {
         unless $!gfx.fillAlpha =~= 0 {
