@@ -108,6 +108,14 @@ class HTML::Canvas::To::PDF {
     method lineTo(Numeric \x, Numeric \y) {
         $!gfx.LineTo( |self!coords(x, y));
     }
+    method quadraticCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \x, Numeric \y) {
+        my \cp2x = cp1x + 2/3 * (x - cp1x);
+        my \cp2y = cp1y + 2/3 * (y - cp1y);
+        $!gfx.CurveTo( |self!coords(cp1x, cp1y), |self!coords(cp2x, cp2y), |self!coords(x, y) );
+     }
+     method bezierCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \cp2x, Numeric \cp2y, Numeric \x, Numeric \y) {
+        $!gfx.CurveTo( |self!coords(cp1x, cp1y), |self!coords(cp2x, cp2y), |self!coords(x, y) );
+    }
     method closePath() { $!gfx.ClosePath }
     method arc(Numeric \x, Numeric \y, Numeric \r, Numeric \startAngle, Numeric \endAngle, Bool $anti-clockwise?) {
         # stub. ignores start and end angle; draws a circle

@@ -29,7 +29,7 @@ sub test-page(&markup) {
         }
     }
     todo "clean render of page $page-no"
-        unless $page-no == 2|3|4;
+        if $page-no == 1|6;
 
     ok $clean, "completion of page $page-no";
     my $width = $feed.width;
@@ -188,53 +188,31 @@ test-page( -> \ctx {
       $y += textHeight + pad;
       ctx.lineWidth = 5;
 
-      ctx.beginPath();
-      ctx.lineCap = 'butt';
-      ctx.moveTo(20, $y);
-      ctx.lineTo(200, $y);
-      ctx.stroke();
-      $y += pad;
+      for <butt round square> -> \lc {
+          ctx.beginPath();
+          ctx.lineCap = lc;
+          ctx.moveTo(20, $y);
+          ctx.lineTo(200, $y);
+          ctx.stroke();
+          $y += pad;
+      }
 
-      ctx.beginPath();
-      ctx.lineCap = 'round';
-      ctx.moveTo(20, $y);
-      ctx.lineTo(200, $y);
-      ctx.stroke();
-      $y += pad;
-
-      ctx.beginPath();
-      ctx.lineCap = 'square';
-      ctx.moveTo(20, $y);
-      ctx.lineTo(200, $y);
-      ctx.stroke();
-      $y += pad;
       ctx.restore();
 
       # line joins
       ctx.save();
       ctx.fillText("Testing lineJoin", 20, $y + textHeight);
       $y += textHeight + pad;
-      ctx.beginPath();
       ctx.lineWidth = 10;
-      ctx.lineJoin = 'miter';
-      ctx.moveTo(20, $y);
-      ctx.lineTo(200, $y);
-      ctx.lineTo(250, $y + 50);
-      ctx.stroke();
-      $y += pad + 10;
-      ctx.beginPath();
-      ctx.lineJoin = 'bevel';
-      ctx.moveTo(20, $y);
-      ctx.lineTo(200, $y);
-      ctx.lineTo(250, $y + 50);
-      ctx.stroke();
-      $y += pad + 10;
-      ctx.beginPath();
-      ctx.lineJoin = 'round';
-      ctx.moveTo(20, $y);
-      ctx.lineTo(200, $y);
-      ctx.lineTo(250, $y + 50);
-      ctx.stroke();
+      for <miter bevel round> -> \lj {
+          ctx.beginPath();
+          ctx.lineJoin = lj;
+          ctx.moveTo(20, $y);
+          ctx.lineTo(200, $y);
+          ctx.lineTo(250, $y + 50);
+          ctx.stroke();
+          $y += pad + 10;
+      }
       $y += pad + 10;
       $y += 50;
       ctx.restore();
@@ -242,27 +220,17 @@ test-page( -> \ctx {
       ctx.fillText("Testing moveTo, lineTo, stroke, and fill", 20, $y + textHeight);
       $y += textHeight + pad;
 
-      # diamond
-      ctx.beginPath();
-      ctx.moveTo(30, $y);
-      ctx.lineTo(50, $y + 20);
-      ctx.lineTo(30, $y + 40);
-      ctx.lineTo(10, $y + 20);
-      ctx.lineTo(30, $y);
-      ctx.stroke();
-      $y += 50;
-
-      # diamond
-      ctx.beginPath();
-      ctx.moveTo(30, $y);
-      ctx.lineTo(50, $y + 20);
-      ctx.lineTo(30, $y + 40);
-      ctx.lineTo(10, $y + 20);
-      ctx.lineTo(30, $y);
-      ctx.closePath();
-      ctx.fill();
-      $y += 50;
-
+      for <stroke fill> -> \c {
+          # diamond
+          ctx.beginPath();
+          ctx.moveTo(30, $y);
+          ctx.lineTo(50, $y + 20);
+          ctx.lineTo(30, $y + 40);
+          ctx.lineTo(10, $y + 20);
+          ctx.lineTo(30, $y);
+          ctx."{c}"();
+          $y += 50;
+      }
 });
 
 test-page( -> \ctx {

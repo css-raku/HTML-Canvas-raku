@@ -179,6 +179,8 @@ class HTML::Canvas {
         :getLineDash(method () { @!dash-list } ),
         :moveTo(method (Numeric \x, Numeric \y) {} ),
         :lineTo(method (Numeric \x, Numeric \y) {} ),
+        :quadraticCurveTo(method (Numeric \cp1x, Numeric \cp1y, Numeric \x, Numeric \y) {} ),
+        :bezierCurveTo(method (Numeric \cp1x, Numeric \cp1y, Numeric \cp2x, Numeric \cp2y, Numeric \x, Numeric \y) {} ),
         :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
         :closePath(method () {}),
     );
