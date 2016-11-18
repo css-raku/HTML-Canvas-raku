@@ -164,18 +164,37 @@ class HTML::Canvas::To::PDF {
         $!gfx.font = [ pdf-font, canvas-font.em ];
     }
     method rect(\x, \y, \w, \h) {
-        unless $!gfx.fillAlpha =~= 0 {
-            $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
-            $!gfx.ClosePath;
-        }
+        $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
+        $!gfx.ClosePath;
     }
     method strokeRect(\x, \y, \w, \h) {
-        $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
-        $!gfx.CloseStroke;
+        unless $!gfx.StrokeAlpha =~= 0 {
+            $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
+            $!gfx.CloseStroke;
+        }
     }
     method fillRect(\x, \y, \w, \h) {
-        $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
-        $!gfx.Fill;
+        unless $!gfx.FillAlpha =~= 0 {
+            $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
+            $!gfx.Fill;
+        }
+    }
+    has %!form-cache{Any};
+    multi method drawImage(HTML::Canvas $image, Numeric \x, Numeric \y) {
+        require ::('PDF::Content::PDF');
+        my \form = %!form-cache{$image} //= do {
+            my $width = $image.width;
+            my $height = $image.height;
+            my $form = ::('PDF::Content::PDF').xobject-form( :bbox[0, 0, $width, $height] );
+            my $renderer = self.new: :gfx($form.gfx), :$width, :$height;
+            $image.render($renderer);
+            $form.finish;
+            $form
+        };
+        $!gfx.do(form, |self!coords(x, y), :valign<top> );
+    }
+    multi method drawImage($image, |c) is default {
+        die "todo: drawImage({$image.perl}, ...)";
     }
 
 }

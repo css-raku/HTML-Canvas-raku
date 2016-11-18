@@ -3,6 +3,8 @@ use v6;
 class HTML::Canvas {
     use PDF::Content::Util::TransformMatrix;
     use CSS::Declarations;
+    has Numeric $.width;
+    has Numeric $.height;
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.subpath;
     has Str @!subpath-new;
@@ -183,6 +185,7 @@ class HTML::Canvas {
         :bezierCurveTo(method (Numeric \cp1x, Numeric \cp1y, Numeric \cp2x, Numeric \cp2y, Numeric \x, Numeric \y) {} ),
         :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
         :closePath(method () {}),
+        :drawImage(method (|c) {}),
     );
 
     # todo: slurping/itemization of @!dash-list?
@@ -232,14 +235,14 @@ class HTML::Canvas {
     }
 
     #| lightweight html generation; canvas + javascript
-    method html( Numeric :$width!, Numeric :$height!, Str :$style, Str :$id = ~ self.WHERE, :$sep = "\n    ", |c) {
+    method html( Numeric :$!width!, Numeric :$!height!, Str :$style, Str :$id = ~ self.WHERE, :$sep = "\n    ", |c) {
         use HTML::Entity;
         my $Style = do with $style { ' style="%s"'.sprintf(encode-entities($_)) } else { '' };
         my $Js = self.js(:context<ctx>, :$sep, |c);
         my $Id = encode-entities($id);
 
         qq:to"END-HTML";
-        <canvas width="{$width}pt" height="{$height}pt" id="$Id"$Style></canvas>
+        <canvas width="{$!width}pt" height="{$!height}pt" id="$Id"$Style></canvas>
         <script>
             var ctx = document.getElementById("$Id").getContext("2d");
             $Js
