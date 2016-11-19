@@ -3,8 +3,6 @@ use v6;
 class HTML::Canvas {
     use PDF::Content::Util::TransformMatrix;
     use CSS::Declarations;
-    has Numeric $.width;
-    has Numeric $.height;
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.subpath;
     has Str @!subpath-new;
@@ -221,33 +219,58 @@ class HTML::Canvas {
         self._finish;
     }
 
+    use HTML::Entity;
+    my role HTMLObj {
+        has Numeric $.width is rw;
+        has Numeric $.height is rw;
+        has Str $.id is rw;
+        method js-ref {
+            'document.getElementById("%s")'.sprintf(self.id);
+        }
+        has method html {...}
+    }
+
+    #| lightweight html generation; canvas + javascript
+    multi method html($obj = self, Numeric :$width!, Numeric :$height!, Str :$style, |c) {
+        if $obj ~~ HTMLObj {
+            die "can't resize" unless $width =~= $obj.width && $height =~= $obj.height;
+        }
+        else {
+            $obj does HTMLObj;
+            $obj.id = ~ $obj.WHERE;
+            $obj.width = $width;
+            $obj.height = $height;
+        }
+        $obj.html(|c);
+    }
+    multi method html(Str :$style, Str :$sep = "\n    ", |c) is default {
+        if self ~~ HTMLObj {
+            my $Style = do with $style { ' style="%s"'.sprintf(encode-entities($_)) } else { '' };
+
+            qq:to"END-HTML";
+            <canvas width="{self.width}pt" height="{self.height}pt" id="{self.id}"$Style></canvas>
+            <script>
+                var ctx = {self.js-ref}.getContext("2d");
+                {self.js(:context<ctx>, :$sep, |c)};
+            </script>
+            END-HTML
+        }
+        else {
+            die 'please call .html( :$width, :$width) on this canvas, to initialize it';
+        }
+    }
+
     #| generate Javascript
     method js(Str :$context = 'ctx', :$sep = "\n") {
         use JSON::Fast;
         @!calls.map({
             my $name = .key;
-            my @args = .value.map: { to-json($_) };
+            my @args = .value.map: { .can('js-ref') ?? .js-ref !! to-json($_) };
             my \fmt = $name ~~ LValue
                 ?? '%s.%s = %s;'
                 !! '%s.%s(%s);';
             sprintf fmt, $context, $name, @args.join(", ");
         }).join: $sep;
-    }
-
-    #| lightweight html generation; canvas + javascript
-    method html( Numeric :$!width!, Numeric :$!height!, Str :$style, Str :$id = ~ self.WHERE, :$sep = "\n    ", |c) {
-        use HTML::Entity;
-        my $Style = do with $style { ' style="%s"'.sprintf(encode-entities($_)) } else { '' };
-        my $Js = self.js(:context<ctx>, :$sep, |c);
-        my $Id = encode-entities($id);
-
-        qq:to"END-HTML";
-        <canvas width="{$!width}pt" height="{$!height}pt" id="$Id"$Style></canvas>
-        <script>
-            var ctx = document.getElementById("$Id").getContext("2d");
-            $Js
-        </script>
-        END-HTML
     }
 
     #| rebuild the canvas, using the given renderer

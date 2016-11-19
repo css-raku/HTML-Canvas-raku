@@ -364,7 +364,7 @@ test-page( -> \ctx {
       ctx.restore();
 
       $y += 100 + pad;
-  	ctx.fillText("Testing quadraticCurveTo", 20, $y + textHeight);
+      ctx.fillText("Testing quadraticCurveTo", 20, $y + textHeight);
       $y += textHeight + pad;
       ctx.save();
       ctx.lineWidth = 6;
@@ -400,7 +400,7 @@ test-page( -> \ctx {
       ctx.save; {
           my \xs = 0.5;
           my \ys = 0.25;
-          ctx.scale(.5, .25);
+          ctx.scale(xs, ys);
           ctx.drawImage($first-canvas, 20/xs, $y/ys);
       }; ctx.restore;
 
