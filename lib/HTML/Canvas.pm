@@ -159,9 +159,9 @@ class HTML::Canvas {
         :setTransform(method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
                              @!transformMatrix = [a, b, c, d, e, f];
                       }),
-        :rect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
-        :strokeRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
+        :clearRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :fillRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
+        :strokeRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :beginPath(method () { @!subpath = @!subpath-new = []; }),
         :fill(method () { self!draw-subpath() }),
         :stroke(method () { self!draw-subpath() }),
@@ -176,14 +176,16 @@ class HTML::Canvas {
                                 fail "unable to measure text - not font object";
                             }
                         } ),
+        :drawImage(method (\image, Numeric \x, Numeric \y, Numeric $x?, Numeric $y?) {}),
+        # :setLineDash - see below
         :getLineDash(method () { @!dash-list } ),
+        :closePath(method () {}),
         :moveTo(method (Numeric \x, Numeric \y) {} ),
         :lineTo(method (Numeric \x, Numeric \y) {} ),
         :quadraticCurveTo(method (Numeric \cp1x, Numeric \cp1y, Numeric \x, Numeric \y) {} ),
         :bezierCurveTo(method (Numeric \cp1x, Numeric \cp1y, Numeric \cp2x, Numeric \cp2y, Numeric \x, Numeric \y) {} ),
+        :rect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
-        :closePath(method () {}),
-        :drawImage(method (|c) {}),
     );
 
     # todo: slurping/itemization of @!dash-list?

@@ -13,6 +13,7 @@ my @sheets;
 sub test-page(&markup) {
     my HTML::Canvas $canvas .= new;
     my $gfx = $pdf.add-page.gfx;
+    $gfx.comment-ops = True;
     my $feed = HTML::Canvas::To::PDF.new: :$gfx, :$canvas;
     my Bool $clean = True;
     $page-no++;
@@ -112,12 +113,13 @@ test-page(-> \ctx {
       ctx.fillText("Testing textBaseline", 20, $y + textHeight);
       $y += textHeight + pad + 30;
 
-      ctx.strokeStyle = '#dddddd';
+      ctx.strokeStyle = '#ddd';
       ctx.font = "20pt times";
 
       ctx.moveTo(20,$y);
       ctx.lineTo(150, $y);
       ctx.stroke();
+
       ctx.textBaseline = 'alphabetic';
       ctx.fillText("Alphabetic Q", 20, $y);
       $y += 40 + pad;
@@ -166,17 +168,18 @@ test-page( -> \ctx {
       # rectangles
       #
       ctx.save();
-      ctx.fillText("Testing fillRect and strokeRect", 20, $y + textHeight);
+      ctx.fillText("Testing fillRect, clearRect and strokeRect", 20, $y + textHeight);
       $y += textHeight + pad;
 
-      ctx.fillRect(20, $y, 20, h);
+      ctx.fillRect(20, $y, 40, h);
       $y += h + pad;
 
-      ctx.fillStyle = '#f5f5f5';
-      ctx.fillRect(20, $y, 20, h);
+      ctx.fillStyle = '#ccc';
+      ctx.fillRect(20, $y, 40, h);
+      ctx.clearRect(25, $y+5, 10, 10);
       $y += h + pad;
 
-      ctx.strokeRect(20, $y, 20, h);
+      ctx.strokeRect(20, $y, 40, h);
       $y += h + pad;
       ctx.restore();
 

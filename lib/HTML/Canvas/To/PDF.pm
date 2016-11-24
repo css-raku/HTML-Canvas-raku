@@ -82,6 +82,30 @@ class HTML::Canvas::To::PDF {
         self!transform( |matrix => @diff )
         unless PDF::Content::Util::TransformMatrix::is-identity(@diff);
     }
+    method clearRect(\x, \y, \w, \h) {
+        # stub - should etch a clipping path. not paint a white rectangle
+        $!gfx.Save;
+        $!gfx.FillColor = :DeviceGray[1];
+        $!gfx.FillAlpha = 1;
+        $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
+        $!gfx.Fill;
+        $!gfx.Restore;
+    }
+    method fillRect(\x, \y, \w, \h) {
+        unless $!gfx.FillAlpha =~= 0 {
+            $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
+            $!gfx.Fill;
+        }
+    }
+    method strokeRect(\x, \y, \w, \h) {
+        unless $!gfx.StrokeAlpha =~= 0 {
+            $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
+            $!gfx.CloseStroke;
+        }
+    }
+    method beginPath() { }
+    method fill() { $!gfx.Fill; }
+    method stroke() { $!gfx.Stroke; }
     method fillStyle(Color $_) {
         $!gfx.FillColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
         $!gfx.FillAlpha = .a / 255;
@@ -93,9 +117,6 @@ class HTML::Canvas::To::PDF {
     method lineWidth(Numeric $width, :$canvas) {
         $!gfx.LineWidth = $width;
     }
-    method setLineDash(List $pattern, :$canvas) {
-        $!gfx.SetDashPattern($pattern, $canvas.lineDashOffset)
-    }
     method lineCap(Str $cap-name, :$canvas) {
         my LineCaps $lc = %( :butt(ButtCaps), :round(RoundCaps),  :square(SquareCaps)){$cap-name};
         $!gfx.LineCap = $lc;
@@ -103,31 +124,6 @@ class HTML::Canvas::To::PDF {
     method lineJoin(Str $cap-name, :$canvas) {
         my LineJoin $lj = %( :miter(MiterJoin), :round(RoundJoin),  :bevel(BevelJoin)){$cap-name};
         $!gfx.LineJoin = $lj;
-    }
-    method moveTo(Numeric \x, Numeric \y) { $!gfx.MoveTo( |self!coords(x, y)) }
-    method lineTo(Numeric \x, Numeric \y) {
-        $!gfx.LineTo( |self!coords(x, y));
-    }
-    method quadraticCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \x, Numeric \y) {
-        my \cp2x = cp1x + 2/3 * (x - cp1x);
-        my \cp2y = cp1y + 2/3 * (y - cp1y);
-        $!gfx.CurveTo( |self!coords(cp1x, cp1y), |self!coords(cp2x, cp2y), |self!coords(x, y) );
-     }
-     method bezierCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \cp2x, Numeric \cp2y, Numeric \x, Numeric \y) {
-        $!gfx.CurveTo( |self!coords(cp1x, cp1y), |self!coords(cp2x, cp2y), |self!coords(x, y) );
-    }
-    method closePath() { $!gfx.ClosePath }
-    method arc(Numeric \x, Numeric \y, Numeric \r, Numeric \startAngle, Numeric \endAngle, Bool $anti-clockwise?) {
-        # stub. ignores start and end angle; draws a circle
-        warn "todo: arc start/end angles"
-            unless endAngle - startAngle =~= 2 * pi;
-        draw-circle($!gfx, r, |self!coords(x, y));
-    }
-    method beginPath() {
-    }
-    method fill() { $!gfx.Fill }
-    method stroke() {
-        $!gfx.Stroke;
     }
     method !text(Str $text, Numeric $x, Numeric $y, :$canvas!, Numeric :$maxWidth) {
         my Numeric $scale;
@@ -143,6 +139,12 @@ class HTML::Canvas::To::PDF {
         $!gfx.print($text);
         $!gfx.EndText;
     }
+    method font(Str $font-style, :$canvas!) {
+        my \canvas-font = $canvas.font-object;
+        my \pdf-font = $!gfx.use-font(canvas-font.face);
+
+        $!gfx.font = [ pdf-font, canvas-font.em ];
+    }
     method fillText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
         $!gfx.Save;
         self!text($text, $x, $y, :$maxWidth, :$canvas);
@@ -157,32 +159,10 @@ class HTML::Canvas::To::PDF {
     method measureText(Str $text, :$canvas!) {
         $canvas.measureText($text)
     }
-    method font(Str $font-style, :$canvas!) {
-        my \canvas-font = $canvas.font-object;
-        my \pdf-font = $!gfx.use-font(canvas-font.face);
-
-        $!gfx.font = [ pdf-font, canvas-font.em ];
-    }
-    method rect(\x, \y, \w, \h) {
-        $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
-        $!gfx.ClosePath;
-    }
-    method strokeRect(\x, \y, \w, \h) {
-        unless $!gfx.StrokeAlpha =~= 0 {
-            $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
-            $!gfx.CloseStroke;
-        }
-    }
-    method fillRect(\x, \y, \w, \h) {
-        unless $!gfx.FillAlpha =~= 0 {
-            $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
-            $!gfx.Fill;
-        }
-    }
     has %!form-cache{Any};
-    multi method drawImage(HTML::Canvas $image, Numeric \x, Numeric \y) {
-        require ::('PDF::Content::PDF');
+    multi method drawImage(HTML::Canvas $image, Numeric \x, Numeric \y, Numeric $w?, Numeric $h?) {
         my \form = %!form-cache{$image} //= do {
+            require ::('PDF::Content::PDF');
             my $width = $image.width;
             my $height = $image.height;
             my $form = ::('PDF::Content::PDF').xobject-form( :bbox[0, 0, $width, $height] );
@@ -193,8 +173,47 @@ class HTML::Canvas::To::PDF {
         };
         $!gfx.do(form, |self!coords(x, y), :valign<top> );
     }
-    multi method drawImage($image, |c) is default {
-        die "todo: drawImage({$image.perl}, ...)";
+    has %!image-cache;
+    multi method drawImage(Str $image, Numeric \x, Numeric \y, Numeric $w?, Numeric $h?) is default {
+        use PDF::Content::Image;
+        use nqp;
+        my \image = %!image-cache{nqp::sha1($image)} //= PDF::Content::Image.open($image);
+
+        my %opt = :valign<top>;
+        %opt<width>  = $_ with $w;
+        %opt<height> = $_ with $h;
+
+        $!gfx.Save;
+        $!gfx.transform: :translate[x, -y];
+        $!gfx.do(image, |%opt);
+        $!gfx.Restore;
+    }
+    method getLineDash() {}
+    method setLineDash(List $pattern, :$canvas) {
+        $!gfx.SetDashPattern($pattern, $canvas.lineDashOffset)
+    }
+    method closePath() { $!gfx.ClosePath }
+    method moveTo(Numeric \x, Numeric \y) { $!gfx.MoveTo( |self!coords(x, y)) }
+    method lineTo(Numeric \x, Numeric \y) {
+        $!gfx.LineTo( |self!coords(x, y));
+    }
+    method quadraticCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \x, Numeric \y) {
+        my \cp2x = cp1x + 2/3 * (x - cp1x);
+        my \cp2y = cp1y + 2/3 * (y - cp1y);
+        $!gfx.CurveTo( |self!coords(cp1x, cp1y), |self!coords(cp2x, cp2y), |self!coords(x, y) );
+     }
+     method bezierCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \cp2x, Numeric \cp2y, Numeric \x, Numeric \y) {
+        $!gfx.CurveTo( |self!coords(cp1x, cp1y), |self!coords(cp2x, cp2y), |self!coords(x, y) );
+    }
+    method rect(\x, \y, \w, \h) {
+        $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
+        $!gfx.ClosePath;
+    }
+    method arc(Numeric \x, Numeric \y, Numeric \r, Numeric \startAngle, Numeric \endAngle, Bool $anti-clockwise?) {
+        # stub. ignores start and end angle; draws a circle
+        warn "todo: arc start/end angles"
+            unless endAngle - startAngle =~= 2 * pi;
+        draw-circle($!gfx, r, |self!coords(x, y));
     }
 
 }
