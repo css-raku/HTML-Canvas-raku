@@ -159,34 +159,36 @@ class HTML::Canvas::To::PDF {
     method measureText(Str $text, :$canvas!) {
         $canvas.measureText($text)
     }
-    has %!form-cache{Any};
-    multi method drawImage(HTML::Canvas $image, Numeric \x, Numeric \y, Numeric $w?, Numeric $h?) {
-        my \form = %!form-cache{$image} //= do {
-            require ::('PDF::Content::PDF');
+    has %!canvas-cache{Any};
+    method !canvas-image(HTML::Canvas $image) {
+        %!canvas-cache{$image} //= do {
             my $width = $image.width;
             my $height = $image.height;
-            my $form = ::('PDF::Content::PDF').xobject-form( :bbox[0, 0, $width, $height] );
+            my $form = (require ::('PDF::Content::PDF')).xobject-form( :bbox[0, 0, $width, $height] );
             my $renderer = self.new: :gfx($form.gfx), :$width, :$height;
             $image.render($renderer);
             $form.finish;
             $form
         };
-        $!gfx.do(form, |self!coords(x, y), :valign<top> );
     }
-    has %!image-cache;
-    multi method drawImage(Str $image, Numeric \x, Numeric \y, Numeric $w?, Numeric $h?) is default {
-        use PDF::Content::Image;
+    has %!form-cache;
+    method !form-image(Str $image) {
         use nqp;
-        my \image = %!image-cache{nqp::sha1($image)} //= PDF::Content::Image.open($image);
+        %!form-cache{nqp::sha1($image)} //= PDF::Content::Image.open($image)    }
+    my subset CanvasOrStr of Any where HTML::Canvas|Str;
+    method drawImage(CanvasOrStr $image, Numeric \x, Numeric \y, Numeric $w?, Numeric $h?) is default {
+        use PDF::Content::Image;
+        my \image = do given $image {
+                when HTML::Canvas { self!canvas-image($_); }
+                when Str          { self!form-image($_); }
+                default { die }
+        };
 
         my %opt = :valign<top>;
         %opt<width>  = $_ with $w;
         %opt<height> = $_ with $h;
 
-        $!gfx.Save;
-        $!gfx.transform: :translate[x, -y];
-        $!gfx.do(image, |%opt);
-        $!gfx.Restore;
+        $!gfx.do(image,  |self!coords(x, y), |%opt);
     }
     method getLineDash() {}
     method setLineDash(List $pattern, :$canvas) {

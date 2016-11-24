@@ -31,7 +31,7 @@ sub test-page(&markup) {
         }
     }
     todo "clean render of page $page-no"
-        if $page-no == 1|6;
+        if $page-no == 1;
 
     ok $clean, "completion of page $page-no";
     my $width = $feed.width;
@@ -400,14 +400,11 @@ test-page( -> \ctx {
       my $first-canvas = @sheets[0];
 
       $y += textHeight + pad;
-      ctx.save; {
-          my \xs = 0.5;
-          my \ys = 0.25;
-          ctx.scale(xs, ys);
-          ctx.drawImage($first-canvas, 20/xs, $y/ys);
-      }; ctx.restore;
+      for 20, 150 -> $x {
+          ctx.drawImage($first-canvas, $x, $y, 100, 150);
+      }
 
-      $y += textHeight + pad;
+      $y += 100 + pad;
       ctx.drawImage(imgData, 20, $y, 50, 50);
       $y += 50 + pad;
       ctx.drawImage(imgData, 20, $y, 200, 200);
