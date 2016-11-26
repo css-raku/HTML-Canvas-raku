@@ -159,9 +159,9 @@ class HTML::Canvas::To::PDF {
     method measureText(Str $text, :$canvas!) {
         $canvas.measureText($text)
     }
-    has %!canvas-cache{Any};
+    has %!canvas-cache;
     method !canvas-image(HTML::Canvas $image) {
-        %!canvas-cache{$image} //= do {
+        %!canvas-cache{$image.html-id} //= do {
             my $width = $image.width;
             my $height = $image.height;
             my $form = (require ::('PDF::Content::PDF')).xobject-form( :bbox[0, 0, $width, $height] );
@@ -173,15 +173,15 @@ class HTML::Canvas::To::PDF {
     }
     has %!form-cache;
     method !form-image(Str $image) {
+        use PDF::Content::Image;
         use nqp;
         %!form-cache{nqp::sha1($image)} //= PDF::Content::Image.open($image)    }
     my subset CanvasOrStr of Any where HTML::Canvas|Str;
     method drawImage(CanvasOrStr $image, Numeric \x, Numeric \y, Numeric $w?, Numeric $h?) is default {
-        use PDF::Content::Image;
         my \image = do given $image {
                 when HTML::Canvas { self!canvas-image($_); }
                 when Str          { self!form-image($_); }
-                default { die }
+                default { die "unexpected image: {$image.perl}" }
         };
 
         my %opt = :valign<top>;

@@ -7,7 +7,7 @@
     "source-url"  : "git://github.com/p6-pdf/perl6-HTML-Canvas.git",
     "provides"    : {
 
-        "HTML::Canvas"              : "HTML/Canvas.pm",
-        "HTML::Canvas::To::PDF" : "HTML/Canvas/To/PDF.pm"
+        "HTML::Canvas"          : "lib/HTML/Canvas.pm",
+        "HTML::Canvas::To::PDF" : "lib/HTML/Canvas/To/PDF.pm"
      }
 }
