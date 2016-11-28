@@ -160,7 +160,7 @@ class HTML::Canvas::To::PDF {
         $canvas.measureText($text)
     }
     has %!canvas-cache;
-    method !canvas-image(HTML::Canvas $image) {
+    method !canvas-xobject(HTML::Canvas $image) {
         %!canvas-cache{$image.html-id} //= do {
             my $width = $image.width;
             my $height = $image.height;
@@ -171,24 +171,20 @@ class HTML::Canvas::To::PDF {
             $form
         };
     }
-    has %!form-cache;
-    method !form-image(Str $image) {
-        use PDF::Content::Image;
-        use nqp;
-        %!form-cache{nqp::sha1($image)} //= PDF::Content::Image.open($image)    }
-    my subset CanvasOrStr of Any where HTML::Canvas|Str;
-    method drawImage(CanvasOrStr $image, Numeric \x, Numeric \y, Numeric $w?, Numeric $h?) is default {
-        my \image = do given $image {
-                when HTML::Canvas { self!canvas-image($_); }
-                when Str          { self!form-image($_); }
-                default { die "unexpected image: {$image.perl}" }
-        };
+    my subset CanvasOrXObject of Any where HTML::Canvas|Hash;
+    multi method drawImage( CanvasOrXObject $image, Numeric $sx, Numeric $sy, Numeric $sw, Numeric $sh, Numeric $dx, Numeric $dy, Numeric $dw, Numeric $dh) {
+        warn "todo 9 argument call to drawImage";
+        self.drawImage( $image, $dx, $dy, $dw, $dy, :$sx, :$sy, :$sw, :$sh );
+    }
+    multi method drawImage(CanvasOrXObject $image, Numeric \dx, Numeric \dy, Numeric $dw?, Numeric $dh?, :$sx, :$sy, :$sw, :$sh) is default {
+        my \xobject = $_ ~~ HTML::Canvas ?? self!canvas-xobject($_) !! $_
+            with $image;
 
         my %opt = :valign<top>;
-        %opt<width>  = $_ with $w;
-        %opt<height> = $_ with $h;
+        %opt<width>  = $_ with $dw;
+        %opt<height> = $_ with $dh;
 
-        $!gfx.do(image,  |self!coords(x, y), |%opt);
+        $!gfx.do(xobject, |self!coords(dx, dy), |%opt);
     }
     method getLineDash() {}
     method setLineDash(List $pattern, :$canvas) {

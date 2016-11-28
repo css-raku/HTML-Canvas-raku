@@ -71,7 +71,7 @@ lives-ok {$pdf.save-as("t/render-pdf-basic.pdf")}, "pdf.save-as";
 
 my $width = $feed.width;
 my $height = $feed.height;
-my $html = "<html><body>{ $canvas.html( :$width, :$height ) }</body></html>";
+my $html = "<html><body>{ $canvas.to-html( :$width, :$height ) }</body></html>";
 "t/render-pdf-basic.html".IO.spurt: $html;
 
 done-testing;

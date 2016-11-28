@@ -176,7 +176,7 @@ class HTML::Canvas {
                                 fail "unable to measure text - not font object";
                             }
                         } ),
-        :drawImage(method (\image, Numeric \x, Numeric \y, Numeric $x?, Numeric $y?) {}),
+        :drawImage(method (\image, Numeric \dx, Numeric \dy, *@args) {}),
         # :setLineDash - see below
         :getLineDash(method () { @!dash-list } ),
         :closePath(method () {}),
@@ -229,23 +229,28 @@ class HTML::Canvas {
         method js-ref {
             'document.getElementById("%s")'.sprintf(self.html-id);
         }
-        has method html {...}
     }
 
     #| lightweight html generation; canvas + javascript
-    multi method html($obj = self, Numeric :$width!, Numeric :$height!, Str :$style, |c) {
-        if $obj ~~ HTMLObj {
-            die "can't resize" unless $width =~= $obj.width && $height =~= $obj.height;
-        }
-        else {
+    method to-html($obj = self, Numeric :$width, Numeric :$height, Str :$style='', |c) {
+        unless $obj ~~ HTMLObj {
             $obj does HTMLObj;
             $obj.html-id = ~ $obj.WHERE;
-            $obj.width = $width;
-            $obj.height = $height;
         }
-        $obj.html(|c);
+        $obj.width   = $_ with $width;
+        $obj.height  = $_ with $height;
+
+        if $obj.can('html') {
+            $obj.html(:$style, |c);
+        }
+        elsif $obj.can('data-uri') {
+            "<img id='%s' style='%s' src='%s' />\n".sprintf: $obj.html-id, encode-entities($style), $obj.data-uri;
+        }
+        else {
+            die "unable to convert this object to HTML";
+        }
     }
-    multi method html(Str :$style, Str :$sep = "\n    ", |c) is default {
+    method html(Str :$style, Str :$sep = "\n    ", |c) is default {
         if self ~~ HTMLObj {
             my $Style = do with $style { ' style="%s"'.sprintf(encode-entities($_)) } else { '' };
 
@@ -265,14 +270,24 @@ class HTML::Canvas {
     #| generate Javascript
     method js(Str :$context = 'ctx', :$sep = "\n") {
         use JSON::Fast;
-        @!calls.map({
+        my Str %vars{Any};
+        my $var-name = 'image0';
+        my Str @js;
+
+        for @!calls {
             my $name = .key;
-            my @args = .value.map: { .can('js-ref') ?? .js-ref !! to-json($_) };
+            my @args = .value.map: {
+                $_ ~~ Str|Numeric|Bool|List
+                    ?? to-json($_)
+                    !! (.?js-ref // die "unexpected object: {.perl}");
+            };
             my \fmt = $name ~~ LValue
                 ?? '%s.%s = %s;'
                 !! '%s.%s(%s);';
-            sprintf fmt, $context, $name, @args.join(", ");
-        }).join: $sep;
+            @js.push: fmt.sprintf: $context, $name, @args.join(", ");
+        }
+
+        @js.join: $sep;
     }
 
     #| rebuild the canvas, using the given renderer
