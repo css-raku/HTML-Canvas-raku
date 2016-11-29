@@ -172,9 +172,28 @@ class HTML::Canvas::To::PDF {
         };
     }
     my subset CanvasOrXObject of Any where HTML::Canvas|Hash;
-    multi method drawImage( CanvasOrXObject $image, Numeric $sx, Numeric $sy, Numeric $sw, Numeric $sh, Numeric $dx, Numeric $dy, Numeric $dw, Numeric $dh) {
-        warn "todo 9 argument call to drawImage";
-        self.drawImage( $image, $dx, $dy, $dw, $dy, :$sx, :$sy, :$sw, :$sh );
+    multi method drawImage( CanvasOrXObject $image, Numeric \sx, Numeric \sy, Numeric \sw, Numeric \sh, Numeric \dx, Numeric \dy, Numeric \dw, Numeric \dh) {
+        unless sw =~= 0 || sh =~= 0 {
+            # seems to draw a symetrically cropped image in rectangle: [dx, dy, dw, dh]
+            $!gfx.Save;
+            my \xobject = $_ ~~ HTML::Canvas ?? self!canvas-xobject($_) !! $_
+                with $image;
+
+            my $width = dw * (sw + 2*sx) / sw;
+            my $height = dh * (sh + 2*sy) / sh;
+            my \x-margin = ($width - dw) / 2;
+            my \y-margin = ($height - dh) / 2;
+
+            $!gfx.transform: :translate(self!coords(dx - x-margin, dy - y-margin));
+            $!gfx.Rectangle: pt(x-margin), pt(-dh - y-margin), pt(dw), pt(dh);
+            $!gfx.ClosePath;
+            $!gfx.Clip;
+            $!gfx.EndPath;
+
+            $!gfx.do: xobject, :valign<top>, :$width, :$height;
+
+            $!gfx.Restore;
+        }
     }
     multi method drawImage(CanvasOrXObject $image, Numeric \dx, Numeric \dy, Numeric $dw?, Numeric $dh?, :$sx, :$sy, :$sw, :$sh) is default {
         my \xobject = $_ ~~ HTML::Canvas ?? self!canvas-xobject($_) !! $_

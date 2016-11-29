@@ -1,5 +1,6 @@
 use v6;
 use Test;
+plan 7;
 
 use PDF::Content::PDF;
 use PDF::Content::Image::PNG;
@@ -400,16 +401,22 @@ test-page( -> \ctx {
       my $first-canvas = @sheets[0];
 
       $y += textHeight + pad;
-      for 20, 150 -> $x {
-          ctx.drawImage($first-canvas, $x, $y, 100, 150);
-      }
+      ctx.drawImage($first-canvas, 20, $y, 100, 150);
+      ctx.drawImage($first-canvas, 160, $y, 100, 150);
+      ctx.drawImage($first-canvas,                    30, 30, 400, 500,
+                                   300, $y, 100, 150);
 
       my \image = PDF::Content::Image::PNG.open("t/images/camelia-logo.png");
       @html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
       $y += 100 + pad;
       ctx.drawImage(image, 20, $y, 50, 50);
+      ctx.drawImage(image, 10, 10, 240, 220,
+                            70, $y, 50, 50);
+      ctx.drawImage(image, 120, $y, 20, 50);
       $y += 50 + pad;
-      ctx.drawImage(image, 20, $y, 200, 200);
+      ctx.drawImage(image,  20, $y, 200, 200);
+      ctx.drawImage(image,  10, 10, 240, 220,
+                           220, $y, 200, 200);
       $y += 200 + pad;
       ctx.drawImage(image, 20, $y);
       $y += 200 + pad;
