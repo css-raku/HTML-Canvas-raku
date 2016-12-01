@@ -409,11 +409,16 @@ test-page( -> \ctx {
       my \image = PDF::Content::Image::PNG.open("t/images/camelia-logo.png");
       @html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
       $y += 100 + pad;
-      ctx.drawImage(image, 20, $y, 50, 50);
-      ctx.drawImage(image, 10, 10, 240, 220,
-                            70, $y, 50, 50);
-      ctx.drawImage(image, 120, $y, 20, 50);
-      $y += 50 + pad;
+      ctx.drawImage(image,  20,  $y+0,  50, 50);
+      my $x = 50;
+      my $shift = 0;
+      for 1 .. 3 {
+          ctx.drawImage(image, $shift, $shift, 240, 220,  $x,  $y, 50, 50);
+          $x += 50;
+          $shift += 20;
+      }
+      ctx.drawImage(image, $x,  $y, 20, 50);
+      $y += 80 + pad;
       ctx.drawImage(image,  20, $y, 200, 200);
       ctx.drawImage(image,  10, 10, 240, 220,
                            220, $y, 200, 200);

@@ -160,10 +160,8 @@ class HTML::Canvas::To::PDF {
         $canvas.measureText($text)
     }
     has %!canvas-cache;
-    method !canvas-xobject(HTML::Canvas $image) {
-        %!canvas-cache{$image.html-id} //= do {
-            my $width = $image.width;
-            my $height = $image.height;
+    method !canvas-to-xobject(HTML::Canvas $image, Numeric :$width!, Numeric :$height! ) {
+        %!canvas-cache{ ($image.html-id, $width, $height).join('X') } //= do {
             my $form = (require ::('PDF::Content::PDF')).xobject-form( :bbox[0, 0, $width, $height] );
             my $renderer = self.new: :gfx($form.gfx), :$width, :$height;
             $image.render($renderer);
@@ -174,36 +172,56 @@ class HTML::Canvas::To::PDF {
     my subset CanvasOrXObject of Any where HTML::Canvas|Hash;
     multi method drawImage( CanvasOrXObject $image, Numeric \sx, Numeric \sy, Numeric \sw, Numeric \sh, Numeric \dx, Numeric \dy, Numeric \dw, Numeric \dh) {
         unless sw =~= 0 || sh =~= 0 {
-            # seems to draw a symetrically cropped image in rectangle: [dx, dy, dw, dh]
             $!gfx.Save;
-            my \xobject = $_ ~~ HTML::Canvas ?? self!canvas-xobject($_) !! $_
-                with $image;
 
-            my $width = dw * (sw + 2*sx) / sw;
-            my $height = dh * (sh + 2*sy) / sh;
-            my \x-margin = ($width - dw) / 2;
-            my \y-margin = ($height - dh) / 2;
-
-            $!gfx.transform: :translate(self!coords(dx - x-margin, dy - y-margin));
-            $!gfx.Rectangle: pt(x-margin), pt(-dh - y-margin), pt(dw), pt(dh);
+            # position at top right of visible area
+            $!gfx.transform: :translate(self!coords(dx, dy));
+            # clip to visible area
+            $!gfx.Rectangle: pt(0), pt(-dh), pt(dw), pt(dh);
             $!gfx.ClosePath;
             $!gfx.Clip;
             $!gfx.EndPath;
 
-            $!gfx.do: xobject, :valign<top>, :$width, :$height;
+            my $xobject;
+            my $width;
+            my $height;
+            my \x-scale = dw / sw;
+            my \y-scale = dh / sh;
+            if $image.isa(HTML::Canvas) {
+                $width = x-scale * $image.html-width;
+                $height = y-scale * $image.html-height;
+                $xobject = self!canvas-to-xobject($image, :$width, :$height);
+            }
+            else {
+                $width = x-scale * $image.width;
+                $height = y-scale * $image.height;
+                $xobject = $image;
+            }
+
+            $!gfx.transform: :translate[ -sx * x-scale, sy * y-scale ]
+                if sx || sy;
+
+            $!gfx.do: $xobject, :valign<top>, :$width, :$height;
 
             $!gfx.Restore;
         }
     }
-    multi method drawImage(CanvasOrXObject $image, Numeric \dx, Numeric \dy, Numeric $dw?, Numeric $dh?, :$sx, :$sy, :$sw, :$sh) is default {
-        my \xobject = $_ ~~ HTML::Canvas ?? self!canvas-xobject($_) !! $_
-            with $image;
+    multi method drawImage(CanvasOrXObject $image, Numeric $dx, Numeric $dy, Numeric $dw?, Numeric $dh?) is default {
+        my $xobject;
+        if $image.isa(HTML::Canvas) {
+            my $width = $image.html-width // $dw;
+            my $height = $image.html-height // $dh;
+            $xobject = self!canvas-to-xobject($image, :$width, :$height);
+        }
+        else {
+            $xobject = $image;
+        }
 
         my %opt = :valign<top>;
         %opt<width>  = $_ with $dw;
         %opt<height> = $_ with $dh;
 
-        $!gfx.do(xobject, |self!coords(dx, dy), |%opt);
+        $!gfx.do($xobject, |self!coords($dx, $dy), |%opt);
     }
     method getLineDash() {}
     method setLineDash(List $pattern, :$canvas) {

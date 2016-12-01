@@ -223,8 +223,8 @@ class HTML::Canvas {
 
     use HTML::Entity;
     my role HTMLObj {
-        has Numeric $.width is rw;
-        has Numeric $.height is rw;
+        has Numeric $.html-width is rw;
+        has Numeric $.html-height is rw;
         has Str $.html-id is rw;
         method js-ref {
             'document.getElementById("%s")'.sprintf(self.html-id);
@@ -237,8 +237,8 @@ class HTML::Canvas {
             $obj does HTMLObj;
             $obj.html-id = ~ $obj.WHERE;
         }
-        $obj.width   = $_ with $width;
-        $obj.height  = $_ with $height;
+        $obj.html-width   = $_ with $width;
+        $obj.html-height  = $_ with $height;
 
         if $obj.can('html') {
             $obj.html(:$style, |c);
@@ -255,7 +255,7 @@ class HTML::Canvas {
             my $Style = do with $style { ' style="%s"'.sprintf(encode-entities($_)) } else { '' };
 
             qq:to"END-HTML";
-            <canvas width="{self.width}pt" height="{self.height}pt" id="{self.html-id}"$Style></canvas>
+            <canvas width="{self.html-width}pt" height="{self.html-height}pt" id="{self.html-id}"$Style></canvas>
             <script>
                 var ctx = {self.js-ref}.getContext("2d");
                 {self.js(:context<ctx>, :$sep, |c)};
