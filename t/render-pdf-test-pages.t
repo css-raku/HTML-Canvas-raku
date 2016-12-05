@@ -1,6 +1,6 @@
 use v6;
 use Test;
-plan 7;
+plan 8;
 
 use PDF::Content::PDF;
 use PDF::Content::Image::PNG;
@@ -393,22 +393,12 @@ test-page( -> \ctx {
 
 test-page( -> \ctx {
       $y=0;
-      #
-      # images
-      #
 
       ctx.fillText("Testing drawImage", 20, $y + textHeight);
-      my $first-canvas = @sheets[0];
-
-      $y += textHeight + pad;
-      ctx.drawImage($first-canvas, 20, $y, 100, 150);
-      ctx.drawImage($first-canvas, 160, $y, 100, 150);
-      ctx.drawImage($first-canvas,                    30, 30, 400, 500,
-                                   300, $y, 100, 150);
+      $y += textHeight + pad + 10;
 
       my \image = PDF::Content::Image::PNG.open("t/images/camelia-logo.png");
       @html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
-      $y += 100 + pad;
       ctx.drawImage(image,  20,  $y+0,  50, 50);
       my $x = 50;
       my $shift = 0;
@@ -416,6 +406,12 @@ test-page( -> \ctx {
           ctx.drawImage(image, $shift, $shift, 240, 220,  $x,  $y, 50, 50);
           $x += 50;
           $shift += 20;
+      }
+      $shift = 0;
+      for 1 .. 3 {
+          ctx.drawImage(image, 0, 0, 200 + $shift, 220,  $x,  $y, 50, 50);
+          $x += 60;
+          $shift += 50;
       }
       ctx.drawImage(image, $x,  $y, 20, 50);
       $y += 80 + pad;
@@ -425,6 +421,40 @@ test-page( -> \ctx {
       $y += 200 + pad;
       ctx.drawImage(image, 20, $y);
       $y += 200 + pad;
+});
+
+test-page( -> \ctx {
+      $y=0;
+
+      ctx.fillText("Testing drawImage (canvas)", 20, $y + textHeight);
+      $y += textHeight + pad + 10;
+
+      my $canvas = @sheets[0];
+
+      my $x = 50;
+      my $shift = 0;
+      for 1 .. 3 {
+          ctx.drawImage($canvas, $shift, $shift, 240, 220,  $x,  $y, 50, 50);
+          $x += 60;
+          $shift += 20;
+      }
+
+      $shift = 0;
+      for 1 .. 3 {
+          ctx.drawImage($canvas, 0, 0, 200 + $shift, 220,  $x,  $y, 50, 50);
+          $x += 60;
+          $shift += 50;
+      }
+
+      ctx.drawImage($canvas, $x,  $y, 20, 50);
+
+      $y += 100 + pad;
+
+      ctx.drawImage($canvas, 20, $y, 100, 150);
+      ctx.drawImage($canvas, 160, $y, 100, 150);
+      ctx.drawImage($canvas,                    30, 30, 400, 500,
+                                   300, $y, 100, 150);
+
 });
 
 lives-ok {$pdf.save-as("t/render-pdf-test-pages.pdf")}, "pdf.save-as";

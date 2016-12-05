@@ -194,7 +194,7 @@ class HTML::Canvas {
     }
     method !call(Str $name, *@args) {
         @!calls.push: ($name => @args)
-            unless $name eq '_start' | '_finish';
+            unless $name eq '_start'|'_finish';
 
         if $name ~~ PathOps {
             #| draw later (via $.fill or $.stroke)

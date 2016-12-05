@@ -169,7 +169,7 @@ class HTML::Canvas::To::PDF {
             $form
         };
     }
-    my subset CanvasOrXObject of Any where HTML::Canvas|Hash;
+    my subset CanvasOrXObject where HTML::Canvas|Hash;
     multi method drawImage( CanvasOrXObject $image, Numeric \sx, Numeric \sy, Numeric \sw, Numeric \sh, Numeric \dx, Numeric \dy, Numeric \dw, Numeric \dh) {
         unless sw =~= 0 || sh =~= 0 {
             $!gfx.Save;
@@ -182,24 +182,27 @@ class HTML::Canvas::To::PDF {
             $!gfx.Clip;
             $!gfx.EndPath;
 
+            my \x-scale = dw / sw;
+            my \y-scale = dh / sh;
+            $!gfx.transform: :translate[ -sx * x-scale, sy * y-scale ]
+                if sx || sy;
+
             my $xobject;
             my $width;
             my $height;
-            my \x-scale = dw / sw;
-            my \y-scale = dh / sh;
+
             if $image.isa(HTML::Canvas) {
-                $width = x-scale * $image.html-width;
-                $height = y-scale * $image.html-height;
+                $width = $image.html-width || dw;
+                $height = $image.html-height || dh;
                 $xobject = self!canvas-to-xobject($image, :$width, :$height);
+                $width  *= x-scale;
+                $height *= y-scale;
             }
             else {
                 $width = x-scale * $image.width;
                 $height = y-scale * $image.height;
                 $xobject = $image;
             }
-
-            $!gfx.transform: :translate[ -sx * x-scale, sy * y-scale ]
-                if sx || sy;
 
             $!gfx.do: $xobject, :valign<top>, :$width, :$height;
 

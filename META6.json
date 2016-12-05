@@ -2,6 +2,7 @@
     "perl"        : "6.c",
     "name"        : "HTML::Canvas",
     "version"     : "0.0.1",
+    "auth"        : "github:p6-pdf",
     "description" : "Implements the HTML Canvas (2D) API",
     "depends"     : [ "JSON::Fast", "PDF::Content", "PDF::Style::Font", "HTML::Entity", "CSS::Declarations", "Color" ],
     "source-url"  : "git://github.com/p6-pdf/perl6-HTML-Canvas.git",
