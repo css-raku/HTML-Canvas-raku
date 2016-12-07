@@ -8,7 +8,7 @@ class HTML::Canvas {
     has Str @!subpath-new;
     has Pair @.calls;
     has Routine @.callback;
-    my subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle';
+    my subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textBaseline';
     my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath';
 
     has Numeric $.lineWidth = 1.0;
@@ -59,6 +59,17 @@ class HTML::Canvas {
                 $!css.font = $!font;
                 .css = $!css with $!font-object;
                 self!call('font', $!font);
+            }
+        );
+    }
+
+    subset Baseline of Str where 'alphabetic'|'top'|'hanging'|'middle'|'ideographic'|'bottom';
+    has Baseline $.textBaseline = 'alphabetic';
+    method textBaseline is rw {
+        Proxy.new(
+            FETCH => sub ($) { $!textBaseline },
+            STORE => sub ($, Str $!textBaseline) {
+                self!call('textBaseline', $!textBaseline);
             }
         );
     }

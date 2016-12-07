@@ -32,8 +32,6 @@ sub test-page(&markup) {
             }
         }
     }
-    todo "clean render of page $page-no"
-        if $page-no == 1;
 
     ok $clean, "completion of page $page-no";
     my $width = $feed.width;

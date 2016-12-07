@@ -136,7 +136,8 @@ class HTML::Canvas::To::PDF {
         $!gfx.BeginText;
         $!gfx.HorizScaling = $_ with $scale;
         $!gfx.text-position = self!coords($x, $y);
-        $!gfx.print($text);
+        my $baseline = $canvas.textBaseline;
+        $!gfx.print($text, :$baseline);
         $!gfx.EndText;
     }
     method font(Str $font-style, :$canvas!) {
@@ -144,6 +145,8 @@ class HTML::Canvas::To::PDF {
         my \pdf-font = $!gfx.use-font(canvas-font.face);
 
         $!gfx.font = [ pdf-font, canvas-font.em ];
+    }
+    method textBaseline(Str $baseline) {
     }
     method fillText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
         $!gfx.Save;
