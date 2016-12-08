@@ -40,6 +40,7 @@ $canvas.context: -> \ctx {
         ctx.fillText("Hello World",50, 40);
         ctx.strokeRect(40,20, 10,25);
         ctx.rotate(.2);
+        ctx.font = "18pt Arial";
         ctx.fillText("Hello World",50, 40);
         ctx.strokeStyle = 'red';
         ctx.strokeRect(40,20, 4,25);

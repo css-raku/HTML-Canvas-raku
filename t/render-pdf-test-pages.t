@@ -69,7 +69,7 @@ test-page(-> \ctx {
       ctx.fillText("Hello PDF", 20, $y + textHeight);
       $y += textHeight + pad;
 
-      ctx.font = "10pt courier bold";
+      ctx.font = "small courier bold";
       ctx.fillText("Hello Bold PDF", 20, $y + textHeight);
       $y += textHeight + pad;
 
