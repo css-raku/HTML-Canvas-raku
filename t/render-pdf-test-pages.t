@@ -1,6 +1,6 @@
 use v6;
 use Test;
-plan 8;
+plan 9;
 
 use PDF::Content::PDF;
 use PDF::Content::Image::PNG;
@@ -16,6 +16,7 @@ my $y = 0;
 my \h = 20;
 my \pad = 10;
 my \textHeight = 20;
+my $measured-text;
 
 sub test-page(&markup) {
     my HTML::Canvas $canvas .= new;
@@ -67,6 +68,7 @@ test-page(-> \ctx {
       ctx.font = "10pt times";
       ctx.fillText("Hello PDF", 20, $y + textHeight);
       $y += textHeight + pad;
+      $measured-text = ctx.measureText("Hello PDF").width;
 
       ctx.font = "10pt courier";
       ctx.fillText("Hello PDF", 20, $y + textHeight);
@@ -164,6 +166,9 @@ test-page(-> \ctx {
 
       ctx.restore();
 });
+
+ok(56 < $measured-text < 58, 'MeasureText')
+    or diag "text measurement $measured-text outside of range: 56...58";
 
 test-page( -> \ctx {
       #

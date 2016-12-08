@@ -62,6 +62,11 @@ class HTML::Canvas {
             }
         );
     }
+    #| browsers seem to be display fonts at 4/3 of actual size. Not sure
+    #| if this should be treated as UI dependant.
+    method adjusted-font-size(Numeric $raw-size) {
+        $raw-size * 4/3;
+    }
 
     subset Baseline of Str where 'alphabetic'|'top'|'hanging'|'middle'|'ideographic'|'bottom';
     has Baseline $.textBaseline = 'alphabetic';
@@ -180,11 +185,11 @@ class HTML::Canvas {
         :strokeText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) { }),
         :measureText(method (Str $text, :$obj) {
                             with $!font-object {
-                                my Numeric $width = .face.stringwidth($text, .em);
-                                class { has Numeric $.width }.new: :$width
+                                my Numeric $width = self.adjusted-font-size: .face.stringwidth($text, .em);
+                                class { has Numeric $.width }.new: :$width;
                             }
                             else {
-                                fail "unable to measure text - not font object";
+                                fail "unable to measure text - no current font object";
                             }
                         } ),
         :drawImage(method (\image, Numeric \dx, Numeric \dy, *@args) {}),
@@ -329,8 +334,9 @@ class HTML::Canvas {
         if !@meth {
             with %API{name} -> &api {
                 @meth.push: method (*@a) {
-                    &api(self, |@a);
+                    my \r := &api(self, |@a);
                     self!call(name, |@a);
+                    r;
                 };
             }
             self.^add_method(name, @meth[0]) if @meth;

@@ -143,10 +143,7 @@ class HTML::Canvas::To::PDF {
     method font(Str $font-style, :$canvas!) {
         my \canvas-font = $canvas.font-object;
         my \pdf-font = $!gfx.use-font(canvas-font.face);
-        # just a fudge factor so PDF font sizes visually match HTML
-        my constant SizeAdjust = 1.33;
-
-        $!gfx.font = [ pdf-font, canvas-font.em * SizeAdjust ];
+        $!gfx.font = [ pdf-font, $canvas.adjusted-font-size(canvas-font.em) ];
     }
     method textBaseline(Str $baseline) {
     }
@@ -162,7 +159,6 @@ class HTML::Canvas::To::PDF {
         $!gfx.Restore
     }
     method measureText(Str $text, :$canvas!) {
-        $canvas.measureText($text)
     }
     has %!canvas-cache;
     method !canvas-to-xobject(HTML::Canvas $image, Numeric :$width!, Numeric :$height! ) {
