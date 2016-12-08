@@ -47,6 +47,13 @@ my \textHeight = 20;
 
 test-page(-> \ctx {
     # tests adapted from jsPDF/examples/context2d/test_context2d.html
+      sub draw-line {
+          ctx.beginPath();
+          ctx.moveTo(20,$y);
+          ctx.lineTo(150, $y);
+          ctx.stroke();
+      }
+
       ctx.font = "20pt times";
 
       # Text and Fonts
@@ -116,45 +123,38 @@ test-page(-> \ctx {
       ctx.strokeStyle = '#ddd';
       ctx.font = "20pt times";
 
-      ctx.moveTo(20,$y);
-      ctx.lineTo(150, $y);
-      ctx.stroke();
+      draw-line();
 
       ctx.textBaseline = 'alphabetic';
       ctx.fillText("Alphabetic Q", 20, $y);
       $y += 40 + pad;
 
-      ctx.moveTo(20,$y);
-      ctx.lineTo(150, $y);
-      ctx.stroke();
+      draw-line();
+
       ctx.textBaseline = 'ideographic';
       ctx.fillText("Ideographic Q", 20, $y);
       $y += 40 + pad;
 
-      ctx.moveTo(20,$y);
-      ctx.lineTo(150, $y);
-      ctx.stroke();
+      draw-line();
+
       ctx.textBaseline = 'top';
       ctx.fillText("Top Q", 20, $y);
       $y += 40 + pad;
 
-      ctx.moveTo(20,$y);
-      ctx.lineTo(150, $y);
-      ctx.stroke();
+      draw-line();
+
       ctx.textBaseline = 'bottom';
       ctx.fillText("Bottom Q", 20, $y);
       $y += 40 + pad;
 
-      ctx.moveTo(20,$y);
-      ctx.lineTo(150, $y);
-      ctx.stroke();
+      draw-line();
+
       ctx.textBaseline = 'middle';
       ctx.fillText("Middle Q", 20, $y);
       $y += 40 + pad;
 
-      ctx.moveTo(20,$y);
-      ctx.lineTo(150, $y);
-      ctx.stroke();
+      draw-line();
+
       ctx.textBaseline = 'hanging';
       ctx.fillText("Hanging Q", 20, $y);
       $y += 40 + pad;
