@@ -12,6 +12,11 @@ my $page-no;
 my @html-body;
 my @sheets;
 
+my $y = 0;
+my \h = 20;
+my \pad = 10;
+my \textHeight = 20;
+
 sub test-page(&markup) {
     my HTML::Canvas $canvas .= new;
     my $gfx = $pdf.add-page.gfx;
@@ -20,7 +25,12 @@ sub test-page(&markup) {
     my Bool $clean = True;
     $page-no++;
     try {
-        $canvas.context(&markup);
+        $canvas.context(
+            -> \ctx {
+                $y = 0;
+                ctx.font = "20pt times";
+                &markup(ctx);
+            });
         CATCH {
             default {
                 warn "stopped on page $page-no: {.message}";
@@ -40,11 +50,6 @@ sub test-page(&markup) {
     @sheets.push: $canvas;
 }
 
-my $y = 0;
-my \h = 20;
-my \pad = 10;
-my \textHeight = 20;
-
 test-page(-> \ctx {
     # tests adapted from jsPDF/examples/context2d/test_context2d.html
       sub draw-line {
@@ -53,8 +58,6 @@ test-page(-> \ctx {
           ctx.lineTo(150, $y);
           ctx.stroke();
       }
-
-      ctx.font = "20pt times";
 
       # Text and Fonts
       ctx.save();
@@ -163,7 +166,6 @@ test-page(-> \ctx {
 });
 
 test-page( -> \ctx {
-      $y=0;
       #
       # rectangles
       #
@@ -242,7 +244,6 @@ test-page( -> \ctx {
       #
       # arcs
       #
-      $y=0;
       ctx.fillText("Testing arc, stroke, and fill", 20, $y + textHeight);
       $y += textHeight + pad + 20;
 
@@ -283,10 +284,8 @@ test-page( -> \ctx {
 });
 
 test-page( -> \ctx {
-      $y=0;
       # fill and stroke styles
       ctx.fillText("Testing fillStyle and strokeStyle", 20, $y + textHeight);
-      ctx.font = '20pt times-roman';
       $y += textHeight + pad;
 
       # test fill style
@@ -390,8 +389,6 @@ test-page( -> \ctx {
 });
 
 test-page( -> \ctx {
-      $y=0;
-
       ctx.fillText("Testing drawImage", 20, $y + textHeight);
       $y += textHeight + pad + 10;
 
@@ -422,8 +419,6 @@ test-page( -> \ctx {
 });
 
 test-page( -> \ctx {
-      $y=0;
-
       ctx.fillText("Testing drawImage (canvas)", 20, $y + textHeight);
       $y += textHeight + pad + 10;
 
