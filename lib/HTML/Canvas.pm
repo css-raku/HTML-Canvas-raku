@@ -279,7 +279,7 @@ class HTML::Canvas {
             END-HTML
         }
         else {
-            die 'please call .html( :$width, :$width) on this canvas, to initialize it';
+            die 'please call .to-html( :$width, :$width) on this canvas, to initialize it';
         }
     }
 
