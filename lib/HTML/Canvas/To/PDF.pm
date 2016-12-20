@@ -290,6 +290,9 @@ class HTML::Canvas::To::PDF {
             $endAngle += 2 * pi;
         }
 
+        $endAngle = $startAngle + 2 * pi
+            if $endAngle - $startAngle > 2 * pi;
+
         my \start-q = find-quadrant($startAngle);
         my \end-q   = find-quadrant($endAngle);
 

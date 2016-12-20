@@ -313,6 +313,11 @@ test-page( -> \ctx {
       $y +=  pad + 40;
 
       ctx.beginPath();
+      ctx.arc(50, $y, 20, 0, 2.2*pi, False);
+      ctx.stroke();
+      $y +=  pad + 40;
+
+      ctx.beginPath();
       ctx.arc(50, $y, 20, 0, 2*pi, False);
       ctx.fill();
       $y +=  pad + 40;
