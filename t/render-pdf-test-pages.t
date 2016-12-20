@@ -32,6 +32,7 @@ sub test-page(&markup) {
                 ctx.font = "20pt times";
                 &markup(ctx);
             });
+
         CATCH {
             default {
                 warn "stopped on page $page-no: {.message}";
@@ -245,6 +246,11 @@ test-page( -> \ctx {
       }
 });
 
+
+sub deg2rad (Numeric $deg) {
+    return $deg * pi / 180;
+}
+
 test-page( -> \ctx {
       #
       # arcs
@@ -253,12 +259,12 @@ test-page( -> \ctx {
       $y += textHeight + pad + 20;
 
       ctx.beginPath();
-      ctx.arc(50, $y, 20, -10, 170, False);
+      ctx.arc(50, $y, 20, deg2rad(-10), deg2rad(170), False);
       ctx.stroke();
       $y +=  pad + 40;
 
       ctx.beginPath();
-      ctx.arc(50, $y, 20, -10, 170, True);
+      ctx.arc(50, $y, 20, deg2rad(-10), deg2rad(170), True);
       ctx.stroke();
       $y +=  pad + 40;
 

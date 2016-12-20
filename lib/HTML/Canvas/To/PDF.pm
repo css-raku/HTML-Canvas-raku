@@ -38,16 +38,6 @@ class HTML::Canvas::To::PDF {
         (x, -y);
     }
 
-    # ref: http://stackoverflow.com/questions/1960786/how-do-you-draw-filled-and-unfilled-circles-with-pdf-primitives
-    sub draw-circle(\g, Numeric \r, \x, \y) {
-        my Numeric \magic = r * 0.551784;
-        g.MoveTo(x - r, y);
-        g.CurveTo(x - r, y + magic,  x - magic, y + r,  x, y + r);
-        g.CurveTo(x + magic, y + r,  x + r, y + magic,  x + r, y);
-        g.CurveTo(x + r, y - magic,  x + magic, y - r,  x, y - r);
-        g.CurveTo(x - magic, y - r,  x - r, y - magic,  x - r, y);
-    }
-
     method !transform( |c ) {
 	my Numeric @tm = PDF::Content::Util::TransformMatrix::transform-matrix( |c );
         @!ctm = PDF::Content::Util::TransformMatrix::multiply(@!ctm, @tm);
@@ -246,11 +236,84 @@ class HTML::Canvas::To::PDF {
         $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
         $!gfx.ClosePath;
     }
-    method arc(Numeric \x, Numeric \y, Numeric \r, Numeric \startAngle, Numeric \endAngle, Bool $anti-clockwise?) {
-        # stub. ignores start and end angle; draws a circle
-        warn "todo: arc start/end angles"
-            unless endAngle - startAngle =~= 2 * pi;
-        draw-circle($!gfx, r, |self!coords(x, y));
+
+
+    #| Compute all four points for an arc that subtends the same total angle
+    #| but is centered on the X-axis
+    sub createSmallArc(Numeric \r, Numeric \a1, Numeric \a2) {
+        # adapted from http://hansmuller-flex.blogspot.co.nz/2011/04/approximating-circular-arc-with-cubic.html
+        # courtesy of Hans Muller
+        my Numeric \a = (a2 - a1) / 2.0;
+
+        my Numeric \x4 = r * cos(a);
+        my Numeric \y4 = r * sin(a);
+        my Numeric \x1 = x4;
+        my Numeric \y1 = -y4;
+
+        my Numeric \k = 0.5522847498;
+        my Numeric \f = k * tan(a);
+
+        my Numeric \x2 = x1 + f * y4;
+        my Numeric \y2 = y1 + f * x4;
+        my Numeric \x3 = x2;
+        my Numeric \y3 = -y2;
+
+        # Find the arc points actual locations by computing x1,y1 and x4,y4
+        # and rotating the control points by a + a1
+
+        my Numeric \ar = a + a1;
+        my Numeric \cos_ar = cos(ar);
+        my Numeric \sin_ar = sin(ar);
+
+        return {
+            :x1(r * cos(a1)),
+            :y1(r * sin(a1)),
+            :x2(x2 * cos_ar - y2 * sin_ar),
+            :y2(x2 * sin_ar + y2 * cos_ar),
+            :x3(x3 * cos_ar - y3 * sin_ar),
+            :y3(x3 * sin_ar + y3 * cos_ar),
+            :x4(r * cos(a2)),
+            :y4(r * sin(a2)),
+        };
+    }
+
+    constant @Quadrant = [ 0, pi/2, pi, 3 * pi/2, 2 * pi ];
+    sub find-quadrant(\a) {
+        (0..3).first: { @Quadrant[$_] - $*TOLERANCE <= a <= @Quadrant[$_+1] + $*TOLERANCE };
+    }
+    method arc(Numeric \x, Numeric \y, Numeric \r, Numeric $startAngle, Numeric $endAngle, Bool $anti-clockwise?) {
+        my \startAngle = $startAngle % (2 * pi);
+        my \endAngle = $endAngle % (2 * pi);
+
+        my \start-q = find-quadrant(startAngle);
+        my \end-q   = find-quadrant(endAngle);
+        my $n = end-q == start-q && endAngle < startAngle
+             ?? 4
+             !! (end-q > start-q
+                 ?? end-q - start-q
+                 !! (4 - start-q) + end-q);
+
+        warn { :$startAngle, :$endAngle, :s(start-q), :e(end-q), :$n }.perl;
+
+        my @arcs = (0..$n).map: {
+            my \first-q = $_ == 0;
+            my \last-q = $_ == $n;
+            my \i = (start-q + $_) % 4;
+            my \a1 = first-q ?? startAngle !! @Quadrant[i];
+            my \a2 = last-q  ?? endAngle   !! @Quadrant[i+1];
+            warn { :i(i), :a1(a1), :a2(a2) }.perl;
+            createSmallArc(r, a1, a2);
+        }
+
+        $!gfx.MoveTo( |self!coords(x + .<x1>, y + .<y1>) )
+            with @arcs[0];
+
+        for @arcs {
+            $!gfx.CurveTo( |self!coords(x + .<x2>, y + .<y2>),
+                           |self!coords(x + .<x3>, y + .<y3>),
+                           |self!coords(x + .<x4>, y + .<y4>),
+                         );
+        }
     }
 
 }
