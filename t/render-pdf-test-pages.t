@@ -299,12 +299,12 @@ test-page( -> \ctx {
       ctx.arc(50, $y, 20, 0, pi, False);
       ctx.stroke();
 
-      ctx.save;
-      ctx.strokeStyle = 'rgba(255,0,0,.5)';
-      ctx.beginPath();
-      ctx.arc(50, $y, 20, 0, pi, True);
-      ctx.stroke();
-      ctx.restore;
+      ctx.save; {
+          ctx.strokeStyle = 'rgba(255,0,0,.5)';
+          ctx.beginPath();
+          ctx.arc(50, $y, 20, 0, pi, True);
+          ctx.stroke();
+      }; ctx.restore;
       $y +=  pad + 40;
 
       ctx.beginPath();
@@ -315,6 +315,18 @@ test-page( -> \ctx {
       ctx.beginPath();
       ctx.arc(50, $y, 20, 0, 2.2*pi, False);
       ctx.stroke();
+      $y +=  pad + 40;
+
+      ctx.beginPath();
+      ctx.arc(50, $y, 20, 8, 2*pi, False);
+      ctx.fill();
+
+      ctx.save; {
+          ctx.strokeStyle = 'rgba(255,0,0,.5)';
+          ctx.beginPath();
+          ctx.arc(50, $y, 20, 8, 2*pi, False);
+          ctx.fill();
+      }; ctx.restore;
       $y +=  pad + 40;
 
       ctx.beginPath();

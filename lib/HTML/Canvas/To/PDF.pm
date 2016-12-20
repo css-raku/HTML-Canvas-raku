@@ -237,7 +237,6 @@ class HTML::Canvas::To::PDF {
         $!gfx.ClosePath;
     }
 
-
     #| Compute all four points for an arc that subtends the same total angle
     #| but is centered on the X-axis
     sub createSmallArc(Numeric \r, Numeric \a1, Numeric \a2) {
@@ -293,6 +292,8 @@ class HTML::Canvas::To::PDF {
         $endAngle = $startAngle + 2 * pi
             if $endAngle - $startAngle > 2 * pi;
 
+        # break circle down into semicircle quadrants, which
+        # are then drawn with individual PDF CurveTo operations
         my \start-q = find-quadrant($startAngle);
         my \end-q   = find-quadrant($endAngle);
 
@@ -301,11 +302,12 @@ class HTML::Canvas::To::PDF {
             !! (4 - start-q) + end-q;
 
         $n ||= do {
+            # further analyse start/end in the same quadrant
+            # ~ full circle, or small short arc?
             my \theta = $endAngle - $startAngle;
             theta < pi ?? 0 !! ($endAngle < $startAngle ?? 4 !! 3);
         }
 
-        # breakdown into semicircles <= 90 degrees
         my @semi-circles = (0..$n).map: {
             my \starting = $_ == 0;
             my \ending = $_ == $n;
