@@ -257,25 +257,54 @@ test-page( -> \ctx {
       #
       ctx.fillText("Testing arc, stroke, and fill", 20, $y + textHeight);
       $y += textHeight + pad + 20;
+      ctx.strokeStyle = 'rgba(0,0,255,.75)';
 
       ctx.beginPath();
       ctx.arc(50, $y, 20, deg2rad(-10), deg2rad(170), False);
       ctx.stroke();
-      $y +=  pad + 40;
 
+      ctx.save;
+      ctx.strokeStyle = 'rgba(255,0,0,.5)';
       ctx.beginPath();
       ctx.arc(50, $y, 20, deg2rad(-10), deg2rad(170), True);
       ctx.stroke();
+      ctx.restore;
+      $y +=  pad + 40;
+
+      ctx.beginPath();
+      ctx.arc(50, $y, 20, deg2rad(20), deg2rad(340), False);
+      ctx.stroke();
+
+      ctx.save;
+      ctx.strokeStyle = 'rgba(255,0,0,.5)';
+      ctx.beginPath();
+      ctx.arc(50, $y, 20, deg2rad(20), deg2rad(340), True);
+      ctx.stroke();
+      ctx.restore;
+      $y +=  pad + 40;
+
+      ctx.beginPath();
+      ctx.arc(50, $y, 20, deg2rad(10), deg2rad(80), False);
+      ctx.stroke();
+
+      ctx.save;
+      ctx.strokeStyle = 'rgba(255,0,0,.5)';
+      ctx.beginPath();
+      ctx.arc(50, $y, 20, deg2rad(10), deg2rad(80), True);
+      ctx.stroke();
+      ctx.restore;
       $y +=  pad + 40;
 
       ctx.beginPath();
       ctx.arc(50, $y, 20, 0, pi, False);
       ctx.stroke();
-      $y +=  pad + 40;
 
+      ctx.save;
+      ctx.strokeStyle = 'rgba(255,0,0,.5)';
       ctx.beginPath();
       ctx.arc(50, $y, 20, 0, pi, True);
       ctx.stroke();
+      ctx.restore;
       $y +=  pad + 40;
 
       ctx.beginPath();

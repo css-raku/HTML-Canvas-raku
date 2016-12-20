@@ -278,37 +278,44 @@ class HTML::Canvas::To::PDF {
     }
 
     constant @Quadrant = [ 0, pi/2, pi, 3 * pi/2, 2 * pi ];
-    sub find-quadrant(\a) {
+    sub find-quadrant($a) {
+        my \a = $a % (2*pi);
         (0..3).first: { @Quadrant[$_] - $*TOLERANCE <= a <= @Quadrant[$_+1] + $*TOLERANCE };
     }
-    method arc(Numeric \x, Numeric \y, Numeric \r, Numeric $startAngle, Numeric $endAngle, Bool $anti-clockwise?) {
-        my \startAngle = $startAngle % (2 * pi);
-        my \endAngle = $endAngle % (2 * pi);
+    method arc(Numeric \x, Numeric \y, Numeric \r,
+               Numeric $startAngle is copy, Numeric $endAngle is copy, Bool $anti-clockwise?) {
 
-        my \start-q = find-quadrant(startAngle);
-        my \end-q   = find-quadrant(endAngle);
-        my $n = end-q == start-q && endAngle < startAngle
-             ?? 4
-             !! (end-q > start-q
-                 ?? end-q - start-q
-                 !! (4 - start-q) + end-q);
+        if $anti-clockwise {
+            ($startAngle, $endAngle) = ($endAngle, $startAngle);
+            $endAngle += 2 * pi;
+        }
 
-        warn { :$startAngle, :$endAngle, :s(start-q), :e(end-q), :$n }.perl;
+        my \start-q = find-quadrant($startAngle);
+        my \end-q   = find-quadrant($endAngle);
 
-        my @arcs = (0..$n).map: {
-            my \first-q = $_ == 0;
-            my \last-q = $_ == $n;
+        my $n = end-q >= start-q
+            ?? end-q - start-q
+            !! (4 - start-q) + end-q;
+
+        $n ||= do {
+            my \theta = $endAngle - $startAngle;
+            theta < pi ?? 0 !! ($endAngle < $startAngle ?? 4 !! 3);
+        }
+
+        # breakdown into semicircles <= 90 degrees
+        my @semi-circles = (0..$n).map: {
+            my \starting = $_ == 0;
+            my \ending = $_ == $n;
             my \i = (start-q + $_) % 4;
-            my \a1 = first-q ?? startAngle !! @Quadrant[i];
-            my \a2 = last-q  ?? endAngle   !! @Quadrant[i+1];
-            warn { :i(i), :a1(a1), :a2(a2) }.perl;
+            my \a1 = starting ?? $startAngle !! @Quadrant[i];
+            my \a2 = ending  ?? $endAngle    !! @Quadrant[i+1];
             createSmallArc(r, a1, a2);
         }
 
         $!gfx.MoveTo( |self!coords(x + .<x1>, y + .<y1>) )
-            with @arcs[0];
+            with @semi-circles[0];
 
-        for @arcs {
+        for @semi-circles {
             $!gfx.CurveTo( |self!coords(x + .<x2>, y + .<y2>),
                            |self!coords(x + .<x3>, y + .<y3>),
                            |self!coords(x + .<x4>, y + .<y4>),
