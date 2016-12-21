@@ -285,24 +285,22 @@ class HTML::Canvas::To::PDF {
                Numeric $startAngle is copy, Numeric $endAngle is copy, Bool $anti-clockwise?) {
 
         if $anti-clockwise {
-            ($startAngle, $endAngle) = ($endAngle, $startAngle);
-            $endAngle += 2 * pi;
+            $endAngle = $startAngle
+                if $startAngle - $endAngle > 2 * pi;
         }
-
-        while $endAngle|$startAngle < 0 {
-            $_ += 2 *pi for $endAngle, $startAngle;
+        else {
+            $endAngle = $startAngle + 2 * pi
+                if $endAngle - $startAngle > 2 * pi;
         }
-        $endAngle = $startAngle + 2 * pi
-            if $endAngle - $startAngle > 2 * pi;
 
         # break circle down into semicircle quadrants, which
         # are then drawn with individual PDF CurveTo operations
-        my \start-q = find-quadrant($startAngle);
-        my \end-q   = find-quadrant($endAngle);
+        my $start-q = find-quadrant($startAngle);
+        my $end-q   = find-quadrant($endAngle);
 
-        my $n = end-q >= start-q
-            ?? end-q - start-q
-            !! (4 - start-q) + end-q;
+        my $n = $end-q >= $start-q
+            ?? $end-q - $start-q
+            !! (4 - $start-q) + $end-q;
 
         $n ||= do {
             # further analyse start/end in the same quadrant
@@ -311,10 +309,17 @@ class HTML::Canvas::To::PDF {
             theta < pi ?? 0 !! 4;
         }
 
+        if $anti-clockwise {
+            # draw the compilmentry arc
+            ($startAngle, $endAngle) = ($endAngle, $startAngle);
+            ($start-q, $end-q) = ($end-q, $start-q);
+            $n = 4 - $n;
+        }
+
         my @segments = (0..$n).map: {
             my \starting = $_ == 0;
             my \ending = $_ == $n;
-            my \i = (start-q + $_) % 4;
+            my \i = ($start-q + $_) % 4;
             my \a1 = starting ?? $startAngle !! @Quadrant[i];
             my \a2 = ending  ?? $endAngle    !! @Quadrant[i+1];
             [a1, a2];

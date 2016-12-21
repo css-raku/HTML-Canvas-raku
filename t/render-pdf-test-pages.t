@@ -318,9 +318,12 @@ test-page( -> \ctx {
       ctx.stroke();
       $y +=  pad + 40;
 
+      ctx.save;
+      ctx.strokeStyle = 'rgba(255,0,0,.5)';
       ctx.beginPath();
       ctx.arc(50, $y, 20, 0, -2.2*pi, True);
       ctx.stroke();
+      ctx.restore;
       $y +=  pad + 40;
 
       ctx.beginPath();
