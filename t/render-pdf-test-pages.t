@@ -258,6 +258,7 @@ test-page( -> \ctx {
       ctx.fillText("Testing arc, stroke, and fill", 20, $y + textHeight);
       $y += textHeight + pad + 20;
       ctx.strokeStyle = 'rgba(0,0,255,.75)';
+      ctx.fillStyle = 'rgba(0,255,0,.75)';
 
       ctx.beginPath();
       ctx.arc(50, $y, 20, deg2rad(-10), deg2rad(170), False);
@@ -318,13 +319,18 @@ test-page( -> \ctx {
       $y +=  pad + 40;
 
       ctx.beginPath();
+      ctx.arc(50, $y, 20, 0, -2.2*pi, True);
+      ctx.stroke();
+      $y +=  pad + 40;
+
+      ctx.beginPath();
       ctx.arc(50, $y, 20, 8, 2*pi, False);
       ctx.fill();
 
       ctx.save; {
-          ctx.strokeStyle = 'rgba(255,0,0,.5)';
+          ctx.fillStyle = 'rgba(255,0,0,.5)';
           ctx.beginPath();
-          ctx.arc(50, $y, 20, 8, 2*pi, False);
+          ctx.arc(50, $y, 20, 8, 2*pi, True);
           ctx.fill();
       }; ctx.restore;
       $y +=  pad + 40;
@@ -337,6 +343,13 @@ test-page( -> \ctx {
       ctx.beginPath();
       ctx.arc(50, $y, 20, 0, pi, False);
       ctx.fill();
+
+      ctx.save; {
+          ctx.fillStyle = 'rgba(255,0,0,.5)';
+          ctx.beginPath();
+          ctx.arc(50, $y, 20, 0, pi, True);
+          ctx.fill();
+      }; ctx.restore;
       $y +=  pad + 40;
 });
 

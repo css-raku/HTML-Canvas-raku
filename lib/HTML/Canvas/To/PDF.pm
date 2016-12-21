@@ -289,6 +289,9 @@ class HTML::Canvas::To::PDF {
             $endAngle += 2 * pi;
         }
 
+        while $endAngle|$startAngle < 0 {
+            $_ += 2 *pi for $endAngle, $startAngle;
+        }
         $endAngle = $startAngle + 2 * pi
             if $endAngle - $startAngle > 2 * pi;
 
@@ -305,22 +308,26 @@ class HTML::Canvas::To::PDF {
             # further analyse start/end in the same quadrant
             # ~ full circle, or small short arc?
             my \theta = $endAngle - $startAngle;
-            theta < pi ?? 0 !! ($endAngle < $startAngle ?? 4 !! 3);
+            theta < pi ?? 0 !! 4;
         }
 
-        my @semi-circles = (0..$n).map: {
+        my @segments = (0..$n).map: {
             my \starting = $_ == 0;
             my \ending = $_ == $n;
             my \i = (start-q + $_) % 4;
             my \a1 = starting ?? $startAngle !! @Quadrant[i];
             my \a2 = ending  ?? $endAngle    !! @Quadrant[i+1];
-            createSmallArc(r, a1, a2);
+            [a1, a2];
         }
 
-        $!gfx.MoveTo( |self!coords(x + .<x1>, y + .<y1>) )
-            with @semi-circles[0];
+        my @arcs = @segments        \
+            .grep({.[0] !=~= [.1]}) \
+            .map: { createSmallArc(r, .[0], .[1]); };
 
-        for @semi-circles {
+        $!gfx.MoveTo( |self!coords(x + .<x1>, y + .<y1>) )
+            with @arcs[0];
+
+        for @arcs {
             $!gfx.CurveTo( |self!coords(x + .<x2>, y + .<y2>),
                            |self!coords(x + .<x3>, y + .<y3>),
                            |self!coords(x + .<x4>, y + .<y4>),
