@@ -1,6 +1,7 @@
 use v6;
 class HTML::Canvas::To::PDF {
 
+    use PDF; # keep rakudo happy
     use Color;
     use HTML::Canvas;
     use PDF::Content::Ops :TextMode, :LineCaps, :LineJoin;
@@ -151,7 +152,7 @@ class HTML::Canvas::To::PDF {
     has %!canvas-cache;
     method !canvas-to-xobject(HTML::Canvas $image, Numeric :$width!, Numeric :$height! ) {
         %!canvas-cache{ ($image.html-id, $width, $height).join('X') } //= do {
-            my $form = (require ::('PDF::Content::PDF')).xobject-form( :bbox[0, 0, $width, $height] );
+            my $form = (require ::('PDF::Lite')).xobject-form( :bbox[0, 0, $width, $height] );
             my $renderer = self.new: :gfx($form.gfx), :$width, :$height;
             $image.render($renderer);
             $form.finish;

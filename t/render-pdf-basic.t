@@ -2,12 +2,12 @@ use v6;
 use Test;
 plan 20;
 
-use PDF::Content::PDF;
+use PDF::Lite;
 use HTML::Canvas;
 use HTML::Canvas::To::PDF;
 
 my HTML::Canvas $canvas .= new;
-my PDF::Content::PDF $pdf .= new;
+my PDF::Lite $pdf .= new;
 my $gfx = $pdf.add-page.gfx;
 my $feed = HTML::Canvas::To::PDF.new: :$gfx, :$canvas;
 is $feed.width, 612, 'renderer default width';

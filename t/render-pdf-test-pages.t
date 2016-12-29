@@ -2,12 +2,12 @@ use v6;
 use Test;
 plan 9;
 
-use PDF::Content::PDF;
+use PDF::Lite;
 use PDF::Content::Image::PNG;
 use HTML::Canvas;
 use HTML::Canvas::To::PDF;
 
-my PDF::Content::PDF $pdf .= new;
+my PDF::Lite $pdf .= new;
 my $page-no;
 my @html-body;
 my @sheets;
