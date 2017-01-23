@@ -40,8 +40,7 @@ class HTML::Canvas::To::PDF {
     }
 
     method !transform( |c ) {
-	my Numeric @tm = PDF::Content::Util::TransformMatrix::transform-matrix( |c );
-        @!ctm = PDF::Content::Util::TransformMatrix::multiply(@!ctm, @tm);
+	my Numeric @tm = PDF::Content::Util::TransformMatrix::transform-matrix( :matrix(@!ctm), |c );
 	$!gfx.ConcatMatrix( @tm );
     }
 
@@ -126,7 +125,13 @@ class HTML::Canvas::To::PDF {
         $!gfx.HorizScaling = $_ with $scale;
         $!gfx.text-position = self!coords($x, $y);
         my $baseline = $canvas.textBaseline;
-        $!gfx.print($text, :$baseline);
+        my HTML::Canvas::textAlignment $align = do given $canvas.textAlign {
+            when 'start' { $canvas.direction eq 'ltr' ?? 'left' !! 'right' }
+            when 'end'   { $canvas.direction eq 'rtl' ?? 'left' !! 'right' }
+            default { $_ }
+        }
+
+        $!gfx.print($text, :$align, :$baseline);
         $!gfx.EndText;
     }
     method font(Str $font-style, :$canvas!) {
@@ -134,8 +139,9 @@ class HTML::Canvas::To::PDF {
         my \pdf-font = $!gfx.use-font(canvas-font.face);
         $!gfx.font = [ pdf-font, $canvas.adjusted-font-size(canvas-font.em) ];
     }
-    method textBaseline(Str $baseline) {
-    }
+    method textBaseline(Str $_) {}
+    method textAlign(Str $_) {}
+    method direction(Str $_) {}
     method fillText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
         $!gfx.Save;
         self!text($text, $x, $y, :$maxWidth, :$canvas);

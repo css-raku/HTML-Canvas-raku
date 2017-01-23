@@ -1,6 +1,6 @@
 use v6;
 use Test;
-plan 9;
+plan 10;
 
 use PDF::Lite;
 use PDF::Content::Image::PNG;
@@ -172,9 +172,42 @@ ok(56 < $measured-text < 58, 'MeasureText')
     or diag "text measurement $measured-text outside of range: 56...58";
 
 test-page( -> \ctx {
+      ctx.save();
+      ctx.fillText("Testing textAlign", 20, $y + textHeight);
+      $y += 20 + pad;
+      my $y-start = $y;
+      ctx.font="15px Arial"; 
+
+      # Show the different textAlign values
+      ctx.textAlign="start"; 
+      ctx.fillText("< textAlign=start",150,$y += textHeight + pad); 
+      ctx.textAlign="end"; 
+      ctx.fillText("textAlign=end >",150, $y); 
+
+      ctx.direction = 'rtl';
+
+      ctx.textAlign="start"; 
+      ctx.fillText("textAlign=start (rtl) >",150,$y += textHeight + pad); 
+      ctx.textAlign="end"; 
+      ctx.fillText("< textAlign=end (rtl)",150, $y); 
+
+      ctx.textAlign="left"; 
+      ctx.fillText("textAlign=left",150, $y += textHeight + pad);
+      ctx.textAlign="center"; 
+      ctx.fillText("textAlign=center",150, $y += textHeight + pad); 
+      ctx.textAlign="right"; 
+      ctx.fillText("textAlign=right",150, $y += textHeight + pad);
+      ctx.restore;
+
+      # Create a red line in position 150
+      ctx.strokeStyle="red";
+      ctx.moveTo(150,$y-start);
+      ctx.lineTo(150,$y);
+      ctx.stroke();
       #
       # rectangles
       #
+      $y += textHeight + pad;
       ctx.save();
       ctx.fillText("Testing fillRect, clearRect and strokeRect", 20, $y + textHeight);
       $y += textHeight + pad;
@@ -521,6 +554,20 @@ test-page( -> \ctx {
       ctx.drawImage($canvas,                    30, 30, 400, 500,
                                    300, $y, 100, 150);
 
+});
+
+test-page( -> \ctx {
+      $y = pad;
+      ctx.fillText("Testing gradiants & Patterns", 20, $y + textHeight);
+      $y += textHeight + pad + 10;
+
+##      my \gradient = ctx.createLinearGradient(0,0,170,0);
+##      gradient.addColorStop(0,"black");
+##      gradient.addColorStop(0.5,"red");
+##      gradient.addColorStop(1,"white");
+##      ctx.fillStyle = gradient;
+
+      ctx.fillRect(20, $y, 150, 100);
 });
 
 lives-ok {$pdf.save-as("t/render-pdf-test-pages.pdf")}, "pdf.save-as";

@@ -8,7 +8,7 @@ class HTML::Canvas {
     has Str @!subpath-new;
     has Pair @.calls;
     has Routine @.callback;
-    my subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textBaseline';
+    my subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction';
     my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath';
 
     has Numeric $.lineWidth = 1.0;
@@ -79,6 +79,28 @@ class HTML::Canvas {
         );
     }
 
+    subset textAlignment of Str where 'start'|'end'|'left'|'right'|'center';
+    has textAlignment $.textAlign = 'start';
+    method textAlign is rw {
+        Proxy.new(
+            FETCH => sub ($) { $!textAlign },
+            STORE => sub ($, Str $!textAlign) {
+                self!call('textAlign', $!textAlign);
+            }
+        );
+    }
+
+    subset textDirection of Str where 'ltr'|'rtl';
+    has textDirection $.direction = 'ltr';
+    method direction is rw {
+        Proxy.new(
+            FETCH => sub ($) { $!direction },
+            STORE => sub ($, Str $!direction) {
+                self!call('direction', $!direction);
+            }
+        );
+    }
+
     has $.font-object is rw;
     method font-object is rw {
         Proxy.new(
@@ -119,8 +141,7 @@ class HTML::Canvas {
     }
 
     method !transform(|c) {
-        my @matrix = PDF::Content::Util::TransformMatrix::transform-matrix(|c);
-        @!transformMatrix = PDF::Content::Util::TransformMatrix::multiply(@!transformMatrix, @matrix);
+        @!transformMatrix = PDF::Content::Util::TransformMatrix::transform-matrix( :matrix(@!transformMatrix), |c);
     }
 
     our %API = BEGIN %(
@@ -139,6 +160,8 @@ class HTML::Canvas {
                          :$!font,
                          :$!fillStyle,
                          :$!strokeStyle,
+                         :$!textAlign,
+                         :$!direction,
                          :$!css,
                          :@ctm
                      };
@@ -153,6 +176,8 @@ class HTML::Canvas {
                             $!font = %state<font>;
                             $!fillStyle = %state<fillStyle>;
                             $!strokeStyle = %state<strokeStyle>;
+                            $!textAlign = %state<textAlign>;
+                            $!direction = %state<direction>;
                             $!css = %state<css>;
                             .css = $!css with $!font-object;
                         }
