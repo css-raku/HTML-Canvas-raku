@@ -1,13 +1,15 @@
 use v6;
 class HTML::Canvas::To::PDF {
 
-    use PDF; # keep rakudo happy
     use Color;
     use HTML::Canvas;
+    use HTML::Canvas::Gradient;
+    use HTML::Canvas::Pattern;
+    use PDF:ver(v0.2.1..*);
+    use PDF::Content:ver(v0.0.1..*);
     use PDF::Content::Ops :TextMode, :LineCaps, :LineJoin;
-    use PDF::Content;
     has PDF::Content $.gfx handles <content content-dump> is required;
-    use PDF::Style::Font;
+    use PDF::Style::Font:ver(v0.0.1..*);
     has $.width; # canvas height in points
     has $.height; # canvas height in points
     has @!ctm = [1, 0, 0, 1, 0, 0]; #| canvas transform matrix
@@ -94,13 +96,25 @@ class HTML::Canvas::To::PDF {
     method beginPath() { }
     method fill() { $!gfx.Fill; }
     method stroke() { $!gfx.Stroke; }
-    method fillStyle(Color $_) {
+    multi method fillStyle(Color $_) {
         $!gfx.FillColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
         $!gfx.FillAlpha = .a / 255;
     }
-    method strokeStyle(Color $_) {
+    multi method fillStyle(HTML::Canvas::Gradient $_) {
+        warn "gradients are nyi";
+    }
+    multi method fillStyle(HTML::Canvas::Pattern $_) {
+        warn "patterns are nyi";
+    }
+    multi method strokeStyle(Color $_) {
         $!gfx.StrokeColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
         $!gfx.StrokeAlpha = .a / 255;
+    }
+    multi method strokeStyle(HTML::Canvas::Gradient $_) {
+        warn "gradients are nyi";
+    }
+    multi method strokeStyle(HTML::Canvas::Pattern $_) {
+        warn "patterns are nyi";
     }
     method lineWidth(Numeric $width, :$canvas) {
         $!gfx.LineWidth = $width;

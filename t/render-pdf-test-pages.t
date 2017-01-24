@@ -561,11 +561,11 @@ test-page( -> \ctx {
       ctx.fillText("Testing gradiants & Patterns", 20, $y + textHeight);
       $y += textHeight + pad + 10;
 
-##      my \gradient = ctx.createLinearGradient(0,0,170,0);
-##      gradient.addColorStop(0,"black");
-##      gradient.addColorStop(0.5,"red");
-##      gradient.addColorStop(1,"white");
-##      ctx.fillStyle = gradient;
+      my \gradient = ctx.createLinearGradient(0,0,170,0);
+      gradient.addColorStop(0,"black");
+      gradient.addColorStop(0.5,"red");
+      gradient.addColorStop(1,"white");
+      ctx.fillStyle = gradient;
 
       ctx.fillRect(20, $y, 150, 100);
 });

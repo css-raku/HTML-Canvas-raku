@@ -2,7 +2,9 @@ use v6;
 
 class HTML::Canvas {
     use PDF::Content::Util::TransformMatrix;
-    use CSS::Declarations;
+    use CSS::Declarations:ver(v0.0.4 .. *);
+    use HTML::Canvas::Gradient;
+    use HTML::Canvas::Pattern;
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.subpath;
     has Str @!subpath-new;
@@ -110,25 +112,36 @@ class HTML::Canvas {
             }
         )
     }
-    has Str $.fillStyle is rw = 'black';
+    my subset ColorSpec where Str|HTML::Canvas::Gradient|HTML::Canvas::Pattern;
+    has ColorSpec $.fillStyle is rw = 'black';
     method fillStyle is rw {
         Proxy.new(
             FETCH => sub ($) { $!fillStyle },
-            STORE => sub ($, Str $!fillStyle) {
-                $!css.background-color = $!fillStyle;
+            STORE => sub ($, ColorSpec $!fillStyle) {
+                my \color = do given $!fillStyle {
+                    when Str {
+                        $!css.background-color = $_;
+                    }
+                    default { $_ }
+                };
                 @!calls.push: (:fillStyle[ $!fillStyle, ]);
-                .('fillStyle', $!css.background-color, :canvas(self)) for @!callback;
+                .('fillStyle', color, :canvas(self)) for @!callback;
             }
         );
     }
-    has Str $.strokeStyle is rw = 'black';
+    has ColorSpec $.strokeStyle is rw = 'black';
     method strokeStyle is rw {
         Proxy.new(
             FETCH => sub ($) { $!strokeStyle },
-            STORE => sub ($, Str $!strokeStyle) {
-                $!css.color = $!strokeStyle;
+            STORE => sub ($, ColorSpec $!strokeStyle) {
+                my \color = do given $!strokeStyle {
+                    when Str {
+                        $!css.color = $_;
+                    }
+                    default { $_ }
+                }
                 @!calls.push: (:strokeStyle[ $!strokeStyle, ]);
-                .('strokeStyle', $!css.color, :canvas(self)) for @!callback;
+                .('strokeStyle', color, :canvas(self)) for @!callback;
             }
         );
     }
@@ -199,7 +212,7 @@ class HTML::Canvas {
                       }),
         :setTransform(method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
                              @!transformMatrix = [a, b, c, d, e, f];
-                      }),
+                         }),
         :clearRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :fillRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :strokeRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
@@ -229,6 +242,12 @@ class HTML::Canvas {
         :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
     );
 
+    method createLinearGradient(Numeric $x0, Numeric $y0, Numeric $x1, Numeric $y1) {
+        HTML::Canvas::Gradient.new: :$x0, :$y0, :$x1, :$y1;
+    }
+    method createRadialGradient(Numeric $x0, Numeric $y0, Numeric $x1, Numeric $y1, Numeric:D $r) {
+        HTML::Canvas::Gradient.new: :$x0, :$y0, :$x1, :$y1, :$r;
+    }
     # todo: slurping/itemization of @!dash-list?
     method setLineDash(@!dash-list) {
         self!call('setLineDash', @!dash-list.item);
@@ -311,16 +330,29 @@ class HTML::Canvas {
     #| generate Javascript
     method js(Str :$context = 'ctx', :$sep = "\n") {
         use JSON::Fast;
-        my Str %vars{Any};
-        my $var-name = 'image0';
         my Str @js;
+        has %grad-var{HTML::Canvas::Gradient};
+        has %patt-var{HTML::Canvas::Pattern};
 
         for @!calls {
             my $name = .key;
             my @args = .value.map: {
-                $_ ~~ Str|Numeric|Bool|List
-                    ?? to-json($_)
-                    !! (.?js-ref // die "unexpected object: {.perl}");
+                when Str|Numeric|Bool|List { to-json($_) }
+                when HTML::Canvas::Gradient {
+                    %grad-var{$_} //= do {
+                        my $var = 'grad_' ~ +%grad-var;
+                        @js.append: .to-js($var, $context);
+                        $var;
+                    }
+                }
+                when HTML::Canvas::Pattern {
+                    %patt-var{$_} //= do {
+                        my $var = 'patt_' ~ +%patt-var;
+                        @js.append: .to-js($var, $context);
+                        $var;
+                    }
+                }
+                default { .?js-ref // die "unexpected object: {.perl}" };
             };
             my \fmt = $name ~~ LValue
                 ?? '%s.%s = %s;'
