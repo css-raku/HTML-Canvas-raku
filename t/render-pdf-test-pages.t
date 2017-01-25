@@ -494,12 +494,13 @@ test-page( -> \ctx {
       ctx.restore();
 });
 
+my \image = PDF::Content::Image::PNG.open("t/images/camelia-logo.png");
+@html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
+
 test-page( -> \ctx {
       ctx.fillText("Testing drawImage", 20, $y + textHeight);
       $y += textHeight + pad + 10;
 
-      my \image = PDF::Content::Image::PNG.open("t/images/camelia-logo.png");
-      @html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
       ctx.drawImage(image,  20,  $y+0,  50, 50);
       my $x = 50;
       my $shift = 0;
@@ -560,6 +561,7 @@ test-page( -> \ctx {
       $y = pad;
       ctx.fillText("Testing gradiants & Patterns", 20, $y + textHeight);
       $y += textHeight + pad + 10;
+      constant h = 150;
 
       my \gradient = ctx.createLinearGradient(0,0,170,0);
       gradient.addColorStop(0,"black");
@@ -567,7 +569,14 @@ test-page( -> \ctx {
       gradient.addColorStop(1,"white");
       ctx.fillStyle = gradient;
 
-      ctx.fillRect(20, $y, 150, 100);
+      ctx.fillRect(20, $y, 150, h);
+      $y += h + pad;
+
+      my \pat = ctx.createPattern(image,"repeat");
+      ctx.rect(20,$y,150,h);
+      ctx.fillStyle=pat;
+      ctx.fill();
+      $y += h + pad;
 });
 
 lives-ok {$pdf.save-as("t/render-pdf-test-pages.pdf")}, "pdf.save-as";

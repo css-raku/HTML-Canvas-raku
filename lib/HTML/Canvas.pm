@@ -230,7 +230,9 @@ class HTML::Canvas {
                                 fail "unable to measure text - no current font object";
                             }
                         } ),
-        :drawImage(method (\image, Numeric \dx, Numeric \dy, *@args) {}),
+        :drawImage(method (\image, Numeric \dx, Numeric \dy, *@args) {
+                          self!register-node(image);
+                      }),
         # :setLineDash - see below
         :getLineDash(method () { @!dash-list } ),
         :closePath(method () {}),
@@ -247,6 +249,10 @@ class HTML::Canvas {
     }
     method createRadialGradient(Numeric $x0, Numeric $y0, Numeric $x1, Numeric $y1, Numeric:D $r) {
         HTML::Canvas::Gradient.new: :$x0, :$y0, :$x1, :$y1, :$r;
+    }
+    method createPattern($image, HTML::Canvas::Pattern::Repetition $repetition = 'repeat') {
+        self!register-node($image);
+        HTML::Canvas::Pattern.new: :$image, :$repetition;
     }
     # todo: slurping/itemization of @!dash-list?
     method setLineDash(@!dash-list) {
@@ -291,12 +297,16 @@ class HTML::Canvas {
         }
     }
 
-    #| lightweight html generation; canvas + javascript
-    method to-html($obj = self, Numeric :$width, Numeric :$height, Str :$style='', |c) {
+    method !register-node($obj) {
         unless $obj ~~ HTMLObj {
             $obj does HTMLObj;
             $obj.html-id = ~ $obj.WHERE;
         }
+        $obj;
+    }
+    #| lightweight html generation; canvas + javascript
+    method to-html($obj = self, Numeric :$width, Numeric :$height, Str :$style='', |c) {
+        self!register-node($obj);
         $obj.html-width   = $_ with $width;
         $obj.html-height  = $_ with $height;
 
