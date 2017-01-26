@@ -353,7 +353,9 @@ class HTML::Canvas {
                 }
                 when HTML::Canvas::Pattern {
                     unless %obj-count{$_}++ {
-                        %obj-count{$_}++ for .image;
+                        with .image -> $obj {
+                            %obj-count{$obj}++;
+                        }
                     }
                 }
                 default {
