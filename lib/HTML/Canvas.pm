@@ -392,7 +392,7 @@ class HTML::Canvas {
         my Str  @js;
 
         # declare variables
-        for $sym.pairs {
+        for $sym.pairs.sort: *.value {
             my $obj = .key;
             my $var-name = .value;
 

@@ -70,7 +70,7 @@ class HTML::Canvas::To::PDF {
         my @ctm-inv = PDF::Content::Util::TransformMatrix::inverse(@!ctm);
         my @diff = PDF::Content::Util::TransformMatrix::multiply([a, b, c, d, e, -f], @ctm-inv);
         self!transform( |matrix => @diff )
-        unless PDF::Content::Util::TransformMatrix::is-identity(@diff);
+            unless PDF::Content::Util::TransformMatrix::is-identity(@diff);
     }
     method clearRect(\x, \y, \w, \h) {
         # stub - should etch a clipping path. not paint a white rectangle
@@ -81,49 +81,102 @@ class HTML::Canvas::To::PDF {
         $!gfx.Fill;
         $!gfx.Restore;
     }
-    method fillRect(\x, \y, \w, \h) {
+    method fillRect(\x, \y, \w, \h, :$canvas!) {
+        self!setup-fill($canvas);
         unless $!gfx.FillAlpha =~= 0 {
             $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
             $!gfx.Fill;
         }
     }
-    method strokeRect(\x, \y, \w, \h) {
+    method strokeRect(\x, \y, \w, \h, :$canvas!) {
+        self!setup-stroke($canvas);
         unless $!gfx.StrokeAlpha =~= 0 {
             $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
             $!gfx.CloseStroke;
         }
     }
     method beginPath() { }
-    method fill() { $!gfx.Fill; }
-    method stroke() { $!gfx.Stroke; }
-    multi method fillStyle(Color $_) {
-        $!gfx.FillColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
-        $!gfx.FillAlpha = .a / 255;
+    method fill(:$canvas!) {
+        self!setup-fill($canvas);
+        $!gfx.Fill;
     }
-    multi method fillStyle(HTML::Canvas::Gradient $_) {
-        warn "gradients are nyi";
+    method stroke(:$canvas!) {
+        self!setup-stroke($canvas);
+        $!gfx.Stroke;
     }
-    multi method fillStyle(HTML::Canvas::Pattern $_) {
-        warn "patterns are nyi";
+    method fillStyle($_) {}
+    method !pdf {require PDF::Lite:ver(v0.0.1..*)}
+    method !make-pattern(HTML::Canvas::Pattern $pattern --> Pair) {
+        my Bool $repeat-x = True;
+        my Bool $repeat-y = True;
+        given $pattern.repetition {
+            when 'repeat-y' { $repeat-x = False }
+            when 'repeat-x' { $repeat-y = False }
+            when 'no-repeat' { $repeat-x = $repeat-y = False }
+        }
+        my $image = $pattern.image;
+        my Numeric $width = $image.width;
+        my Numeric $height = $image.height;
+        my $XStep = $width;
+        my $YStep = $height;
+        my @Matrix = $!gfx.CTM.list;
+
+        my constant BigStep = 1999;
+        unless $repeat-x {
+            # step outside box in X direction
+            $XStep += BigStep;
+        }
+        unless $repeat-y {
+            # step outside box in Y direction
+            $YStep += BigStep;
+            @Matrix = PDF::Content::Util::TransformMatrix::transform-matrix( :matrix(@Matrix), :translate[0, BigStep] );
+        }
+        my $Pattern = self!pdf.tiling-pattern(:BBox[0, 0, $width, $height], :@Matrix, :$XStep, :$YStep );
+        $Pattern.graphics: {
+            .do($image, 0, 0, :$width, :$height );
+        }
+        $Pattern.finish;
+        Pattern => $!gfx.resource-key($Pattern);
     }
-    multi method strokeStyle(Color $_) {
-        $!gfx.StrokeColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
-        $!gfx.StrokeAlpha = .a / 255;
-    }
-    multi method strokeStyle(HTML::Canvas::Gradient $_) {
-        warn "gradients are nyi";
-    }
-    multi method strokeStyle(HTML::Canvas::Pattern $_) {
-        warn "patterns are nyi";
-    }
-    method lineWidth(Numeric $width, :$canvas) {
+    method !setup-fill($canvas) {
+        given $canvas.fillStyle {
+            when HTML::Canvas::Pattern {
+                $!gfx.FillAlpha = 1.0;
+                $!gfx.FillColor = self!make-pattern($_);
+            }
+            when HTML::Canvas::Gradient {
+                warn "gradient fill - nyi";
+            }
+            when Color {
+                $!gfx.FillColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
+                $!gfx.FillAlpha = .a / 255;
+            }
+        }
+    } 
+    method !setup-stroke($canvas) {
+        given $canvas.strokeStyle {
+            when HTML::Canvas::Pattern {
+                $!gfx.StrokeAlpha = 1.0;
+                $!gfx.StrokeColor = self!make-pattern($_);
+            }
+            when HTML::Canvas::Gradient {
+                warn "gradient stroke - nyi";
+            }
+            when Color {
+                $!gfx.StrokeColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
+                $!gfx.StrokeAlpha = .a / 255;
+            }
+        }
+    } 
+    method strokeStyle($_) {}
+    method lineWidth(Numeric $width) {
         $!gfx.LineWidth = $width;
     }
-    method lineCap(Str $cap-name, :$canvas) {
+    method lineCap(Str $cap-name) {
         my LineCaps $lc = %( :butt(ButtCaps), :round(RoundCaps),  :square(SquareCaps)){$cap-name};
         $!gfx.LineCap = $lc;
     }
-    method lineJoin(Str $cap-name, :$canvas) {
+    method lineJoin(Str $cap-name) {
         my LineJoin $lj = %( :miter(MiterJoin), :round(RoundJoin),  :bevel(BevelJoin)){$cap-name};
         $!gfx.LineJoin = $lj;
     }
@@ -157,11 +210,13 @@ class HTML::Canvas::To::PDF {
     method textAlign(Str $_) {}
     method direction(Str $_) {}
     method fillText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
+        self!setup-fill($canvas);
         $!gfx.Save;
         self!text($text, $x, $y, :$maxWidth, :$canvas);
         $!gfx.Restore
     }
     method strokeText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
+        self!setup-stroke($canvas);
         $!gfx.Save;
         $!gfx.TextRender = TextMode::OutlineText;
         self!text($text, $x, $y, :$maxWidth, :$canvas);
