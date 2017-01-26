@@ -322,13 +322,13 @@ class HTML::Canvas {
     }
     method html(Str :$style, Str :$sep = "\n    ", |c) is default {
         if self ~~ HTMLObj {
-            my $Style = do with $style { ' style="%s"'.sprintf(encode-entities($_)) } else { '' };
+            my $style-att = do with $style { ' style="%s"'.sprintf(encode-entities($_)) } else { '' };
 
             qq:to"END-HTML";
-            <canvas width="{self.html-width}pt" height="{self.html-height}pt" id="{self.html-id}"$Style></canvas>
+            <canvas width="{self.html-width}pt" height="{self.html-height}pt" id="{self.html-id}"{$style-att}></canvas>
             <script>
                 var ctx = {self.js-ref}.getContext("2d");
-                {self.js(:context<ctx>, :$sep, |c)};
+                {self.js(:context<ctx>, :$sep, |c)}
             </script>
             END-HTML
         }

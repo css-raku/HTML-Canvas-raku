@@ -8,7 +8,7 @@ class HTML::Canvas::Pattern {
 
     method to-js(Str $ctx, :$sym = my %{Any} --> Array) {
         my $image-js = $sym{$!image} // $!image.js-ref;
-        my @js = '%s.createPattern(%s, %s);'.sprintf($ctx, $image-js, to-json($!repetition));
+        my @js = '%s.createPattern(%s, %s)'.sprintf($ctx, $image-js, to-json($!repetition));
         @js;
     }
  }
