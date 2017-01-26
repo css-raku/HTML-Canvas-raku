@@ -6,8 +6,9 @@ class HTML::Canvas::Pattern {
     has Repetition $.repetition = 'repeat';
     has $.image;
 
-    method to-js(Str $var, Str $ctx --> Array) {
-        my @js = 'var %s = %s.createPattern(%s, %s);'.sprintf($var, $ctx, $!image.js-ref, to-json($!repetition));
+    method to-js(Str $ctx, :$sym = my %{Any} --> Array) {
+        my $image-js = $sym{$!image} // $!image.js-ref;
+        my @js = '%s.createPattern(%s, %s);'.sprintf($ctx, $image-js, to-json($!repetition));
         @js;
     }
  }

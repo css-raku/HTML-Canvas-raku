@@ -561,7 +561,7 @@ test-page( -> \ctx {
       $y = pad;
       ctx.fillText("Testing gradiants & Patterns", 20, $y + textHeight);
       $y += textHeight + pad + 10;
-      constant h = 150;
+      constant h = 100;
 
       my \gradient = ctx.createLinearGradient(0,0,170,0);
       gradient.addColorStop(0,"black");
@@ -572,11 +572,20 @@ test-page( -> \ctx {
       ctx.fillRect(20, $y, 150, h);
       $y += h + pad;
 
-      my \pat = ctx.createPattern(image,"repeat");
-      ctx.rect(20,$y,150,h);
-      ctx.fillStyle=pat;
-      ctx.fill();
-      $y += h + pad;
+      for <repeat repeat-x repeat-y no-repeat>  -> \r {
+          ctx.save(); {
+              my \pat = ctx.createPattern(image,r);
+              ctx.fillStyle=pat;
+              ctx.translate(10,$y);
+              ctx.fillRect(10,10,150,h);
+
+              ctx.translate(180,0);
+              ctx.scale(1/4, 1/4);
+              ctx.fillRect: |(10,10,150,h).map(* * 4);
+          }; ctx.restore();
+
+          $y += h + pad;
+      }
 });
 
 lives-ok {$pdf.save-as("t/render-pdf-test-pages.pdf")}, "pdf.save-as";

@@ -39,7 +39,7 @@ class HTML::Canvas::Gradient {
         @!colorStops.push: ColorStop.new( :$offset, :$color );
     }
 
-    method to-js(Str $var, Str $ctx --> Array) {
+    method to-js(Str $ctx, Str $var --> Array) {
         my @args = $!x0, $!y0, $!x1, $!y1;
         @args.push: $_ with $!r;
         my $args-js = @args.map({ to-json($_) }).join: ", ";

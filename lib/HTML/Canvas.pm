@@ -1,8 +1,8 @@
 use v6;
 
 class HTML::Canvas {
-    use PDF::Content::Util::TransformMatrix;
     use CSS::Declarations:ver(v0.0.4 .. *);
+    use PDF::Content::Util::TransformMatrix;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Pattern;
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
@@ -337,32 +337,88 @@ class HTML::Canvas {
         }
     }
 
+    method !build-symbols {
+        my %obj-count{Any};
+
+        for @!calls {
+            # work out what variables we need to allocate:
+            # - ignore simple scalars
+            # - any objects that are referenced multiple times
+            # - gradients, so we can call the .addTabStop method on them
+            # - also consider image arguments passed to patterns
+            for .value.list {
+                when Str|Numeric|Bool|List { }
+                when HTML::Canvas::Gradient {
+                    %obj-count{$_} = 99;
+                }
+                when HTML::Canvas::Pattern {
+                    unless %obj-count{$_}++ {
+                        %obj-count{$_}++ for .image;
+                    }
+                }
+                default {
+                    %obj-count{$_}++;
+                }
+            }
+        }
+
+        # generate symbols
+        my %var-num;
+        my %sym{Any};
+
+        for %obj-count.pairs {
+            next unless .value > 1;
+            my $obj = .key;
+            my $type = do given $obj {
+                when HTML::Canvas::Gradient { 'grad_' }
+                when HTML::Canvas::Pattern  { 'patt_' }
+                default { .can('js-ref') ?? 'node_' !!  Nil }
+            }
+            with $type {
+                my $var-name = $_ ~ ++%var-num{$_};
+                %sym{$obj} = $var-name;
+            }
+        }
+
+        %sym;
+    }
+
     #| generate Javascript
     method js(Str :$context = 'ctx', :$sep = "\n") {
         use JSON::Fast;
-        my Str @js;
-        has %grad-var{HTML::Canvas::Gradient};
-        has %patt-var{HTML::Canvas::Pattern};
+        my $sym = self!build-symbols;
+        my Str  @js;
 
+        # declare variables
+        for $sym.pairs {
+            my $obj = .key;
+            my $var-name = .value;
+
+            given $obj {
+                when HTML::Canvas::Gradient {
+                    @js.append: .to-js($context, $var-name);
+                }
+                when HTML::Canvas::Pattern {
+                    @js.push: 'var %s = %s;'.sprintf($var-name, .to-js($context, :$sym));
+                }
+                default {
+                    @js.push: 'var %s = %s;'.sprintf($var-name, .js-ref);
+                }
+            }
+        }
+
+        # process statements (calls and assignments)
         for @!calls {
             my $name = .key;
             my @args = .value.map: {
                 when Str|Numeric|Bool|List { to-json($_) }
-                when HTML::Canvas::Gradient {
-                    %grad-var{$_} //= do {
-                        my $var = 'grad_' ~ +%grad-var;
-                        @js.append: .to-js($var, $context);
-                        $var;
-                    }
-                }
+                when $sym{$_}:exists { $sym{$_} }
                 when HTML::Canvas::Pattern {
-                    %patt-var{$_} //= do {
-                        my $var = 'patt_' ~ +%patt-var;
-                        @js.append: .to-js($var, $context);
-                        $var;
-                    }
+                    .to-js($context, :$sym);
                 }
-                default { .?js-ref // die "unexpected object: {.perl}" };
+                default {
+                    .?js-ref // die "unexpected object: {.perl}";
+                }
             };
             my \fmt = $name ~~ LValue
                 ?? '%s.%s = %s;'
