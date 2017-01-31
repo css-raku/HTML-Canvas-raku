@@ -13,6 +13,7 @@ class HTML::Canvas::To::PDF {
     has $.width; # canvas height in points
     has $.height; # canvas height in points
     has @!ctm = [1, 0, 0, 1, 0, 0]; #| canvas transform matrix
+    has @!save;
 
     submethod TWEAK(:$canvas) {
         $!width  //= $!gfx.parent.width;
@@ -42,24 +43,37 @@ class HTML::Canvas::To::PDF {
     }
 
     method !transform( |c ) {
-	my Numeric @tm = PDF::Content::Util::TransformMatrix::transform-matrix( :matrix(@!ctm), |c );
+	my Numeric @tm = PDF::Content::Util::TransformMatrix::transform( |c );
+        @!ctm = PDF::Content::Util::TransformMatrix::multiply(@!ctm, @tm);
 	$!gfx.ConcatMatrix( @tm );
     }
 
     method _start(:$canvas) {
         $canvas.font-object //= PDF::Style::Font.new;
         $!gfx.Save;
+        # clip gaphics to outsde of canvas
         $!gfx.Rectangle(0, 0, pt($!width), pt($!height) );
         $!gfx.ClosePath;
         $!gfx.Clip;
         $!gfx.EndPath;
+        # This translation lets us map HTML coordinates to PDF
+        # by negating Y - see !coords method above
         $!gfx.transform: :translate[0, $!height];
     }
     method _finish {
         $!gfx.Restore;
     }
-    method save { $!gfx.Save }
-    method restore { $!gfx.Restore }
+    method save {
+        @!save.push: { :ctm[@!ctm.list], };
+        $!gfx.Save
+    }
+    method restore {
+        if @!save {
+            my %state = @!save.pop;
+            @!ctm = %state<ctm>.list;
+        }
+        $!gfx.Restore;
+    }
     method scale(Numeric \x, Numeric \y) { self!transform(|scale => [x, y]) }
     method rotate(Numeric \r) { self!transform(|rotate => -r) }
     method translate(Numeric \x, Numeric \y) { self!transform(|translate => [x, -y]) }
@@ -115,25 +129,26 @@ class HTML::Canvas::To::PDF {
             when 'no-repeat' { $repeat-x = $repeat-y = False }
         }
         my $image = $pattern.image;
-        my Numeric $width = $image.width;
-        my Numeric $height = $image.height;
-        my $XStep = $width;
-        my $YStep = $height;
-        my @Matrix = $!gfx.CTM.list;
+        my Numeric $image-width = $image.width;
+        my Numeric $image-height = $image.height;
+        my @Matrix = @!ctm;
 
-        my constant BigStep = 1999;
-        unless $repeat-x {
-            # step outside box in X direction
-            $XStep += BigStep;
+        my constant BigStep = 2000;
+        my $dx = $repeat-x ?? 0 !! BigStep;
+        my $dy = $repeat-y ?? 0 !! BigStep;
+
+        @Matrix = PDF::Content::Util::TransformMatrix::transform( :matrix(@Matrix), :translate[0, $!height] );
+        if $dx || $dy {
+            my @trans = PDF::Content::Util::TransformMatrix::translate(0, -$image-height);
+            @Matrix = PDF::Content::Util::TransformMatrix::multiply(
+                @trans,
+                @Matrix,
+            );
         }
-        unless $repeat-y {
-            # step outside box in Y direction
-            $YStep += BigStep;
-            @Matrix = PDF::Content::Util::TransformMatrix::transform-matrix( :matrix(@Matrix), :translate[0, BigStep] );
-        }
-        my $Pattern = self!pdf.tiling-pattern(:BBox[0, 0, $width, $height], :@Matrix, :$XStep, :$YStep );
+
+        my $Pattern = self!pdf.tiling-pattern(:BBox[0, 0, $image-width, $image-height], :@Matrix, :XStep($dx + $image-width), :YStep($dy + $image-height) );
         $Pattern.graphics: {
-            .do($image, 0, 0, :$width, :$height );
+            .do($image, 0, 0, );
         }
         $Pattern.finish;
         Pattern => $!gfx.resource-key($Pattern);

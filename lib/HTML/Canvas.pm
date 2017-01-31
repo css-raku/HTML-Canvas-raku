@@ -154,7 +154,7 @@ class HTML::Canvas {
     }
 
     method !transform(|c) {
-        @!transformMatrix = PDF::Content::Util::TransformMatrix::transform-matrix( :matrix(@!transformMatrix), |c);
+        @!transformMatrix = PDF::Content::Util::TransformMatrix::transform( :matrix(@!transformMatrix), |c);
     }
 
     our %API = BEGIN %(
