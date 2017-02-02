@@ -21,11 +21,11 @@ $canvas.context: -> \ctx {
 
         lives-ok { ctx.strokeRect(20,20, 10,20); }, "basic API call - lives";
         ctx.scale( 2.0, 2.0);
-        is-deeply [ctx.transformMatrix], [2, 0, 0, 2, 0, 0], 'canvas transform - scaled';
+        is-deeply [ctx.transformMatrix], [2.0, 0.0, 0.0, 2.0, 0, 0], 'canvas transform - scaled';
         is-deeply [$gfx.CTM.list], [2, 0, 0, 2, 0, 792 * 2], 'pdf transform - scaled';
         ctx.translate(-5, -15);
 
-        is-deeply [ctx.transformMatrix], [2, 0, 0, 2, -5, -15], 'canvas transform - scaled';
+        is-deeply [ctx.transformMatrix], [2.0, 0.0, 0.0, 2.0, -10.0, -30.0], 'canvas transform - scaled';
         is-deeply [$gfx.CTM.list], [2, 0, 0, 2, -5, 792 * 2  +  15], 'pdf transform - scaled + translated';
 
         lives-ok { ctx.strokeRect(20,20, 10,20); }, "basic API call - lives";

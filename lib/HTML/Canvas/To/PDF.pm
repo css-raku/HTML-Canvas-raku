@@ -83,6 +83,7 @@ class HTML::Canvas::To::PDF {
     method setTransform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
         my @ctm-inv = PDF::Content::Util::TransformMatrix::inverse(@!ctm);
         my @diff = PDF::Content::Util::TransformMatrix::multiply([a, b, c, d, e, -f], @ctm-inv);
+        warn { :t[a, b, c, d, e, -f], :@!ctm, :@ctm-inv, :@diff }.perl;
         self!transform( |matrix => @diff )
             unless PDF::Content::Util::TransformMatrix::is-identity(@diff);
     }

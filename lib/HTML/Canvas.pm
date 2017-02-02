@@ -153,10 +153,6 @@ class HTML::Canvas {
         .css = $!css with $!font-object;
     }
 
-    method !transform(|c) {
-        @!transformMatrix = PDF::Content::Util::TransformMatrix::transform( :matrix(@!transformMatrix), |c);
-    }
-
     our %API = BEGIN %(
         :_start(method {} ),
         :_finish(method {
@@ -199,16 +195,43 @@ class HTML::Canvas {
                         }
                 } ),
         :scale(method (Numeric $x, Numeric $y) {
-                      self!transform: :scale[$x, $y];
+                      with @!transformMatrix {
+                          $_ *= $x for .[0], .[1];
+                          $_ *= $y for .[2], .[3];
+                      }
                   }),
-        :rotate(method (Numeric $angle) {
-                      self!transform: :rotate($angle);
+        :rotate(method (Numeric $rad) {
+                       my \c = cos($rad);
+                       my \s = sin($rad);
+                       with @!transformMatrix {
+                           .[0..3] = [
+                               .[0] * +c + .[2] * s,
+                               .[1] * +c + .[3] * s,
+                               .[0] * -s + .[2] * c,
+                               .[1] * -s + .[3] * c,
+                           ]
+ 
+                       }
                   }),
-        :translate(method (Numeric $tx, Numeric $ty) {
-                      self!transform: :translate[$tx, $ty];
+        :translate(method (Numeric $x, Numeric $y) {
+                          with @!transformMatrix {
+                              .[4] += .[0] * $x + .[2] * $y;
+                              .[5] += .[1] * $x + .[3] * $y;
+                          }
                   }),
         :transform(method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-                      @!transformMatrix = PDF::Content::Util::TransformMatrix::multiply(@!transformMatrix, [a, b, c, d, e, f]);
+                          @!transformMatrix = do with @!transformMatrix {
+                              [
+                                  .[0] * a + .[2] * b,
+                                  .[1] * a + .[3] * b,
+
+                                  .[0] * c + .[2] * d,
+                                  .[1] * c + .[3] * d,
+
+                                  .[0] * e + .[2] * f + .[4],
+                                  .[1] * e + .[3] * f + .[5],
+                              ];
+                          }
                       }),
         :setTransform(method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
                              @!transformMatrix = [a, b, c, d, e, f];
