@@ -131,24 +131,20 @@ class HTML::Canvas::To::PDF {
         my $image = $pattern.image;
         my Numeric $image-width = $image.width;
         my Numeric $image-height = $image.height;
-        my @Matrix = @!ctm;
 
-        my constant BigStep = 2000;
-        my $dx = $repeat-x ?? 0 !! BigStep;
-        my $dy = $repeat-y ?? 0 !! BigStep;
+        my constant BigPad = 1000;
+        my $left-pad = $repeat-x ?? 0 !! BigPad;
+        my $bottom-pad = $repeat-y ?? 0 !! BigPad;
 
-        @Matrix = PDF::Content::Util::TransformMatrix::transform( :matrix(@Matrix), :translate[0, $!height] );
-        if $dx || $dy {
-            my @trans = PDF::Content::Util::TransformMatrix::translate(0, -$image-height);
-            @Matrix = PDF::Content::Util::TransformMatrix::multiply(
-                @trans,
-                @Matrix,
-            );
-        }
-
-        my $Pattern = self!pdf.tiling-pattern(:BBox[0, 0, $image-width, $image-height], :@Matrix, :XStep($dx + $image-width), :YStep($dy + $image-height) );
+        my (\sx, \sk1, \sk2, \sy, \tx, \ty) = @!ctm;
+        my @Matrix = [sx, sk1, sk2, sy,
+                      tx/sx,
+                      ty/sy + $!height - $image-height*sy,
+                     ];
+        my @BBox = [0, 0, $image-width + $left-pad, $image-height + $bottom-pad];
+        my $Pattern = self!pdf.tiling-pattern(:@BBox, :@Matrix, :XStep($image-width + $left-pad), :YStep($image-height + $bottom-pad) );
         $Pattern.graphics: {
-            .do($image, 0, 0, );
+            .do($image, 0, 0);
         }
         $Pattern.finish;
         Pattern => $!gfx.resource-key($Pattern);
