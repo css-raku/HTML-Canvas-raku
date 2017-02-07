@@ -11,7 +11,7 @@ class HTML::Canvas {
     has Pair @.calls;
     has Routine @.callback;
     my subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction';
-    my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath'|'fillStyle'|'strokeStyle';
+    my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath';
 
     has Numeric $.lineWidth = 1.0;
     method lineWidth is rw {
@@ -118,14 +118,9 @@ class HTML::Canvas {
         Proxy.new(
             FETCH => sub ($) { $!fillStyle },
             STORE => sub ($, ColorSpec $!fillStyle) {
-                my \color = do given $!fillStyle {
-                    when Str {
-                        $!css.background-color = $_;
-                    }
-                    default { $_ }
-                };
+                $!css.background-color = $!fillStyle
+                    if $!fillStyle ~~ Str;
                 @!calls.push: (:fillStyle[ $!fillStyle, ]);
-                .('fillStyle', color, :canvas(self)) for @!callback;
             }
         );
     }
@@ -134,14 +129,9 @@ class HTML::Canvas {
         Proxy.new(
             FETCH => sub ($) { $!strokeStyle },
             STORE => sub ($, ColorSpec $!strokeStyle) {
-                my \color = do given $!strokeStyle {
-                    when Str {
-                        $!css.color = $_;
-                    }
-                    default { $_ }
-                }
+                $!css.color = $!strokeStyle
+                    if $!strokeStyle ~~ Str;
                 @!calls.push: (:strokeStyle[ $!strokeStyle, ]);
-                .('strokeStyle', color, :canvas(self)) for @!callback;
             }
         );
     }
@@ -237,13 +227,27 @@ class HTML::Canvas {
                              @!transformMatrix = [a, b, c, d, e, f];
                          }),
         :clearRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
-        :fillRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
-        :strokeRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
+        :fillRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) {
+                         self!setup-fill();
+                     }),
+        :strokeRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) {
+                           self!setup-stroke();
+         }),
         :beginPath(method () { @!subpath = @!subpath-new = []; }),
-        :fill(method () { self!draw-subpath() }),
-        :stroke(method () { self!draw-subpath() }),
-        :fillText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) { }),
-        :strokeText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) { }),
+        :fill(method () {
+                     self!setup-fill();
+                     self!draw-subpath()
+                 }),
+        :stroke(method () {
+                       self!setup-stroke();
+                       self!draw-subpath()
+                   }),
+        :fillText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) {
+                         self!setup-fill();
+                     }),
+        :strokeText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) {
+                           self!setup-stroke();
+                       }),
         :measureText(method (Str $text, :$obj) {
                             with $!font-object {
                                 my Numeric $width = self.adjusted-font-size: .face.stringwidth($text, .em);
@@ -297,7 +301,10 @@ class HTML::Canvas {
             .($name, |@args, :canvas(self)) for @!callback;
         }
     }
+    method !setup-fill { .('fillStyle', self.fillStyle, :canvas(self)) for @!callback; }
+    method !setup-stroke { .('strokeStyle', self.strokeStyle, :canvas(self)) for @!callback; }
     method !draw-subpath {
+
         @!subpath-new = [];
         for @!subpath -> \s {
             .(s.key, |s.value, :canvas(self)) for @!callback;
@@ -435,10 +442,10 @@ class HTML::Canvas {
         # process statements (calls and assignments)
         for @!calls {
             my $name = .key;
-            my @args = .value.map: {
+            my @args = flat .value.map: {
                 when Str|Numeric|Bool|List { to-json($_) }
                 when $sym{$_}:exists { $sym{$_} }
-                when HTML::Canvas::Pattern {
+                when HTML::Canvas::Pattern | HTML::Canvas::Gradient {
                     .to-js($context, :$sym);
                 }
                 default {

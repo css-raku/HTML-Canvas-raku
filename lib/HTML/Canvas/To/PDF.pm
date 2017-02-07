@@ -107,19 +107,17 @@ class HTML::Canvas::To::PDF {
         $!gfx.Stroke;
     }
     method fillStyle($_, :$canvas!) {
-        given $canvas.fillStyle {
-            when HTML::Canvas::Pattern {
-                $!gfx.FillAlpha = 1.0;
-                $!gfx.FillColor = self!make-pattern($_);
-            }
-            when HTML::Canvas::Gradient {
-                warn "gradient fill - nyi";
-            }
-            default {
-                with $canvas.css.background-color {
-                    $!gfx.FillColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
-                    $!gfx.FillAlpha = .a / 255;
-                }
+        when HTML::Canvas::Pattern {
+            $!gfx.FillAlpha = 1.0;
+            $!gfx.FillColor = self!make-pattern($_);
+        }
+        when HTML::Canvas::Gradient {
+            warn "gradient fill - nyi";
+        }
+        default {
+            with $canvas.css.background-color {
+                $!gfx.FillColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
+                $!gfx.FillAlpha = .a / 255;
             }
         }
     }
@@ -156,19 +154,17 @@ class HTML::Canvas::To::PDF {
         Pattern => $!gfx.resource-key($Pattern);
     }
     method strokeStyle($_, :$canvas!) {
-        given $canvas.strokeStyle {
-            when HTML::Canvas::Pattern {
-                $!gfx.StrokeAlpha = 1.0;
-                $!gfx.StrokeColor = self!make-pattern($_);
-            }
-            when HTML::Canvas::Gradient {
-                warn "gradient stroke - nyi";
-            }
-            default {
-                with $canvas.css.color {
-                    $!gfx.StrokeColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
-                    $!gfx.StrokeAlpha = .a / 255;
-                }
+        when HTML::Canvas::Pattern {
+            $!gfx.StrokeAlpha = 1.0;
+            $!gfx.StrokeColor = self!make-pattern($_);
+        }
+        when HTML::Canvas::Gradient {
+            warn "gradient stroke - nyi";
+        }
+        default {
+            with $canvas.css.color {
+                $!gfx.StrokeColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
+                $!gfx.StrokeAlpha = .a / 255;
             }
         }
     }
