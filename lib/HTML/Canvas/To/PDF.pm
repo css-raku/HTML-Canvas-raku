@@ -12,8 +12,6 @@ class HTML::Canvas::To::PDF {
     use PDF::Style::Font:ver(v0.0.1..*);
     has $.width; # canvas height in points
     has $.height; # canvas height in points
-    has @!ctm = [1, 0, 0, 1, 0, 0]; #| canvas transform matrix
-    has @!save;
 
     submethod TWEAK(:$canvas) {
         $!width  //= $!gfx.parent.width;
@@ -44,14 +42,13 @@ class HTML::Canvas::To::PDF {
 
     method !transform( |c ) {
 	my Numeric @tm = PDF::Content::Util::TransformMatrix::transform( |c );
-        @!ctm = PDF::Content::Util::TransformMatrix::multiply(@!ctm, @tm);
 	$!gfx.ConcatMatrix( @tm );
     }
 
     method _start(:$canvas) {
         $canvas.font-object //= PDF::Style::Font.new;
         $!gfx.Save;
-        # clip gaphics to outsde of canvas
+        # clip graphics to outsde of canvas
         $!gfx.Rectangle(0, 0, pt($!width), pt($!height) );
         $!gfx.ClosePath;
         $!gfx.Clip;
@@ -64,14 +61,9 @@ class HTML::Canvas::To::PDF {
         $!gfx.Restore;
     }
     method save {
-        @!save.push: { :ctm[@!ctm.list], };
         $!gfx.Save
     }
     method restore {
-        if @!save {
-            my %state = @!save.pop;
-            @!ctm = %state<ctm>.list;
-        }
         $!gfx.Restore;
     }
     method scale(Numeric \x, Numeric \y) { self!transform(|scale => [x, y]) }
@@ -81,7 +73,7 @@ class HTML::Canvas::To::PDF {
         self!transform(|matrix => [a, b, c, d, e, -f]);
     }
     method setTransform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-        my @ctm-inv = PDF::Content::Util::TransformMatrix::inverse(@!ctm);
+        my @ctm-inv = PDF::Content::Util::TransformMatrix::inverse($!gfx.CTM);
         my @diff = PDF::Content::Util::TransformMatrix::multiply([a, b, c, d, e, -f], @ctm-inv);
         self!transform( |matrix => @diff )
             unless PDF::Content::Util::TransformMatrix::is-identity(@diff);
@@ -95,30 +87,42 @@ class HTML::Canvas::To::PDF {
         $!gfx.Fill;
         $!gfx.Restore;
     }
-    method fillRect(\x, \y, \w, \h, :$canvas!) {
-        self!setup-fill($canvas);
+    method fillRect(\x, \y, \w, \h ) {
         unless $!gfx.FillAlpha =~= 0 {
             $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
             $!gfx.Fill;
         }
     }
-    method strokeRect(\x, \y, \w, \h, :$canvas!) {
-        self!setup-stroke($canvas);
+    method strokeRect(\x, \y, \w, \h ) {
         unless $!gfx.StrokeAlpha =~= 0 {
             $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
             $!gfx.CloseStroke;
         }
     }
     method beginPath() { }
-    method fill(:$canvas!) {
-        self!setup-fill($canvas);
+    method fill() {
         $!gfx.Fill;
     }
     method stroke(:$canvas!) {
-        self!setup-stroke($canvas);
         $!gfx.Stroke;
     }
-    method fillStyle($_) {}
+    method fillStyle($_, :$canvas!) {
+        given $canvas.fillStyle {
+            when HTML::Canvas::Pattern {
+                $!gfx.FillAlpha = 1.0;
+                $!gfx.FillColor = self!make-pattern($_);
+            }
+            when HTML::Canvas::Gradient {
+                warn "gradient fill - nyi";
+            }
+            default {
+                with $canvas.css.background-color {
+                    $!gfx.FillColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
+                    $!gfx.FillAlpha = .a / 255;
+                }
+            }
+        }
+    }
     method !pdf {require PDF::Lite:ver(v0.0.1..*)}
     method !make-pattern(HTML::Canvas::Pattern $pattern --> Pair) {
         my Bool $repeat-x = True;
@@ -136,7 +140,9 @@ class HTML::Canvas::To::PDF {
         my $left-pad = $repeat-x ?? 0 !! BigPad;
         my $bottom-pad = $repeat-y ?? 0 !! BigPad;
 
-        my (\sx, \sk1, \sk2, \sy, \tx, \ty) = @!ctm;
+        my @ctm = $!gfx.CTM.list;
+        warn "todo: {@ctm.perl} -> Matrix";
+        my (\sx, \sk1, \sk2, \sy, \tx, \ty) = @ctm;
         my @Matrix = [sx, sk1, sk2, sy,
                       tx/sx,
                       ty/sy + $!height - $image-height*sy,
@@ -149,22 +155,7 @@ class HTML::Canvas::To::PDF {
         $Pattern.finish;
         Pattern => $!gfx.resource-key($Pattern);
     }
-    method !setup-fill($canvas) {
-        given $canvas.fillStyle {
-            when HTML::Canvas::Pattern {
-                $!gfx.FillAlpha = 1.0;
-                $!gfx.FillColor = self!make-pattern($_);
-            }
-            when HTML::Canvas::Gradient {
-                warn "gradient fill - nyi";
-            }
-            when Color {
-                $!gfx.FillColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
-                $!gfx.FillAlpha = .a / 255;
-            }
-        }
-    } 
-    method !setup-stroke($canvas) {
+    method strokeStyle($_, :$canvas!) {
         given $canvas.strokeStyle {
             when HTML::Canvas::Pattern {
                 $!gfx.StrokeAlpha = 1.0;
@@ -173,13 +164,14 @@ class HTML::Canvas::To::PDF {
             when HTML::Canvas::Gradient {
                 warn "gradient stroke - nyi";
             }
-            when Color {
-                $!gfx.StrokeColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
-                $!gfx.StrokeAlpha = .a / 255;
+            default {
+                with $canvas.css.color {
+                    $!gfx.StrokeColor = :DeviceRGB[ .rgb.map: ( */255 ) ];
+                    $!gfx.StrokeAlpha = .a / 255;
+                }
             }
         }
-    } 
-    method strokeStyle($_) {}
+    }
     method lineWidth(Numeric $width) {
         $!gfx.LineWidth = $width;
     }
@@ -221,13 +213,11 @@ class HTML::Canvas::To::PDF {
     method textAlign(Str $_) {}
     method direction(Str $_) {}
     method fillText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
-        self!setup-fill($canvas);
         $!gfx.Save;
         self!text($text, $x, $y, :$maxWidth, :$canvas);
         $!gfx.Restore
     }
     method strokeText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?, :$canvas!) {
-        self!setup-stroke($canvas);
         $!gfx.Save;
         $!gfx.TextRender = TextMode::OutlineText;
         self!text($text, $x, $y, :$maxWidth, :$canvas);

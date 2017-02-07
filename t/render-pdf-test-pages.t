@@ -498,8 +498,8 @@ my \image = PDF::Content::Image::PNG.open("t/images/camelia-logo.png");
 @html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
 
 test-page( -> \ctx {
-      ctx.fillText("Testing drawImage", 20, $y + textHeight);
-      $y += textHeight + pad + 10;
+      ctx.fillText("Testing drawImage", 20, $y += textHeight);
+      $y += pad + 10;
 
       ctx.drawImage(image,  20,  $y+0,  50, 50);
       my $x = 50;

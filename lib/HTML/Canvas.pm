@@ -11,7 +11,7 @@ class HTML::Canvas {
     has Pair @.calls;
     has Routine @.callback;
     my subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction';
-    my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath';
+    my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath'|'fillStyle'|'strokeStyle';
 
     has Numeric $.lineWidth = 1.0;
     method lineWidth is rw {
