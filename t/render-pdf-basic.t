@@ -22,18 +22,18 @@ $canvas.context: -> \ctx {
         lives-ok { ctx.strokeRect(20,20, 10,20); }, "basic API call - lives";
         ctx.scale( 2.0, 2.0);
         is-deeply [ctx.transformMatrix], [2.0, 0.0, 0.0, 2.0, 0, 0], 'canvas transform - scaled';
-        is-deeply [$gfx.CTM.list], [2, 0, 0, 2, 0, 792 * 2], 'pdf transform - scaled';
+        is-deeply [$gfx.CTM.list], [2, 0, 0, 2, 0, 792], 'pdf transform - scaled';
         ctx.translate(-5, -15);
 
         is-deeply [ctx.transformMatrix], [2.0, 0.0, 0.0, 2.0, -10.0, -30.0], 'canvas transform - scaled';
-        is-deeply [$gfx.CTM.list], [2, 0, 0, 2, -5, 792 * 2  +  15], 'pdf transform - scaled + translated';
+        is-deeply [$gfx.CTM.list], [2, 0, 0, 2, -5*2, 792  +  15*2], 'pdf transform - scaled + translated';
 
         lives-ok { ctx.strokeRect(20,20, 10,20); }, "basic API call - lives";
         dies-ok  { ctx.strokeRect(10,10, 20, "blah"); }, "incorrect API call - dies";
         dies-ok  { ctx.strokeRect(10,10, 20); }, "incorrect API call - dies";
         dies-ok  { ctx.foo(42) }, "unknown call - dies";
 
-        is-deeply $feed.content-dump, $("q", "0 0 612 792 re", "h", "W", "n", "1 0 0 1 0 792 cm", "q", "1 -791 610 790 re", "s", "20 -40 10 20 re", "s", "2 0 0 2 0 0 cm", "1 0 0 1 -5 15 cm", "20 -40 10 20 re", "s"), 'content to-date';
+        is-deeply $feed.content-dump, $("q", "0 0 612 792 re", "h", "W", "n", "1 0 0 1 0 792 cm", "q", "0 0 0 RG", "1 -791 610 790 re", "s", "20 -40 10 20 re", "s", "2 0 0 2 0 0 cm", "1 0 0 1 -5 15 cm", "20 -40 10 20 re", "s"), 'content to-date';
 
         lives-ok { ctx.font = "24px Arial"; }, 'set font - lives';
         is ctx.font,  "24px Arial", 'font';

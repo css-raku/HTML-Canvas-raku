@@ -344,7 +344,7 @@ class HTML::Canvas {
             $obj.html(:$style, |c);
         }
         elsif $obj.can('data-uri') {
-            "<img id='%s' style='%s' src='%s' />\n".sprintf: $obj.html-id, encode-entities($style), $obj.data-uri;
+            sprintf "<img id='%s' style='%s' src='%s' />\n".sprintf( $obj.html-id, encode-entities($style), $obj.data-uri );
         }
         else {
             die "unable to convert this object to HTML";
@@ -352,7 +352,7 @@ class HTML::Canvas {
     }
     method html(Str :$style, Str :$sep = "\n    ", |c) is default {
         if self ~~ HTMLObj {
-            my $style-att = do with $style { ' style="%s"'.sprintf(encode-entities($_)) } else { '' };
+            my $style-att = do with $style { encode-entities($_).fmt(' style="%s"') } else { '' };
 
             qq:to"END-HTML";
             <canvas width="{self.html-width}pt" height="{self.html-height}pt" id="{self.html-id}"{$style-att}></canvas>
@@ -455,7 +455,7 @@ class HTML::Canvas {
             my \fmt = $name ~~ LValue
                 ?? '%s.%s = %s;'
                 !! '%s.%s(%s);';
-            @js.push: fmt.sprintf: $context, $name, @args.join(", ");
+            @js.push: fmt.sprintf( $context, $name, @args.join(", ") );
         }
 
         @js.join: $sep;

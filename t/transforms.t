@@ -60,30 +60,25 @@ test-page(
     -> \ctx, \gfx {
         constant h = 100;
         my $html-transform;         
-        my $gfx-transform;         
 
         ctx.fillText("Testing Transforms", 20, $y += textHeight);
         $y += pad + 10;
         my \pat = ctx.createPattern(image,'repeat');
+        my $n;
 
-      for ([:translate(100,50), :scale(2,2)],
-           [:scale(2,2), :translate(150, 50) ],
+        for (
+            [:translate(150,50), :scale(2,2)],
+            [:scale(2,2), :translate(150, 50) ],
           ) -> \t {
           ctx.save(); {
               ctx."{.key}"(|.value) for t.list;
               $html-transform = ctx.transformMatrix.list;
-              $gfx-transform = gfx.CTM;
               ctx.font = "italic 5pt courier";
-              ctx.fillText([$html-transform.list].perl, 0, 0);
+              ctx.fillText("h#{++$n}:"~[$html-transform.list].perl, 0, 0);
               ctx.strokeStyle = 'red';
               ctx.fillStyle = pat;
               ctx.fillRect(0,10,75,100);
               ctx.strokeRect(0,10,75,100);
-          }; ctx.restore();
-
-          ctx.save(); {
-              ctx.setTransform(|$html-transform);
-              is-deeply gfx.CTM, $gfx-transform, 'set-transform';
           }; ctx.restore();
 
           $y += h + pad;

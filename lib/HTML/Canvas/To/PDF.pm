@@ -6,7 +6,7 @@ class HTML::Canvas::To::PDF {
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Pattern;
     use PDF:ver(v0.2.1..*);
-    use PDF::Content:ver(v0.0.1..*);
+    use PDF::Content:ver(v0.0.2..*);
     use PDF::Content::Ops :TextMode, :LineCaps, :LineJoin;
     has PDF::Content $.gfx handles <content content-dump> is required;
     use PDF::Style::Font:ver(v0.0.1..*);
@@ -139,11 +139,10 @@ class HTML::Canvas::To::PDF {
         my $bottom-pad = $repeat-y ?? 0 !! BigPad;
 
         my @ctm = $!gfx.CTM.list;
-        warn "todo: {@ctm.perl} -> Matrix";
-        my (\sx, \sk1, \sk2, \sy, \tx, \ty) = @ctm;
-        my @Matrix = [sx, sk1, sk2, sy,
-                      tx/sx,
-                      ty/sy + $!height - $image-height*sy,
+        my (\scale-x, \skew-x, \skew-y, \scale-y, \trans-x, \trans-y) = @ctm;
+        my @Matrix = [scale-x, skew-x, skew-y, scale-y,
+                      trans-x,
+                      trans-y - $image-height*scale-y,
                      ];
         my @BBox = [0, 0, $image-width + $left-pad, $image-height + $bottom-pad];
         my $Pattern = self!pdf.tiling-pattern(:@BBox, :@Matrix, :XStep($image-width + $left-pad), :YStep($image-height + $bottom-pad) );
