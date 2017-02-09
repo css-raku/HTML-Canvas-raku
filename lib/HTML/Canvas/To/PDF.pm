@@ -70,14 +70,13 @@ class HTML::Canvas::To::PDF {
     method rotate(Numeric \r) { self!transform(|rotate => -r) }
     method translate(Numeric \x, Numeric \y) { self!transform(|translate => [x, -y]) }
     method transform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-        self!transform(|matrix => [a, b, c, d, e, -f]);
+        self!transform( |matrix => [a, b, -c, d, e, -f]);
     }
     method setTransform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-        my @ctm-inv = PDF::Content::Util::TransformMatrix::inverse($!gfx.CTM);
-        my @diff = PDF::Content::Util::TransformMatrix::multiply([a, b, c, d, e, -f], @ctm-inv);
-        self!transform( |matrix => @diff )
-            unless PDF::Content::Util::TransformMatrix::is-identity(@diff);
-    }
+        # reset
+        $!gfx.CTM = PDF::Content::Util::TransformMatrix::translate(0, $!height);
+        self!transform( |matrix => [a, b, -c, d, e, -f]);
+   }
     method clearRect(\x, \y, \w, \h) {
         # stub - should etch a clipping path. not paint a white rectangle
         $!gfx.Save;
@@ -141,7 +140,7 @@ class HTML::Canvas::To::PDF {
         my @ctm = $!gfx.CTM.list;
         my (\scale-x, \skew-x, \skew-y, \scale-y, \trans-x, \trans-y) = @ctm;
         my @Matrix = [scale-x, skew-x, skew-y, scale-y,
-                      trans-x,
+                      trans-x - $image-height*skew-y,
                       trans-y - $image-height*scale-y,
                      ];
         my @BBox = [0, 0, $image-width + $left-pad, $image-height + $bottom-pad];

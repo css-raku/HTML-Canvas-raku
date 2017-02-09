@@ -1,6 +1,6 @@
 use v6;
 use Test;
-plan 4;
+plan 2;
 
 use PDF::Lite;
 use PDF::Content::Image::PNG;
@@ -67,14 +67,16 @@ test-page(
         my $n;
 
         for (
-            [:translate(150,50), :scale(2,2)],
-            [:scale(2,2), :translate(150, 50) ],
+            [:translate(50,50), :scale(2,2)],
+            [:scale(2,2), :translate(100, 25) ],
+            [:translate(75,300), :scale(2,2), :rotate(pi/16) ],
+            [:setTransform(2, 0, .3, 2, 200, 300) ],
           ) -> \t {
           ctx.save(); {
               ctx."{.key}"(|.value) for t.list;
               $html-transform = ctx.transformMatrix.list;
               ctx.font = "italic 5pt courier";
-              ctx.fillText("h#{++$n}:"~[$html-transform.list].perl, 0, 0);
+              ctx.fillText("h#{++$n}:"~[$html-transform.map: *.fmt('%.2f')].perl, 0, 0);
               ctx.strokeStyle = 'red';
               ctx.fillStyle = pat;
               ctx.fillRect(0,10,75,100);
