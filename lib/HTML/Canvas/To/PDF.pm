@@ -73,9 +73,10 @@ class HTML::Canvas::To::PDF {
         self!transform( |matrix => [a, b, -c, d, e, -f]);
     }
     method setTransform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-        # reset
-        $!gfx.CTM = PDF::Content::Util::TransformMatrix::translate(0, $!height);
-        self!transform( |matrix => [a, b, -c, d, e, -f]);
+        $!gfx.CTM = PDF::Content::Util::TransformMatrix::multiply(
+            [a, b, -c, d, e, -f],
+            PDF::Content::Util::TransformMatrix::translate(0, $!height)
+        );
    }
     method clearRect(\x, \y, \w, \h) {
         # stub - should etch a clipping path. not paint a white rectangle

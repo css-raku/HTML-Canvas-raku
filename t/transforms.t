@@ -68,9 +68,10 @@ test-page(
 
         for (
             [:translate(50,50), :scale(2,2)],
-            [:scale(2,2), :translate(100, 25) ],
+            [:scale(2,2), :translate(100, 30) ],
             [:translate(75,300), :scale(2,2), :rotate(pi/16) ],
-            [:setTransform(2, 0, .3, 2, 200, 300) ],
+            [:rotate(1), :scale(2,3), :translate(-15, 32), :setTransform(2, 0, .3, 2, 200, 300) ],
+            [:translate(75,300), :scale(1.5,2.5), :rotate(pi/16) ],
           ) -> \t {
           ctx.save(); {
               ctx."{.key}"(|.value) for t.list;
