@@ -10,6 +10,7 @@ class HTML::Canvas::To::PDF {
     use PDF::Content::Ops :TextMode, :LineCaps, :LineJoin;
     has PDF::Content $.gfx handles <content content-dump> is required;
     use PDF::Style::Font:ver(v0.0.1..*);
+    use PDF::DAO;
     has $.width; # canvas height in points
     has $.height; # canvas height in points
 
@@ -112,7 +113,8 @@ class HTML::Canvas::To::PDF {
             $!gfx.FillColor = self!make-pattern($_);
         }
         when HTML::Canvas::Gradient {
-            warn "gradient fill - nyi";
+            $!gfx.FillAlpha = 1.0;
+            $!gfx.FillColor = self!make-gradient($_);
         }
         default {
             with $canvas.css.background-color {
@@ -152,13 +154,71 @@ class HTML::Canvas::To::PDF {
         $Pattern.finish;
         Pattern => $!gfx.resource-key($Pattern);
     }
+    method !make-axial-shading(HTML::Canvas::Gradient $gradient --> PDF::DAO::Dict) {
+        my @color-stops;
+        for $gradient.colorStops.sort(*.offset) {
+            my @rgb = (.r, .g, .b).map: (*/255)
+                with .color;
+            @color-stops.push: %( :offset(.offset), :@rgb );
+        };
+        @color-stops.push({ :rgb[1, 1, 1] })
+            unless @color-stops;
+        @color-stops[0]<offset> = 0.0;
+        state %func-cache{Any};
+        my @Functions = [(1 ..^ +@color-stops).map: {
+                my $C0 = @color-stops[$_ - 1]<rgb>;
+                my $C1 = @color-stops[$_]<rgb>;
+                %(
+                    :FunctionType(2), # axial
+                    :Domain[0, 1],
+                    :$C0,
+                    :$C1,
+                    :N(1)
+                );
+            }];
+        my @Encode = flat (0, 1) xx +@Functions;
+        my $Function = {
+            :FunctionType(3), # stitching
+            :Domain[0, 1],
+            :@Encode,
+            :@Functions,
+        };
+        $Function<Bounds> = [ (1 .. (+@color-stops-2)).map({ @color-stops[$_]<offset>; }) ]
+            if +@color-stops > 2;
+        my @Coords = [.x0, .y0, .x1, .y1] with $gradient;
+        PDF::DAO.coerce: :dict{
+            :Background(@color-stops.tail<rgb>),
+            :ShadingType(2), # axial
+            :ColorSpace( :name<DeviceRGB> ),
+            :Domain[0, 1],
+            :@Coords,
+            :$Function,
+            :Extend[True, True],
+        };
+    }
+    method !make-gradient(HTML::Canvas::Gradient $gradient --> Pair) {
+        # I think I need a type 3 shading function, to hold the color-stops
+        my $Shading = self!make-axial-shading($gradient);
+        my Numeric $gradient-height = $gradient.y1 - $gradient.y0;
+
+        my (\scale-x, \skew-x, \skew-y, \scale-y, \trans-x, \trans-y) =  $!gfx.CTM.list;
+        my @Matrix = [scale-x, skew-x, skew-y, scale-y,
+                      trans-x - $gradient-height*skew-y,
+                      trans-y - $gradient-height*scale-y,
+                     ];
+        # construct a type 2 (shading) pattern
+        my %dict = :Type(:name<Pattern>), :PatternType(2), :@Matrix, :$Shading;
+        my $Pattern = $!gfx.resource-key(PDF::DAO.coerce(:%dict));
+        :$Pattern;
+    }
     method strokeStyle($_, :$canvas!) {
         when HTML::Canvas::Pattern {
             $!gfx.StrokeAlpha = 1.0;
             $!gfx.StrokeColor = self!make-pattern($_);
         }
         when HTML::Canvas::Gradient {
-            warn "gradient stroke - nyi";
+            $!gfx.StrokeAlpha = 1.0;
+            $!gfx.StrokeColor = self!make-gradient($_);
         }
         default {
             with $canvas.css.color {

@@ -564,12 +564,13 @@ test-page( -> \ctx {
       constant h = 100;
 
       my \gradient = ctx.createLinearGradient(0,0,170,0);
-      gradient.addColorStop(0,"black");
-      gradient.addColorStop(0.5,"red");
-      gradient.addColorStop(1,"white");
+      gradient.addColorStop(0,"red");
+      gradient.addColorStop(0.5,"white");
+      gradient.addColorStop(1,"blue");
       ctx.fillStyle = gradient;
 
       ctx.fillRect(20, $y, 150, h);
+      ctx.fillRect(180, $y, 50, h);
       $y += h + pad;
 
       for <repeat repeat-x repeat-y no-repeat>  -> \r {
