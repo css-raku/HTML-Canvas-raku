@@ -6,17 +6,19 @@ class HTML::Canvas::To::PDF {
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Pattern;
     use PDF:ver(v0.2.1..*);
+    use PDF::DAO;
     use PDF::Content:ver(v0.0.2..*);
     use PDF::Content::Ops :TextMode, :LineCaps, :LineJoin;
     has PDF::Content $.gfx handles <content content-dump> is required;
     use PDF::Style::Font:ver(v0.0.1..*);
-    use PDF::DAO;
     has $.width; # canvas height in points
     has $.height; # canvas height in points
 
     submethod TWEAK(:$canvas) {
-        $!width  //= $!gfx.parent.width;
-        $!height //= $!gfx.parent.height;
+        with $!gfx.parent {
+            $!width  //= .width;
+            $!height //= .height;
+        }
 
         with $canvas {
             .font-object //= PDF::Style::Font.new;
@@ -196,9 +198,9 @@ class HTML::Canvas::To::PDF {
             :Extend[True, True],
         };
     }
+    has %!shading-cache{Any};
     method !make-gradient(HTML::Canvas::Gradient $gradient --> Pair) {
-        # I think I need a type 3 shading function, to hold the color-stops
-        my $Shading = self!make-axial-shading($gradient);
+        my $Shading = %!shading-cache{$gradient}{+$gradient.colorStops} //= self!make-axial-shading($gradient);
         my Numeric $gradient-height = $gradient.y1 - $gradient.y0;
 
         my (\scale-x, \skew-x, \skew-y, \scale-y, \trans-x, \trans-y) =  $!gfx.CTM.list;
