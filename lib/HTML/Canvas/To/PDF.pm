@@ -126,35 +126,38 @@ class HTML::Canvas::To::PDF {
         }
     }
     method !pdf {require PDF::Lite:ver(v0.0.1..*)}
+    has %!pattern-cache{Any};
     method !make-pattern(HTML::Canvas::Pattern $pattern --> Pair) {
-        my Bool $repeat-x = True;
-        my Bool $repeat-y = True;
-        given $pattern.repetition {
-            when 'repeat-y' { $repeat-x = False }
-            when 'repeat-x' { $repeat-y = False }
-            when 'no-repeat' { $repeat-x = $repeat-y = False }
-        }
-        my $image = $pattern.image;
-        my Numeric $image-width = $image.width;
-        my Numeric $image-height = $image.height;
-
-        my constant BigPad = 1000;
-        my $left-pad = $repeat-x ?? 0 !! BigPad;
-        my $bottom-pad = $repeat-y ?? 0 !! BigPad;
-
         my @ctm = $!gfx.CTM.list;
-        my (\scale-x, \skew-x, \skew-y, \scale-y, \trans-x, \trans-y) = @ctm;
-        my @Matrix = [scale-x, skew-x, skew-y, scale-y,
-                      trans-x - $image-height*skew-y,
-                      trans-y - $image-height*scale-y,
-                     ];
-        my @BBox = [0, 0, $image-width + $left-pad, $image-height + $bottom-pad];
-        my $Pattern = self!pdf.tiling-pattern(:@BBox, :@Matrix, :XStep($image-width + $left-pad), :YStep($image-height + $bottom-pad) );
-        $Pattern.graphics: {
-            .do($image, 0, 0);
+        %!pattern-cache{$pattern}{@ctm.gist} //= do {
+            my Bool $repeat-x = True;
+            my Bool $repeat-y = True;
+            given $pattern.repetition {
+                when 'repeat-y' { $repeat-x = False }
+                when 'repeat-x' { $repeat-y = False }
+                when 'no-repeat' { $repeat-x = $repeat-y = False }
+            }
+            my $image = $pattern.image;
+            my Numeric $image-width = $image.width;
+            my Numeric $image-height = $image.height;
+
+            my constant BigPad = 1000;
+            my $left-pad = $repeat-x ?? 0 !! BigPad;
+            my $bottom-pad = $repeat-y ?? 0 !! BigPad;
+
+            my (\scale-x, \skew-x, \skew-y, \scale-y, \trans-x, \trans-y) = @ctm;
+            my @Matrix = [scale-x, skew-x, skew-y, scale-y,
+                          trans-x - $image-height*skew-y,
+                          trans-y - $image-height*scale-y,
+                         ];
+            my @BBox = [0, 0, $image-width + $left-pad, $image-height + $bottom-pad];
+            my $Pattern = self!pdf.tiling-pattern(:@BBox, :@Matrix, :XStep($image-width + $left-pad), :YStep($image-height + $bottom-pad) );
+            $Pattern.graphics: {
+                .do($image, 0, 0);
+            }
+            $Pattern.finish;
+            Pattern => $!gfx.resource-key($Pattern);
         }
-        $Pattern.finish;
-        Pattern => $!gfx.resource-key($Pattern);
     }
     method !make-axial-shading(HTML::Canvas::Gradient $gradient --> PDF::DAO::Dict) {
         my @color-stops;
@@ -198,20 +201,24 @@ class HTML::Canvas::To::PDF {
             :Extend[True, True],
         };
     }
-    has %!shading-cache{Any};
+    has %!gradient-cache{Any};
     method !make-gradient(HTML::Canvas::Gradient $gradient --> Pair) {
-        my $Shading = %!shading-cache{$gradient}{+$gradient.colorStops} //= self!make-axial-shading($gradient);
-        my Numeric $gradient-height = $gradient.y1 - $gradient.y0;
+        my @ctm = $!gfx.CTM.list;
+        @ctm.push: +$gradient.colorStops;
+        %!gradient-cache{$gradient}{@ctm.gist} //= do {
+            my $Shading = self!make-axial-shading($gradient);
+            my Numeric $gradient-height = $gradient.y1 - $gradient.y0;
 
-        my (\scale-x, \skew-x, \skew-y, \scale-y, \trans-x, \trans-y) =  $!gfx.CTM.list;
-        my @Matrix = [scale-x, skew-x, skew-y, scale-y,
-                      trans-x - $gradient-height*skew-y,
-                      trans-y - $gradient-height*scale-y,
-                     ];
-        # construct a type 2 (shading) pattern
-        my %dict = :Type(:name<Pattern>), :PatternType(2), :@Matrix, :$Shading;
-        my $Pattern = $!gfx.resource-key(PDF::DAO.coerce(:%dict));
-        :$Pattern;
+            my (\scale-x, \skew-x, \skew-y, \scale-y, \trans-x, \trans-y) = @ctm;
+            my @Matrix = [scale-x, skew-x, skew-y, scale-y,
+                          trans-x - $gradient-height*skew-y,
+                          trans-y - $gradient-height*scale-y,
+                         ];
+            # construct a type 2 (shading) pattern
+            my %dict = :Type(:name<Pattern>), :PatternType(2), :@Matrix, :$Shading;
+            my $Pattern = $!gfx.resource-key(PDF::DAO.coerce(:%dict));
+            :$Pattern;
+        }
     }
     method strokeStyle($_, :$canvas!) {
         when HTML::Canvas::Pattern {
