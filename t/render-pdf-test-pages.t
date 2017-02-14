@@ -1,6 +1,6 @@
 use v6;
 use Test;
-plan 10;
+plan 11;
 
 use PDF::Lite;
 use PDF::Content::Image::PNG;
@@ -25,14 +25,14 @@ sub test-page(&markup) {
     my $feed = HTML::Canvas::To::PDF.new: :$gfx, :$canvas;
     my Bool $clean = True;
     $page-no++;
-    try {
         $canvas.context(
             -> \ctx {
                 $y = 0;
                 ctx.font = "20pt times";
                 &markup(ctx);
             });
-
+    try {
+        42;
         CATCH {
             default {
                 warn "stopped on page $page-no: {.message}";
@@ -234,9 +234,9 @@ test-page( -> \ctx {
       $y += textHeight + pad;
       ctx.lineWidth = 5;
 
-      for <butt round square> -> \lc {
+      for <butt round square> {
           ctx.beginPath();
-          ctx.lineCap = lc;
+          ctx.lineCap = $_;
           ctx.moveTo(20, $y);
           ctx.lineTo(200, $y);
           ctx.stroke();
@@ -250,9 +250,9 @@ test-page( -> \ctx {
       ctx.fillText("Testing lineJoin", 20, $y + textHeight);
       $y += textHeight + pad;
       ctx.lineWidth = 10;
-      for <miter bevel round> -> \lj {
+      for <miter bevel round> {
           ctx.beginPath();
-          ctx.lineJoin = lj;
+          ctx.lineJoin = $_;
           ctx.moveTo(20, $y);
           ctx.lineTo(200, $y);
           ctx.lineTo(250, $y + 50);
@@ -266,7 +266,7 @@ test-page( -> \ctx {
       ctx.fillText("Testing moveTo, lineTo, stroke, and fill", 20, $y + textHeight);
       $y += textHeight + pad;
 
-      for <stroke fill> -> \c {
+      for <stroke fill> {
           # diamond
           ctx.beginPath();
           ctx.moveTo(30, $y);
@@ -274,20 +274,14 @@ test-page( -> \ctx {
           ctx.lineTo(30, $y + 40);
           ctx.lineTo(10, $y + 20);
           ctx.lineTo(30, $y);
-          ctx."{c}"();
+          ctx."$_"();
           $y += 50;
       }
 });
 
-
-sub deg2rad (Numeric $deg) {
-    return $deg * pi / 180;
-}
+sub deg2rad(Numeric $deg) { $deg * pi / 180 }
 
 test-page( -> \ctx {
-      #
-      # arcs
-      #
       ctx.fillText("Testing arc, stroke, and fill", 20, $y + textHeight);
       $y += textHeight + pad + 20;
       ctx.strokeStyle = 'rgba(0,0,255,.75)';
@@ -559,19 +553,9 @@ test-page( -> \ctx {
 
 test-page( -> \ctx {
       $y = pad;
-      ctx.fillText("Testing gradiants & Patterns", 20, $y + textHeight);
+      ctx.fillText("Testing Patterns", 20, $y + textHeight);
       $y += textHeight + pad + 10;
       constant h = 100;
-
-      my \gradient = ctx.createLinearGradient(0,0,170,0);
-      gradient.addColorStop(0,"red");
-      gradient.addColorStop(0.5,"white");
-      gradient.addColorStop(1,"blue");
-      ctx.fillStyle = gradient;
-
-      ctx.fillRect(20, $y, 150, h);
-      ctx.fillRect(180, $y, 50, h);
-      $y += h + pad;
 
       for <repeat repeat-x repeat-y no-repeat>  -> \r {
           ctx.save(); {
@@ -587,6 +571,31 @@ test-page( -> \ctx {
 
           $y += h + pad;
       }
+});
+
+test-page( -> \ctx {
+    $y = pad;
+    ctx.fillText("Testing Gradients", 20, $y + textHeight);
+    $y += textHeight + pad + 10;
+    constant h = 100;
+
+    for (ctx.createLinearGradient(0,0,170,0),
+         ctx.createLinearGradient(0,0,0,120),
+         ctx.createLinearGradient(0,0,170,120),
+         ctx.createRadialGradient(75,50,5,90,60,100)) -> $grd {
+        $grd.addColorStop(0,"red");
+        $grd.addColorStop(0.5,"white");
+        $grd.addColorStop(1,"blue");
+        ctx.fillStyle = $grd;
+
+        ctx.save; {
+            ctx.translate(0, $y);
+            ctx.fillRect(10, 10, 150, h);
+            ctx.fillRect(180, 10, 50, h);
+        }; ctx.restore;
+
+        $y += h + pad;
+    }
 });
 
 lives-ok {$pdf.save-as("t/render-pdf-test-pages.pdf")}, "pdf.save-as";

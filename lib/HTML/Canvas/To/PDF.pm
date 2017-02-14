@@ -129,7 +129,7 @@ class HTML::Canvas::To::PDF {
     has %!pattern-cache{Any};
     method !make-pattern(HTML::Canvas::Pattern $pattern --> Pair) {
         my @ctm = $!gfx.CTM.list;
-        %!pattern-cache{$pattern}{@ctm.gist} //= do {
+        %!pattern-cache{$pattern}{@ctm.Str} //= do {
             my Bool $repeat-x = True;
             my Bool $repeat-y = True;
             given $pattern.repetition {
@@ -159,7 +159,7 @@ class HTML::Canvas::To::PDF {
             Pattern => $!gfx.resource-key($Pattern);
         }
     }
-    method !make-axial-shading(HTML::Canvas::Gradient $gradient --> PDF::DAO::Dict) {
+    method !make-shading(HTML::Canvas::Gradient $gradient --> PDF::DAO::Dict) {
         my @color-stops;
         for $gradient.colorStops.sort(*.offset) {
             my @rgb = (.r, .g, .b).map: (*/255)
@@ -181,19 +181,39 @@ class HTML::Canvas::To::PDF {
                     :N(1)
                 );
             }];
-        my @Encode = flat (0, 1) xx +@Functions;
-        my $Function = {
-            :FunctionType(3), # stitching
-            :Domain[0, 1],
-            :@Encode,
-            :@Functions,
+        my $Function;
+        if +@Functions == 1 {
+            $Function = @Functions[0];
+        }
+        else {
+            # multiple functions - wrap then up in a stiching function
+            my @Bounds = [ (1 .. (+@color-stops-2)).map({ @color-stops[$_]<offset>; }) ];
+            my @Encode = flat (0, 1) xx +@Functions;
+            
+            $Function = {
+                :FunctionType(3), # stitching
+                :Domain[0, 1],
+                :@Encode,
+                :@Functions,
+                :@Bounds
+            }
         };
-        $Function<Bounds> = [ (1 .. (+@color-stops-2)).map({ @color-stops[$_]<offset>; }) ]
-            if +@color-stops > 2;
-        my @Coords = [.x0, .y0, .x1, .y1] with $gradient;
+
+        my (@Coords, $ShadingType);
+        given $gradient.type {
+            when 'Linear' {
+                $ShadingType = 2; # axial
+                @Coords = [.x0, .y0, .x1, .y1] with $gradient;
+            }
+            when 'Radial' {
+                $ShadingType = 3; # radial
+                @Coords = [.x0, .y0, .r0, .x1, .y1, .r1] with $gradient;
+            }
+        }
+
         PDF::DAO.coerce: :dict{
+            :$ShadingType,
             :Background(@color-stops.tail<rgb>),
-            :ShadingType(2), # axial
             :ColorSpace( :name<DeviceRGB> ),
             :Domain[0, 1],
             :@Coords,
@@ -205,8 +225,8 @@ class HTML::Canvas::To::PDF {
     method !make-gradient(HTML::Canvas::Gradient $gradient --> Pair) {
         my @ctm = $!gfx.CTM.list;
         @ctm.push: +$gradient.colorStops;
-        %!gradient-cache{$gradient}{@ctm.gist} //= do {
-            my $Shading = self!make-axial-shading($gradient);
+        %!gradient-cache{$gradient}{@ctm.Str} //= do {
+            my $Shading = self!make-shading($gradient);
             my Numeric $gradient-height = $gradient.y1 - $gradient.y0;
 
             my (\scale-x, \skew-x, \skew-y, \scale-y, \trans-x, \trans-y) = @ctm;
@@ -451,7 +471,7 @@ class HTML::Canvas::To::PDF {
         }
 
         if $anti-clockwise {
-            # draw the compilmentry arc
+            # draw the complimentry arc
             ($startAngle, $endAngle) = ($endAngle, $startAngle);
             ($start-q, $end-q) = ($end-q, $start-q);
             $n = 4 - $n;

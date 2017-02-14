@@ -274,8 +274,8 @@ class HTML::Canvas {
     method createLinearGradient(Numeric $x0, Numeric $y0, Numeric $x1, Numeric $y1) {
         HTML::Canvas::Gradient.new: :$x0, :$y0, :$x1, :$y1;
     }
-    method createRadialGradient(Numeric $x0, Numeric $y0, Numeric $x1, Numeric $y1, Numeric:D $r) {
-        HTML::Canvas::Gradient.new: :$x0, :$y0, :$x1, :$y1, :$r;
+    method createRadialGradient(Numeric $x0, Numeric $y0, Numeric $r0, Numeric $x1, Numeric $y1, Numeric:D $r1) {
+        HTML::Canvas::Gradient.new: :$x0, :$y0, :$r0, :$x1, :$y1, :$r1;
     }
     method createPattern($image, HTML::Canvas::Pattern::Repetition $repetition = 'repeat') {
         self!register-node($image);

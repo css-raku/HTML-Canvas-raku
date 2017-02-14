@@ -8,8 +8,9 @@ class HTML::Canvas::Gradient {
     has Numeric $.y0;
     has Numeric $.x1;
     has Numeric $.y1;
-    has Numeric $.r;
-    method !type { with $!r { 'Radial' } else { 'Linear' } }
+    has Numeric $.r0;
+    has Numeric $.r1;
+    method type { with $!r0 // $!r1 { 'Radial' } else { 'Linear' } }
 
     my class ColorStop {
         use CSS::Declarations;
@@ -40,10 +41,14 @@ class HTML::Canvas::Gradient {
     }
 
     method to-js(Str $ctx, Str $var --> Array) {
-        my @args = $!x0, $!y0, $!x1, $!y1;
-        @args.push: $_ with $!r;
+        my @args = do with $!r0 // $!r1 {
+            $!x0, $!y0, ($!r0 // 0), $!x1, $!y1, ($!r1 // 0);
+        }
+        else {
+            $!x0, $!y0, $!x1, $!y1;
+        }
         my $args-js = @args.map({ to-json($_) }).join: ", ";
-        my @js = 'var %s = %s.create%sGradient(%s);'.sprintf($var, $ctx, self!type, $args-js);
+        my @js = 'var %s = %s.create%sGradient(%s);'.sprintf($var, $ctx, self.type, $args-js);
         @js.push: .to-js($var)
             for @!colorStops;
         @js;
