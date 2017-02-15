@@ -207,13 +207,15 @@ class HTML::Canvas::To::PDF {
             }
             when 'Radial' {
                 $ShadingType = 3; # radial
-                @Coords = [.x0, .y0, .r0, .x1, .y1, .r1] with $gradient;
+                @Coords = [.x0, .y1 - 2 * .y0, .r0, .x1, -.y0, .r1] with $gradient;
             }
         }
 
         PDF::DAO.coerce: :dict{
             :$ShadingType,
-            :Background(@color-stops.tail<rgb>),
+            ($gradient.type eq 'Linear'
+             ?? :Background(@color-stops.tail<rgb>),
+             !! ()),
             :ColorSpace( :name<DeviceRGB> ),
             :Domain[0, 1],
             :@Coords,
