@@ -203,7 +203,7 @@ class HTML::Canvas::To::PDF {
         given $gradient.type {
             when 'Linear' {
                 $ShadingType = 2; # axial
-                @Coords = [.x0, .y0, .x1, .y1] with $gradient;
+                @Coords = [.x0, .y1, .x1, .y0] with $gradient;
             }
             when 'Radial' {
                 $ShadingType = 3; # radial
