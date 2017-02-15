@@ -32,7 +32,7 @@ class HTML::Canvas::To::PDF {
                 self."{$op}"(|c);
             }
             else {
-                warn "unimplemented Canvas 2d API call: $op"
+                warn "Canvas call not supported in PDF: $op"
             }
         }
     }
@@ -106,8 +106,12 @@ class HTML::Canvas::To::PDF {
     method fill() {
         $!gfx.Fill;
     }
-    method stroke(:$canvas!) {
+    method stroke() {
         $!gfx.Stroke;
+    }
+    method clip() {
+        $!gfx.Clip;
+        $!gfx.EndPath;
     }
     method fillStyle($_, :$canvas!) {
         when HTML::Canvas::Pattern {
@@ -214,7 +218,7 @@ class HTML::Canvas::To::PDF {
         PDF::DAO.coerce: :dict{
             :$ShadingType,
             ($gradient.type eq 'Linear'
-             ?? :Background(@color-stops.tail<rgb>),
+             ?? :Background(@color-stops.tail<rgb>)
              !! ()),
             :ColorSpace( :name<DeviceRGB> ),
             :Domain[0, 1],

@@ -242,6 +242,9 @@ class HTML::Canvas {
                        self!setup-stroke();
                        self!draw-subpath()
                    }),
+        :clip(method () {
+                     self!draw-subpath();
+                 }),
         :fillText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) {
                          self!setup-fill();
                      }),

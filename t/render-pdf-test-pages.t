@@ -25,14 +25,15 @@ sub test-page(&markup) {
     my $feed = HTML::Canvas::To::PDF.new: :$gfx, :$canvas;
     my Bool $clean = True;
     $page-no++;
+
+    try {
         $canvas.context(
             -> \ctx {
                 $y = 0;
                 ctx.font = "20pt times";
                 &markup(ctx);
             });
-    try {
-        42;
+
         CATCH {
             default {
                 warn "stopped on page $page-no: {.message}";
@@ -276,7 +277,9 @@ test-page( -> \ctx {
           ctx.lineTo(30, $y);
           ctx."$_"();
           $y += 50;
+
       }
+
 });
 
 sub deg2rad(Numeric $deg) { $deg * pi / 180 }
@@ -439,6 +442,18 @@ test-page( -> \ctx {
 
       }; ctx.restore();
 
+      ctx.fillText("Testing clip", 20, $y + textHeight);
+      $y += textHeight + pad;
+
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(255,200,200,.5)';
+      ctx.fillRect(10, $y, 100, 50);
+      ctx.rect(50, $y+20, 100, 50);
+      ctx.stroke();
+      ctx.clip();
+      # Fill another rectangle after clip()
+      ctx.fillStyle = 'rgba(200,255,200,.5)';
+      ctx.fillRect(10, $y, 100, 50);
 });
 
 test-page( -> \ctx {
@@ -591,7 +606,7 @@ test-page( -> \ctx {
         ctx.save; {
             ctx.translate(0, $y);
             ctx.fillRect(10, 10, 150, h);
-            ctx.fillRect(180, 10, 50, h);
+            ctx.fillRect(170, 10, 50, h);
         }; ctx.restore;
 
         $y += h + pad;
