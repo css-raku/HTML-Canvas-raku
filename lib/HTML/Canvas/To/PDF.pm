@@ -9,8 +9,10 @@ class HTML::Canvas::To::PDF {
     use PDF::DAO;
     use PDF::Content:ver(v0.0.2..*);
     use PDF::Content::Ops :TextMode, :LineCaps, :LineJoin;
-    has PDF::Content $.gfx handles <content content-dump> is required;
     use PDF::Style::Font:ver(v0.0.1..*);
+    use PDF::Content::Util::TransformMatrix;
+
+    has PDF::Content $.gfx handles <content content-dump> is required;
     has $.width; # canvas height in points
     has $.height; # canvas height in points
 
@@ -149,11 +151,12 @@ class HTML::Canvas::To::PDF {
             my $left-pad = $repeat-x ?? 0 !! BigPad;
             my $bottom-pad = $repeat-y ?? 0 !! BigPad;
 
-            my (\scale-x, \skew-x, \skew-y, \scale-y, \trans-x, \trans-y) = @ctm;
-            my @Matrix = [scale-x, skew-x, skew-y, scale-y,
-                          trans-x - $image-height*skew-y,
-                          trans-y - $image-height*scale-y,
-                         ];
+            my @Matrix = @ctm;
+            with @Matrix {
+                enum « :skew-y(2) :scale-y(3) :e(4) :f(5) »;
+                .[e] -= $image-height * .[skew-y];
+                .[f] -= $image-height * .[scale-y];
+            }
             my @BBox = [0, 0, $image-width + $left-pad, $image-height + $bottom-pad];
             my $Pattern = self!pdf.tiling-pattern(:@BBox, :@Matrix, :XStep($image-width + $left-pad), :YStep($image-height + $bottom-pad) );
             $Pattern.graphics: {
