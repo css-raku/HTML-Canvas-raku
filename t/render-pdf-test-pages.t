@@ -193,11 +193,11 @@ test-page( -> \ctx {
       ctx.fillText("< textAlign=end (rtl)",150, $y); 
 
       ctx.textAlign="left"; 
-      ctx.fillText("textAlign=left",150, $y += textHeight + pad);
+      ctx.fillText("< textAlign=left",150, $y += textHeight + pad);
       ctx.textAlign="center"; 
-      ctx.fillText("textAlign=center",150, $y += textHeight + pad); 
+      ctx.fillText("< textAlign=center >",150, $y += textHeight + pad); 
       ctx.textAlign="right"; 
-      ctx.fillText("textAlign=right",150, $y += textHeight + pad);
+      ctx.fillText("textAlign=right >",150, $y += textHeight + pad);
       ctx.restore;
 
       # Create a red line in position 150

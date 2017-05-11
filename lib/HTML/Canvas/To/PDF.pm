@@ -13,7 +13,7 @@ class HTML::Canvas::To::PDF {
     use PDF::Content::Util::TransformMatrix;
 
     has PDF::Content $.gfx handles <content content-dump> is required;
-    has $.width; # canvas height in points
+    has $.width;  # canvas width in points
     has $.height; # canvas height in points
 
     submethod TWEAK(:$canvas) {
@@ -83,7 +83,7 @@ class HTML::Canvas::To::PDF {
             PDF::Content::Util::TransformMatrix::translate(0, $!height)
         );
    }
-    method clearRect(\x, \y, \w, \h) {
+    method clearRect(Numeric \x, Numeric \y, Numeric \w, Numeric \h) {
         # stub - should etch a clipping path. not paint a white rectangle
         $!gfx.Save;
         $!gfx.FillColor = :DeviceGray[1];
@@ -92,13 +92,13 @@ class HTML::Canvas::To::PDF {
         $!gfx.Fill;
         $!gfx.Restore;
     }
-    method fillRect(\x, \y, \w, \h ) {
+    method fillRect(Numeric \x, Numeric \y, Numeric \w, Numeric \h ) {
         unless $!gfx.FillAlpha =~= 0 {
             $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
             $!gfx.Fill;
         }
     }
-    method strokeRect(\x, \y, \w, \h ) {
+    method strokeRect(Numeric \x, Numeric \y, Numeric \w, Numeric \h ) {
         unless $!gfx.StrokeAlpha =~= 0 {
             $!gfx.Rectangle( |self!coords(x, y + h), pt(w), pt(h) );
             $!gfx.CloseStroke;
@@ -115,7 +115,7 @@ class HTML::Canvas::To::PDF {
         $!gfx.Clip;
         $!gfx.EndPath;
     }
-    method fillStyle($_, :$canvas!) {
+    method fillStyle(HTML::Canvas::ColorSpec $_, :$canvas!) {
         when HTML::Canvas::Pattern {
             $!gfx.FillAlpha = 1.0;
             $!gfx.FillColor = self!make-pattern($_);
@@ -153,9 +153,9 @@ class HTML::Canvas::To::PDF {
 
             my @Matrix = @ctm;
             with @Matrix {
-                enum « :skew-y(2) :scale-y(3) :e(4) :f(5) »;
-                .[e] -= $image-height * .[skew-y];
-                .[f] -= $image-height * .[scale-y];
+                enum « :Skew-Y(2) :Scale-Y(3) :E(4) :F(5) »;
+                .[E] -= $image-height * .[Skew-Y];
+                .[F] -= $image-height * .[Scale-Y];
             }
             my @BBox = [0, 0, $image-width + $left-pad, $image-height + $bottom-pad];
             my $Pattern = self!pdf.tiling-pattern(:@BBox, :@Matrix, :XStep($image-width + $left-pad), :YStep($image-height + $bottom-pad) );
@@ -167,6 +167,7 @@ class HTML::Canvas::To::PDF {
         }
     }
     method !make-shading(HTML::Canvas::Gradient $gradient --> PDF::DAO::Dict) {
+	enum « :Axial(2) :Stitching(3), :Radial(3) »;
         my @color-stops;
         for $gradient.colorStops.sort(*.offset) {
             my @rgb = (.r, .g, .b).map: (*/255)
@@ -181,7 +182,7 @@ class HTML::Canvas::To::PDF {
                 my $C0 = @color-stops[$_ - 1]<rgb>;
                 my $C1 = @color-stops[$_]<rgb>;
                 %(
-                    :FunctionType(2), # axial
+                    :FunctionType(Axial),
                     :Domain[0, 1],
                     :$C0,
                     :$C1,
@@ -194,11 +195,11 @@ class HTML::Canvas::To::PDF {
         }
         else {
             # multiple functions - wrap then up in a stiching function
-            my @Bounds = [ (1 .. (+@color-stops-2)).map({ @color-stops[$_]<offset>; }) ];
+            my @Bounds = [ (1 .. (+@color-stops-2)).map: { @color-stops[$_]<offset>; } ];
             my @Encode = flat (0, 1) xx +@Functions;
             
             $Function = {
-                :FunctionType(3), # stitching
+                :FunctionType(Stitching),
                 :Domain[0, 1],
                 :@Encode,
                 :@Functions,
@@ -206,15 +207,14 @@ class HTML::Canvas::To::PDF {
             }
         };
 
-        my (@Coords, $ShadingType);
-        given $gradient.type {
+        my ($ShadingType, @Coords) = do given $gradient.type {
             when 'Linear' {
-                $ShadingType = 2; # axial
-                @Coords = [.x0, .y1, .x1, .y0] with $gradient;
+                (Axial,
+		 [.x0, .y1, .x1, .y0] with $gradient);
             }
             when 'Radial' {
-                $ShadingType = 3; # radial
-                @Coords = [.x0, .y1 - 2 * .y0, .r0, .x1, -.y0, .r1] with $gradient;
+                (Radial,
+		 [.x0, .y1 - 2 * .y0, .r0, .x1, -.y0, .r1] with $gradient);
             }
         }
 
@@ -249,7 +249,7 @@ class HTML::Canvas::To::PDF {
             :$Pattern;
         }
     }
-    method strokeStyle($_, :$canvas!) {
+    method strokeStyle(HTML::Canvas::ColorSpec $_, :$canvas!) {
         when HTML::Canvas::Pattern {
             $!gfx.StrokeAlpha = 1.0;
             $!gfx.StrokeColor = self!make-pattern($_);
@@ -268,11 +268,11 @@ class HTML::Canvas::To::PDF {
     method lineWidth(Numeric $width) {
         $!gfx.LineWidth = $width;
     }
-    method lineCap(Str $cap-name) {
+    method lineCap(HTML::Canvas::LineCap $cap-name) {
         my LineCaps $lc = %( :butt(ButtCaps), :round(RoundCaps),  :square(SquareCaps)){$cap-name};
         $!gfx.LineCap = $lc;
     }
-    method lineJoin(Str $cap-name) {
+    method lineJoin(HTML::Canvas::LineJoin $cap-name) {
         my LineJoin $lj = %( :miter(MiterJoin), :round(RoundJoin),  :bevel(BevelJoin)){$cap-name};
         $!gfx.LineJoin = $lj;
     }
@@ -287,8 +287,8 @@ class HTML::Canvas::To::PDF {
         $!gfx.BeginText;
         $!gfx.HorizScaling = $_ with $scale;
         $!gfx.text-position = self!coords($x, $y);
-        my $baseline = $canvas.textBaseline;
-        my HTML::Canvas::textAlignment $align = do given $canvas.textAlign {
+        my HTML::Canvas::Baseline $baseline = $canvas.textBaseline;
+        my HTML::Canvas::TextAlignment $align = do given $canvas.textAlign {
             when 'start' { $canvas.direction eq 'ltr' ?? 'left' !! 'right' }
             when 'end'   { $canvas.direction eq 'rtl' ?? 'left' !! 'right' }
             default { $_ }

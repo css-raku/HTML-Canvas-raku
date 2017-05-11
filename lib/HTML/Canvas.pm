@@ -5,6 +5,7 @@ class HTML::Canvas {
     use PDF::Content::Util::TransformMatrix;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Pattern;
+    use HTML::Entity;
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Pair @.subpath;
     has Str @!subpath-new;
@@ -33,7 +34,7 @@ class HTML::Canvas {
             }
         );
     }
-    my subset LineCap of Str where 'butt'|'round'|'square';
+    subset LineCap of Str where 'butt'|'round'|'square';
     has LineCap $.lineCap = 'butt';
     method lineCap is rw {
         Proxy.new(
@@ -43,7 +44,7 @@ class HTML::Canvas {
             }
         );
     }
-    my subset LineJoin of Str where 'bevel'|'round'|'miter';
+    subset LineJoin of Str where 'bevel'|'round'|'miter';
     has LineJoin $.lineJoin = 'bevel';
     method lineJoin is rw {
         Proxy.new(
@@ -81,8 +82,8 @@ class HTML::Canvas {
         );
     }
 
-    subset textAlignment of Str where 'start'|'end'|'left'|'right'|'center';
-    has textAlignment $.textAlign = 'start';
+    subset TextAlignment of Str where 'start'|'end'|'left'|'right'|'center';
+    has TextAlignment $.textAlign = 'start';
     method textAlign is rw {
         Proxy.new(
             FETCH => sub ($) { $!textAlign },
@@ -92,8 +93,8 @@ class HTML::Canvas {
         );
     }
 
-    subset textDirection of Str where 'ltr'|'rtl';
-    has textDirection $.direction = 'ltr';
+    subset TextDirection of Str where 'ltr'|'rtl';
+    has TextDirection $.direction = 'ltr';
     method direction is rw {
         Proxy.new(
             FETCH => sub ($) { $!direction },
@@ -112,7 +113,7 @@ class HTML::Canvas {
             }
         )
     }
-    my subset ColorSpec where Str|HTML::Canvas::Gradient|HTML::Canvas::Pattern;
+    subset ColorSpec where Str|HTML::Canvas::Gradient|HTML::Canvas::Pattern;
     has ColorSpec $.fillStyle is rw = 'black';
     method fillStyle is rw {
         Proxy.new(
@@ -320,7 +321,6 @@ class HTML::Canvas {
         self._finish;
     }
 
-    use HTML::Entity;
     my role HTMLObj {
         has Numeric $.html-width is rw;
         has Numeric $.html-height is rw;
