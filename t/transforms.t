@@ -21,7 +21,6 @@ my $measured-text;
 sub test-page(&markup) {
     my HTML::Canvas $canvas .= new;
     my $gfx = $pdf.add-page.gfx;
-    $gfx.comment-ops = True;
     my $feed = HTML::Canvas::To::PDF.new: :$gfx, :$canvas;
     my Bool $clean = True;
     $page-no++;

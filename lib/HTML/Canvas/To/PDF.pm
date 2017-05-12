@@ -28,9 +28,29 @@ class HTML::Canvas::To::PDF {
         }
     }
 
+    method !add-pdf-comment($op, *@args) {
+	use JSON::Fast;
+	my @jargs = flat @args.map: {
+	    when Str|Numeric|Bool|List { to-json($_) }
+	    when HTML::Canvas::Pattern | HTML::Canvas::Gradient {
+		.to-js('ctx');
+	    }
+	    default {
+		.?js-ref // .perl;
+	    }
+            };
+            my \fmt = $op ~~ HTML::Canvas::LValue
+                ?? 'ctx.%s = %s;'
+                !! 'ctx.%s(%s);';
+	my $js = fmt.sprintf( $op, @jargs.join(", ") );
+	$!gfx.add-comment('--- ' ~ $js ~ ' ---')
+    }
+
     method callback {
         sub ($op, |c) {
             if self.can: "{$op}" {
+		self!add-pdf-comment($op, |c)
+		    unless $op ~~ /^_/;
                 self."{$op}"(|c);
             }
             else {

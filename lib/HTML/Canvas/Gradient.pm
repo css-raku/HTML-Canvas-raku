@@ -40,7 +40,7 @@ class HTML::Canvas::Gradient {
         @!colorStops.push: ColorStop.new( :$offset, :$color );
     }
 
-    method to-js(Str $ctx, Str $var --> Array) {
+    method to-js(Str $ctx, Str $var = 'grad' --> Array) {
         my @args = do with $!r0 // $!r1 {
             $!x0, $!y0, ($!r0 // 0), $!x1, $!y1, ($!r1 // 0);
         }
