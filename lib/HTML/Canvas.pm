@@ -2,7 +2,6 @@ use v6;
 
 class HTML::Canvas {
     use CSS::Declarations:ver(v0.0.4 .. *);
-    use PDF::Content::Util::TransformMatrix;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Pattern;
     use HTML::Entity;
@@ -366,7 +365,7 @@ class HTML::Canvas {
             END-HTML
         }
         else {
-            die 'please call .to-html( :$width, :$width) on this canvas, to initialize it';
+            die 'please call .to-html( :$width, :$height) on this canvas, to initialize it';
         }
     }
 

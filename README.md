@@ -1,18 +1,13 @@
 # perl6-HTML-Canvas
+
+This a a lighweight module for composing HTML-5 canvases.
+
 ```
 use v6;
-# Create a simple Canvas. Save as HTML and PDF
+# Create a simple Canvas. Save as HTML
 
-use PDF::Content::PDF;
 use HTML::Canvas;
-use HTML::Canvas::To::PDF;
-
 my HTML::Canvas $canvas .= new;
-
-# render to a PDF page
-my PDF::Content::PDF $pdf .= new;
-my $gfx = $pdf.add-page.gfx;
-my $feed = HTML::Canvas::To::PDF.new: :$gfx, :$canvas;
 
 $canvas.context: -> \ctx {
     ctx.save; {
@@ -28,11 +23,6 @@ $canvas.context: -> \ctx {
 }
 
 # save canvas as PDF
-$pdf.save-as: "t/canvas-demo.pdf";
-
-# also save canvas as HTML
-my $width = $feed.width;
-my $height = $feed.height;
-my $html = "<html><body>{ $canvas.html( :$width, :$height ) }</body></html>";
+my $html = "<html><body>{ $canvas.to-html( :width(250), :height(150) ) }</body></html>";
 "t/canvas-demo.html".IO.spurt: $html;
 ```
