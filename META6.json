@@ -4,11 +4,12 @@
     "version"     : "0.0.1",
     "auth"        : "github:p6-pdf",
     "description" : "Implements the HTML Canvas (2D) API",
-    "depends"     : [ "HTML::Entity", "CSS::Declarations" ],
+    "depends"     : [ "HTML::Entity", "CSS::Declarations", "JSON::Fast". "Base64" ],
     "source-url"  : "git://github.com/p6-pdf/HTML-Canvas-p6.git",
     "provides"    : {
         "HTML::Canvas"           : "lib/HTML/Canvas.pm",
         "HTML::Canvas::Gradiant" : "lib/HTML/Canvas/Gradiant.pm",
-        "HTML::Canvas::Pattern" : "lib/HTML/Canvas/Pattern.pm"
+        "HTML::Canvas::Image"    : "lib/HTML/Canvas/Image.pm",
+        "HTML::Canvas::Pattern"  : "lib/HTML/Canvas/Pattern.pm"
      }
 }
