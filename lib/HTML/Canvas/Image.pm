@@ -24,8 +24,8 @@ class HTML::Canvas::Image {
         my Bool \base64 = ? $0<b64>;
         my Numeric \start = $0<start>.to;
 
-        die "expected mime-type 'image/*' or 'application/pdf', got '{mime-type}': $path"
-            unless mime-type eq (mime-subtype eq 'pdf' ?? 'application' !! 'image');
+        die "expected mime-type 'image/*', got '{mime-type}': $path"
+            unless mime-type eq 'image';
         my $image-type = self!image-type(mime-subtype, :$path);
         my $data = substr($data-uri, start);
 	$data = decode-base64($data, :bin).decode("latin-1");
@@ -52,7 +52,6 @@ class HTML::Canvas::Image {
             FETCH => sub ($) {
                 $!data-uri //= do {
                     with $!source {
-			use PDF::IO::Util;
                         my Str $bytes = .isa(Str)
                             ?? .substr(0)
                             !! .path.IO.slurp(:enc<latin-1>);
