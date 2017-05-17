@@ -50,19 +50,17 @@ class HTML::Canvas::Image {
     method data-uri is rw {
         Proxy.new(
             FETCH => sub ($) {
-                $!data-uri //= do {
-                    with $!source {
-                        my Str $bytes = .isa(Str)
-                            ?? .substr(0)
-                            !! .path.IO.slurp(:enc<latin-1>);
+                $!data-uri //= do with $!source {
+		    my Str $bytes = .isa(Str)
+			?? .substr(0)
+			!! .path.IO.slurp(:enc<latin-1>);
 
-                        my $enc = encode-base64($bytes, :str);
-                        'data:image/%s;base64,%s'.sprintf($.image-type.lc, $enc);
-                    }
-                    else {
-                        fail 'image is not associated with a source';
-                    }
-                }
+		    my $enc = encode-base64($bytes, :str);
+		    'data:image/%s;base64,%s'.sprintf($.image-type.lc, $enc);
+		}
+		else {
+		    fail 'image is not associated with a source';
+		}
             },
             STORE => sub ($, $!data-uri) {},
         )

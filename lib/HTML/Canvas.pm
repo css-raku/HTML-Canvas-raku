@@ -445,7 +445,8 @@ class HTML::Canvas {
         for @!calls {
             my $name = .key;
             my @args = flat .value.map: {
-                when Str|Numeric|Bool|List { to-json($_) }
+                when Str|Numeric|Bool { to-json($_) }
+                when List { '[ ' ~ .map({to-json($_)}).join(', ') ~ ' ]' }
                 when $sym{$_}:exists { $sym{$_} }
                 when HTML::Canvas::Pattern | HTML::Canvas::Gradient {
                     .to-js($context, :$sym);

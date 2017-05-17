@@ -3,6 +3,7 @@
     "name"        : "HTML::Canvas",
     "version"     : "0.0.1",
     "auth"        : "github:p6-css",
+    "api"         : "2dcontext-20151119",
     "description" : "Implements the HTML Canvas (2D) API",
     "depends"     : [ "HTML::Entity", "CSS::Declarations", "JSON::Fast", "Base64" ],
     "source-url"  : "git://github.com/p6-css/HTML-Canvas-p6.git",
