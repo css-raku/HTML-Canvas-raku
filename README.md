@@ -36,129 +36,133 @@ my $html = "<html><body>{ $canvas.to-html( :width(250), :height(150) ) }</body><
 
 ## Setters/Getters
 
-### lineWidth
+#### lineWidth
 
     has Numeric $.lineWidth = 1.0;
 
-### lineCap
+#### globalAlpha
+
+    has Numeric $.globalAlpha = 1.0;
+
+#### lineCap
 
     subset LineCap of Str where 'butt'|'round'|'square';
     has LineCap $.lineCap = 'butt';
 
-### lineJoin
+#### lineJoin
 
     subset LineJoin of Str where 'bevel'|'round'|'miter';
     has LineJoin $.lineJoin = 'bevel';
 
-### font
+#### font
 
     has Str $.font = '10pt times-roman';
 
-### textBaseline
+#### textBaseline
 
     subset Baseline of Str where 'alphabetic'|'top'|'hanging'|'middle'|'ideographic'|'bottom';
     has Baseline $.textBaseline = 'alphabetic';
 
-### textAlign
+#### textAlign
 
     subset TextAlignment of Str where 'start'|'end'|'left'|'right'|'center';
     has TextAlignment $.textAlign = 'start';
 
-### direction
+#### direction
 
     subset TextDirection of Str where 'ltr'|'rtl';
     has TextDirection $.direction = 'ltr';
 
-### fillStyle
+#### fillStyle
 
     subset ColorSpec where Str|HTML::Canvas::Gradient|HTML::Canvas::Pattern;
     has ColorSpec $.fillStyle is rw = 'black';
 
-### strokeStyle
+#### strokeStyle
 
     has ColorSpec $.strokeStyle is rw = 'black';
 
-### setLineDash/getLineDash/lineDash
+#### setLineDash/getLineDash/lineDash
 
      has Numeric @.lineDash;
 
-### lineDashOffset
+#### lineDashOffset
 
       has Numeric $.lineDashOffset = 0.0;
 
 ## Graphics State
 
-### `save()`
+#### `save()`
 
-### `restore()`
+#### `restore()`
 
-### `scale(Numeric $x, Numeric $y)`
+#### `scale(Numeric $x, Numeric $y)`
 
-### `rotate(Numeric $rad)`
+#### `rotate(Numeric $rad)`
 
-### `translate(Numeric $x, Numeric $y)`
+#### `translate(Numeric $x, Numeric $y)`
 
-### `transform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f)`
+#### `transform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f)`
 
-### `setTransform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f)`
+#### `setTransform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f)`
 
 ## Painting Methods
 
-### `clearRect(Numeric $x, Numeric $y, Numeric $w, Numeric $h)`
+#### `clearRect(Numeric $x, Numeric $y, Numeric $w, Numeric $h)`
 
-### `fillRect(Numeric $x, Numeric $y, Numeric $w, Numeric $h)`
+#### `fillRect(Numeric $x, Numeric $y, Numeric $w, Numeric $h)`
 
-### `strokeRect(Numeric $x, Numeric $y, Numeric $w, Numeric $h)`
+#### `strokeRect(Numeric $x, Numeric $y, Numeric $w, Numeric $h)`
 
-### `beginPath()`
+#### `beginPath()`
 
-### `fill()`
+#### `fill()`
 
-### `stroke()`
+#### `stroke()`
 
-### `clip()`
+#### `clip()`
 
-### `fillText(Str $text, Numeric $x, Numeric $y, Numeric $max-width?)`
+#### `fillText(Str $text, Numeric $x, Numeric $y, Numeric $max-width?)`
 
-### `strokeText(Str $text, Numeric $x, Numeric $y, Numeric $max-width?)`
+#### `strokeText(Str $text, Numeric $x, Numeric $y, Numeric $max-width?)`
 
-### `measureText(Str $text)`
+#### `measureText(Str $text)`
 
 ## Path Methods
 
-### `closePath()`
+#### `closePath()`
 
-### `moveTo(Numeric \x, Numeric \y)`
+#### `moveTo(Numeric \x, Numeric \y)`
 
-### `lineTo(Numeric \x, Numeric \y)`
+#### `lineTo(Numeric \x, Numeric \y)`
 
-### `quadraticCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \x, Numeric \y)`
+#### `quadraticCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \x, Numeric \y)`
 
-### `bezierCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \cp2x, Numeric \cp2y, Numeric \x, Numeric \y)`
+#### `bezierCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \cp2x, Numeric \cp2y, Numeric \x, Numeric \y)`
 
-### `rect(Numeric $x, Numeric $y, Numeric $w, Numeric $h)`
+#### `rect(Numeric $x, Numeric $y, Numeric $w, Numeric $h)`
 
-### `arc(Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?)`
+#### `arc(Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?)`
 
 ## Images Patterns and Gradients
 
-### drawImage:
+#### drawImage:
 
     multi method drawImage( $image, Numeric \sx, Numeric \sy, Numeric \sw, Numeric \sh, Numeric \dx, Numeric \dy, Numeric \dw, Numeric \dh);
     multi method drawImage(CanvasOrXObject $image, Numeric $dx, Numeric $dy, Numeric $dw?, Numeric $dh?)
 
-### `createLinearGradient(Numeric $x0, Numeric $y0, Numeric $x1, Numeric $y1)`
+#### `createLinearGradient(Numeric $x0, Numeric $y0, Numeric $x1, Numeric $y1)`
 
-### `createRadialGradient(Numeric $x0, Numeric $y0, Numeric $r0, Numeric $x1, Numeric $y1, Numeric:D $r1)`
+#### `createRadialGradient(Numeric $x0, Numeric $y0, Numeric $r0, Numeric $x1, Numeric $y1, Numeric:D $r1)`
 
-### `createPattern($image, HTML::Canvas::Pattern::Repetition $repetition = 'repeat')`
+#### `createPattern($image, HTML::Canvas::Pattern::Repetition $repetition = 'repeat')`
 
 
 ```
 use HTML::Canvas;
 use HTML::Canvas::Image;
 
-my HTML::Canvas \ctx .= new;
+my HTML::Canvas \ctx = HTML::Canvas.new;
 my @html-body;
 
 ## Images ##
@@ -167,7 +171,6 @@ my \image = HTML::Canvas::Image.open("t/images/crosshair-100x100.jpg");
 @html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
 
 ctx.drawImage(image,  20,  10,  50, 50);
-say ctx.js;
 
 ## Patterns ##
 
@@ -186,6 +189,8 @@ with ctx.createRadialGradient(75,50,5,90,60,100) -> $grd {
     ctx.translate(10,200);
     ctx.fillRect(10, 10, 150, 100);
 }
+
+say ctx.js;
 ```
 
 ## See also

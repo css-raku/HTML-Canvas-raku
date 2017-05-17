@@ -10,7 +10,7 @@ class HTML::Canvas {
     has Str @!subpath-new;
     has Pair @.calls;
     has Routine @.callback;
-    subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction';
+    subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction'|'globalAlpha';
     my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath';
 
     has Numeric $.lineWidth = 1.0;
@@ -19,6 +19,16 @@ class HTML::Canvas {
             FETCH => sub ($) { $!lineWidth },
             STORE => sub ($, $!lineWidth) {
                 self!call('lineWidth', $!lineWidth);
+            }
+        );
+    }
+
+    has Numeric $.globalAlpha = 1.0;
+    method globalAlpha is rw {
+        Proxy.new(
+            FETCH => sub ($) { $!globalAlpha },
+            STORE => sub ($, $!globalAlpha) {
+                self!call('globalAlpha', $!globalAlpha);
             }
         );
     }
@@ -156,11 +166,16 @@ class HTML::Canvas {
         :save(method {
                      my @ctm = @!transformMatrix;
                      @!gsave.push: {
-                         :$!font,
-                         :$!fillStyle,
                          :$!strokeStyle,
+                         :$!fillStyle,
+			 :$!globalAlpha,
+			 :$!lineWidth,
+			 :$!lineCap,
+			 :$!lineJoin,
+			 :$!font,
                          :$!textAlign,
                          :$!direction,
+			 :$!textBaseline,
                          :$!css,
                          :@ctm
                      };
@@ -171,12 +186,16 @@ class HTML::Canvas {
                             my %state = @!gsave.pop;
 
                             @!transformMatrix = %state<ctm>.list;
-
-                            $!font = %state<font>;
-                            $!fillStyle = %state<fillStyle>;
                             $!strokeStyle = %state<strokeStyle>;
+                            $!fillStyle = %state<fillStyle>;
+                            $!globalAlpha = %state<globalAlpha>;
+                            $!lineWidth = %state<lineWidth>;
+                            $!lineCap = %state<lineCap>;
+                            $!lineJoin = %state<lineJoin>;
+			    $!font = %state<font>;
                             $!textAlign = %state<textAlign>;
                             $!direction = %state<direction>;
+                            $!textBaseline = %state<textBaseline>;
                             $!css = %state<css>;
                             .css = $!css with $!font-object;
                         }
@@ -251,7 +270,7 @@ class HTML::Canvas {
         :strokeText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) {
                            self!setup-stroke();
                        }),
-        :measureText(method (Str $text, :$obj) {
+        :measureText(method (Str $text) {
                             with $!font-object {
                                 my Numeric $width = self.adjusted-font-size: .face.stringwidth($text, .em);
                                 class { has Numeric $.width }.new: :$width;
