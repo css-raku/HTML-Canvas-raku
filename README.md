@@ -29,9 +29,9 @@ $canvas.context: -> \ctx {
 # save canvas as PDF
 my $html = "<html><body>{ $canvas.to-html( :width(250), :height(150) ) }</body></html>";
 "t/canvas-demo.html".IO.spurt: $html;
-```
-## Images Patterns and Gradients
 
+## Images Patterns and Gradients
+```
 use HTML::Canvas;
 use HTML::Canvas::Image;
 
@@ -53,7 +53,7 @@ say ctx.js;
      ctx.translate(10,50);
      ctx.fillRect(10,10,150,100);
 
-## Gradiants
+## Gradients
 
     with ctx.createRadialGradient(75,50,5,90,60,100) -> $grd {
         $grd.addColorStop(0,"red");
@@ -64,6 +64,97 @@ say ctx.js;
         ctx.fillRect(10, 10, 150, 100);
     }
 ```
+
+# Methods
+
+## Setters/Getters
+
+### lineWidth
+
+### lineDashOffset
+
+### lineCap
+
+### lineJoin
+
+### font
+
+### textBaseline
+
+### textAlign
+
+### direction
+
+### fillStyle
+
+### strokeStyle
+
+### setLineDash/getLineDash/lineDash
+
+## Graphics State
+
+### save
+
+### restore
+
+### scale
+
+### rotate
+
+### translate
+
+### transform
+
+### setTransform
+
+## Painting Methods
+
+### clearRect
+
+### fillRect
+
+### strokeRect
+
+### beginPath
+
+### fill
+
+### stroke
+
+### clip
+
+### fillText
+
+### strokeText
+
+### measureText
+
+### drawImage
+
+## Path Methods
+
+### closePath
+
+### moveTo
+
+### lineTo
+
+### quadraticCurveTo
+
+### bezierCurveTo
+
+### rect
+
+### arc
+
+## Gradients and Patterns
+
+### createLinearGradient
+
+### createRadialGradient
+
+### createPattern
+
 
 ## See also
 
