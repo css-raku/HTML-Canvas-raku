@@ -1,6 +1,6 @@
 use v6;
 use Test;
-plan 12;
+plan 13;
 
 use HTML::Canvas;
 my HTML::Canvas $canvas .= new;
@@ -32,7 +32,8 @@ $canvas.context: -> \ctx {
         ctx.strokeStyle = 'red';
         ctx.strokeRect(40,20, 4,25);
         ctx.strokeStyle = 'blue';
-        ctx.setLineDash([.8,1]);
+        ctx.lineDash = [.8,1];
+	is-deeply ctx.lineDash, Array[Numeric].new(.8, 1), 'lineDash';
         ctx.strokeRect(45,20, 4,25);
     }; ctx.restore;
 

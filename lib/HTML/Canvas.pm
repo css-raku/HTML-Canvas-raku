@@ -23,7 +23,7 @@ class HTML::Canvas {
         );
     }
 
-    has Numeric @.dash-list;
+    has Numeric @.lineDash;
     has Numeric $.lineDashOffset = 0.0;
     method lineDashOffset is rw {
         Proxy.new(
@@ -264,7 +264,7 @@ class HTML::Canvas {
                           self!register-node(image);
                       }),
         # :setLineDash - see below
-        :getLineDash(method () { @!dash-list } ),
+        :getLineDash(method () { @!lineDash } ),
         :closePath(method () {}),
         :moveTo(method (Numeric \x, Numeric \y) {} ),
         :lineTo(method (Numeric \x, Numeric \y) {} ),
@@ -284,9 +284,15 @@ class HTML::Canvas {
         self!register-node($image);
         HTML::Canvas::Pattern.new: :$image, :$repetition;
     }
-    # todo: slurping/itemization of @!dash-list?
-    method setLineDash(@!dash-list) {
-        self!call('setLineDash', @!dash-list.item);
+    # todo: slurping/itemization of @!lineDash?
+    method setLineDash(@!lineDash) {
+        self!call('setLineDash', @!lineDash.item);
+    }
+    method lineDash {
+	Proxy.new(
+	    FETCH => sub ($) { @!lineDash },
+	    STORE => sub ($, \l) { self.setLineDash(l) },
+	    )
     }
     method !call(Str $name, *@args) {
         @!calls.push: ($name => @args)
