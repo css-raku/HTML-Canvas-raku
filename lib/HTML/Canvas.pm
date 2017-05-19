@@ -165,7 +165,10 @@ class HTML::Canvas {
                     } ),
         :save(method {
                      my @ctm = @!transformMatrix;
+		     my @path = @!subpath;
                      @!gsave.push: {
+                         :@ctm,
+			 :@path,
                          :$!strokeStyle,
                          :$!fillStyle,
 			 :$!globalAlpha,
@@ -177,7 +180,6 @@ class HTML::Canvas {
                          :$!direction,
 			 :$!textBaseline,
                          :$!css,
-                         :@ctm
                      };
                      $!css = $!css.new: :copy($!css);
                  } ),
@@ -186,6 +188,7 @@ class HTML::Canvas {
                             my %state = @!gsave.pop;
 
                             @!transformMatrix = %state<ctm>.list;
+                            @!subpath = %state<path>.list;
                             $!strokeStyle = %state<strokeStyle>;
                             $!fillStyle = %state<fillStyle>;
                             $!globalAlpha = %state<globalAlpha>;
@@ -326,7 +329,7 @@ class HTML::Canvas {
             warn "no current path to $name";
         }
         else {
-            .($name, |@args, :canvas(self)) for @!callback;
+            .($name, |@args) for @!callback;
         }
     }
     method !setup-fill { .('fillStyle', self.fillStyle, :canvas(self)) for @!callback; }
