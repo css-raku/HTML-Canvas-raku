@@ -6,6 +6,8 @@ It supports the majority of the [HTML Canvas 2D Context](https://www.w3.org/TR/2
 
 A canvas may be currently constructed via the API, then rendered to Javascript via the `.to-html` method.
 
+Backends are under construction for PNG and PDF rendering of canvases.
+
 ```
 use v6;
 # Create a simple Canvas. Save as HTML
@@ -195,5 +197,7 @@ say ctx.js;
 
 ## See also
 
-- Coming soon is [HTML::Canvas::To::PDF](https://github.com/p6-pdf/HTML-Canvas-To-PDF-p6) - a backend
-for this module that renders to PDF, using the Perl 6 [PDF](https://github.com/p6-pdf) tool-chain.
+Backends coming soon:
+
+- [HTML::Canvas::To::Cairo](https://github.com/p6-pdf/HTML-Canvas-To-PDF-p6) - renders to PNG, using Cairo.
+- [HTML::Canvas::To::PDF](https://github.com/p6-pdf/HTML-Canvas-To-PDF-p6) - renders to PDF, using the Perl 6 [PDF](https://github.com/p6-pdf) tool-chain.

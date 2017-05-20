@@ -275,8 +275,8 @@ class HTML::Canvas {
                        }),
         :measureText(method (Str $text) {
                             with $!font-object {
-                                my Numeric $width = self.adjusted-font-size: .face.stringwidth($text, .em);
-                                class { has Numeric $.width }.new: :$width;
+                                my Numeric $width = self.adjusted-font-size: .stringwidth($text, .em);
+                                my class TextMetrics { has Numeric $.width }.new: :$width;
                             }
                             else {
                                 fail "unable to measure text - no current font object";
