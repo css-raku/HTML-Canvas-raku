@@ -5,7 +5,7 @@
     "auth"        : "github:p6-css",
     "api"         : "2dcontext-20151119",
     "description" : "Implements the HTML Canvas (2D) API",
-    "depends"     : [ "HTML::Entity", "CSS::Declarations", "JSON::Fast", "Base64" ],
+    "depends"     : [ "HTML::Entity", "CSS::Declarations", "JSON::Fast", "Base64::Native" ],
     "source-url"  : "git://github.com/p6-css/HTML-Canvas-p6.git",
     "provides"    : {
         "HTML::Canvas"           : "lib/HTML/Canvas.pm",

@@ -1,6 +1,6 @@
 class HTML::Canvas::Image {
 
-    use Base64;
+    use Base64::Native;
     has Str $.data-uri;
     my subset Str-or-IOHandle where Str|IO::Handle;
     has Str-or-IOHandle $.source;
@@ -27,9 +27,6 @@ class HTML::Canvas::Image {
         die "expected mime-type 'image/*', got '{mime-type}': $path"
             unless mime-type eq 'image';
         my $image-type = self!image-type(mime-subtype, :$path);
-        my $data = substr($data-uri, start);
-	$data = decode-base64($data, :bin).decode("latin-1");
-
         self.new(:$image-type, :$data-uri);
     }
 
@@ -55,7 +52,7 @@ class HTML::Canvas::Image {
 			?? .substr(0)
 			!! .path.IO.slurp(:enc<latin-1>);
 
-		    my $enc = encode-base64($bytes, :str);
+		    my Str $enc = base64-encode($bytes).encode: "latin-1";
 		    'data:image/%s;base64,%s'.sprintf($.image-type.lc, $enc);
 		}
 		else {
