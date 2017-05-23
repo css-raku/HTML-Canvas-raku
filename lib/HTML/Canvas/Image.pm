@@ -52,7 +52,7 @@ class HTML::Canvas::Image {
 			?? .substr(0)
 			!! .path.IO.slurp(:enc<latin-1>);
 
-		    my Str $enc = base64-encode($bytes).encode: "latin-1";
+		    my Str $enc = base64-encode($bytes, :str);
 		    'data:image/%s;base64,%s'.sprintf($.image-type.lc, $enc);
 		}
 		else {
