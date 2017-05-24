@@ -332,13 +332,13 @@ class HTML::Canvas {
             .($name, |@args) for @!callback;
         }
     }
-    method !setup-fill { .('fillStyle', self.fillStyle, :canvas(self)) for @!callback; }
-    method !setup-stroke { .('strokeStyle', self.strokeStyle, :canvas(self)) for @!callback; }
+    method !setup-fill { .('fillStyle', self.fillStyle) for @!callback; }
+    method !setup-stroke { .('strokeStyle', self.strokeStyle) for @!callback; }
     method !draw-subpath {
 
         @!subpath-new = [];
         for @!subpath -> \s {
-            .(s.key, |s.value, :canvas(self)) for @!callback;
+            .(s.key, |s.value) for @!callback;
         }
     }
 

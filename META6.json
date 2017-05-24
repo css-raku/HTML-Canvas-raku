@@ -11,6 +11,7 @@
         "HTML::Canvas"           : "lib/HTML/Canvas.pm",
         "HTML::Canvas::Gradiant" : "lib/HTML/Canvas/Gradiant.pm",
         "HTML::Canvas::Image"    : "lib/HTML/Canvas/Image.pm",
-        "HTML::Canvas::Pattern"  : "lib/HTML/Canvas/Pattern.pm"
+        "HTML::Canvas::Pattern"  : "lib/HTML/Canvas/Pattern.pm",
+        "HTML::Canvas::Tracer"   : "lib/HTML/Canvas/Tracer.pm"
      }
 }
