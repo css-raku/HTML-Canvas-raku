@@ -502,10 +502,8 @@ class HTML::Canvas {
             for @calls {
                 with .key -> \call {
                     my \args = .value;
-                    if call ~~ LValue {
-                        +args
-                            ?? ($obj."{call}"() = args[0])
-                            !! $obj."{call}"();
+                    if +args && call ~~ LValue {
+                        $obj."{call}"() = args[0];
                     }
                     else {
                         $obj."{call}"(|args);

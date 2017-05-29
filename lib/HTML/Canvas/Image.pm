@@ -44,20 +44,32 @@ class HTML::Canvas::Image {
         self.new( :$source, :$image-type,);
     }
 
+    method Str returns Str {
+        with $!source {
+            .isa(Str)
+                ?? .substr(0)
+                !! .path.IO.slurp(:enc<latin-1>);
+        }
+    }
+
+    method Blob returns Blob {
+        with $!source {
+            .isa(Str)
+                ?? .encode("latin-1")
+                !! .path.IO.slurp(:bin);
+        }
+    }
+
     method data-uri is rw {
         Proxy.new(
             FETCH => sub ($) {
-                $!data-uri //= do with $!source {
-		    my Str $bytes = .isa(Str)
-			?? .substr(0)
-			!! .path.IO.slurp(:enc<latin-1>);
-
-		    my Str $enc = base64-encode($bytes, :str);
-		    'data:image/%s;base64,%s'.sprintf($.image-type.lc, $enc);
-		}
-		else {
-		    fail 'image is not associated with a source';
-		}
+                $!data-uri //= do with $.Str {
+                    my Str $enc = base64-encode($_, :str);
+                    'data:image/%s;base64,%s'.sprintf($.image-type.lc, $enc);
+                }
+                else {
+                    fail 'image is not associated with a source';
+                }
             },
             STORE => sub ($, $!data-uri) {},
         )

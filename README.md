@@ -1,10 +1,10 @@
 # perl6-HTML-Canvas
 
-This a a lighweight module for composing HTML-5 canvases.
+This a a module for composing HTML-5 canvases.
 
 It supports the majority of the [HTML Canvas 2D Context](https://www.w3.org/TR/2dcontext/) API.
 
-A canvas may be currently constructed via the API, then rendered to Javascript via the `.to-html` method.
+A canvas may be constructed via the API, then rendered to Javascript via the `.js` or `.to-html` methods.
 
 Backends are under construction for PNG and PDF rendering of canvases.
 
@@ -199,5 +199,5 @@ say ctx.js;
 
 Backends coming soon:
 
-- [HTML::Canvas::To::Cairo](https://github.com/p6-pdf/HTML-Canvas-To-PDF-p6) - renders to PNG, using Cairo.
+- [HTML::Canvas::To::Cairo](https://github.com/p6-css/HTML-Canvas-To-Cairo-p6) - renders to PNG etc, using Cairo.
 - [HTML::Canvas::To::PDF](https://github.com/p6-pdf/HTML-Canvas-To-PDF-p6) - renders to PDF, using the Perl 6 [PDF](https://github.com/p6-pdf) tool-chain.
