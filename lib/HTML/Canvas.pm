@@ -497,16 +497,17 @@ class HTML::Canvas {
         my @callback = [ $renderer.callback, ];
         my %opt = :font-object(.clone)
             with self.font-object;
-        my $obj = self.new: :@callback, |%opt;
-        $obj.context: {
+        my $canvas = self.new: :@callback, |%opt;
+        temp $renderer.canvas = $canvas;
+        $canvas.context: {
             for @calls {
                 with .key -> \call {
                     my \args = .value;
                     if +args && call ~~ LValue {
-                        $obj."{call}"() = args[0];
+                        $canvas."{call}"() = args[0];
                     }
                     else {
-                        $obj."{call}"(|args);
+                        $canvas."{call}"(|args);
                     }
                 }
             }
