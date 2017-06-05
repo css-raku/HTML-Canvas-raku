@@ -1,5 +1,5 @@
 use Test;
-plan 2;
+plan 3;
 
 # ensure consistant document ID generation
 srand(123456);
@@ -13,8 +13,6 @@ for @<code> {
     my $snippet = ~$_;
     given $snippet {
 	default {
-	    # assume anything else is code.
-	    $snippet = $snippet.subst('DateTime.now;', 'DateTime.new( :year(2015), :month(12), :day(25) );' );
 	    # disable say
 	    sub say(|c) { }
 

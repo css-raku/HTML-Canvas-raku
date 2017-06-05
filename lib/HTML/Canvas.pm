@@ -382,10 +382,12 @@ class HTML::Canvas {
     }
     method html(Str :$style, Str :$sep = "\n    ", |c) is default {
         if self ~~ HTMLObj {
-            my $style-att = do with $style { encode-entities($_).fmt(' style="%s"') } else { '' };
+            my $style-att  = do with $style { encode-entities($_).fmt(' style="%s"') } else { '' };
+            my $width-att  = do with self.html-width  { ' width="%dpt"'.sprintf($_) } else { '' };
+            my $height-att = do with self.html-height { ' height="%dpt"'.sprintf($_) } else { '' };
 
             qq:to"END-HTML";
-            <canvas width="{self.html-width}pt" height="{self.html-height}pt" id="{self.html-id}"{$style-att}></canvas>
+            <canvas{$width-att}{$height-att} id="{self.html-id}"{$style-att}></canvas>
             <script>
                 var ctx = {self.js-ref}.getContext("2d");
                 {self.js(:context<ctx>, :$sep, |c)}

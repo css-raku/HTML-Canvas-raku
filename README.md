@@ -6,7 +6,9 @@ It supports the majority of the [HTML Canvas 2D Context](https://www.w3.org/TR/2
 
 A canvas may be constructed via the API, then rendered to Javascript via the `.js` or `.to-html` methods.
 
-Backends are under construction for PNG and PDF rendering of canvases.
+A Cairo backend is available for rendering to PNG or PDF; See below:
+
+# Example
 
 ```
 use v6;
@@ -28,13 +30,47 @@ $canvas.context: -> \ctx {
     ctx.fillText("Hello World", 40, 75);
 }
 
-# save canvas as PDF
+# save canvas as HTML
 my $html = "<html><body>{ $canvas.to-html( :width(250), :height(150) ) }</body></html>";
 "t/canvas-demo.html".IO.spurt: $html;
 
 ```
 
-# Methods
+## Images
+
+The `HTML::Canvas::Image` class is used to upload images for inclusion in HTML documents,
+and/or rendering by back-ends.
+
+```
+use HTML::Canvas;
+use HTML::Canvas::Image;
+
+my HTML::Canvas $canvas .= new;
+my @html-body;
+# add the image, as a hidden DOM item
+my \image = HTML::Canvas::Image.open("t/images/camelia-logo.png");
+@html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
+# draw it
+$canvas.context( -> \ctx {
+    ctx.drawImage(image, 10, 10  );  
+});
+
+@html-body.push: $canvas.to-html;
+
+my $html = "<html><body>" ~ @html-body.join ~ "</body></html>";
+
+```
+
+Currently supported image formats are:
+
+Backend                 | PNG | GIF |JPEG | PNG | BMP
+---                     | --- | --- | --- | --- | ---
+HTML::Canvas (HTML)     | X   | X   | X   | X   | X
+HTML::Canvas::To::Cairo | X   |     |     |     |
+HTML::Canvas::To::PDF   | X   | X   | X   | X   |
+
+
+## Methods
 
 ## Setters/Getters
 
@@ -159,7 +195,6 @@ my $html = "<html><body>{ $canvas.to-html( :width(250), :height(150) ) }</body><
 
 #### `createPattern($image, HTML::Canvas::Pattern::Repetition $repetition = 'repeat')`
 
-
 ```
 use HTML::Canvas;
 use HTML::Canvas::Image;
@@ -195,9 +230,12 @@ with ctx.createRadialGradient(75,50,5,90,60,100) -> $grd {
 say ctx.js;
 ```
 
-## See also
+## Backends
 
-Backends coming soon:
+### Available:
 
-- [HTML::Canvas::To::Cairo](https://github.com/p6-css/HTML-Canvas-To-Cairo-p6) - renders to PNG etc, using Cairo.
+- [HTML::Canvas::To::Cairo](https://github.com/p6-css/HTML-Canvas-To-Cairo-p6) - renders to PNG and PDF via Cairo.
+
+### Coming soon:
+
 - [HTML::Canvas::To::PDF](https://github.com/p6-pdf/HTML-Canvas-To-PDF-p6) - renders to PDF, using the Perl 6 [PDF](https://github.com/p6-pdf) tool-chain.
