@@ -64,7 +64,7 @@ class HTML::Canvas::Image {
         Proxy.new(
             FETCH => sub ($) {
                 $!data-uri //= do with $.Str {
-                    my Str $enc = base64-encode($_, :str);
+                    my Str $enc = base64-encode($_, :str, :uri);
                     'data:image/%s;base64,%s'.sprintf($.image-type.lc, $enc);
                 }
                 else {
