@@ -2,8 +2,8 @@ class HTML::Canvas::Image {
 
     use Base64::Native;
     has Str $.data-uri;
-    my subset Str-or-IOHandle where Str|IO::Handle;
-    has Str-or-IOHandle $.source;
+    my subset Str-or-IO-Handle where Str|IO::Handle;
+    has Str-or-IO-Handle $.source;
     has Str $.image-type;
 
     method !image-type($_, :$path!) {

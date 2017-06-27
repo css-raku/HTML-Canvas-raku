@@ -6,6 +6,8 @@ class HTML::Canvas {
     use HTML::Canvas::Pattern;
     use HTML::Entity;
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
+    has Numeric $.width;
+    has Numeric $.height;
     has Pair @.subpath;
     has Str @!subpath-new;
     has Pair @.calls;
@@ -365,7 +367,7 @@ class HTML::Canvas {
         $obj;
     }
     #| lightweight html generation; canvas + javascript
-    method to-html($obj = self, Numeric :$width, Numeric :$height, Str :$style='', |c) {
+    method to-html($obj = self, Numeric :$width = $obj.?width // Numeric, Numeric :$height = $obj.?height // Numeric, Str :$style='', |c) {
         self!register-node($obj);
         $obj.html-width   = $_ with $width;
         $obj.html-height  = $_ with $height;

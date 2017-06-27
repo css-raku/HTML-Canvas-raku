@@ -4,7 +4,7 @@ This a a module for composing HTML-5 canvases.
 
 It supports the majority of the [HTML Canvas 2D Context](https://www.w3.org/TR/2dcontext/) API.
 
-A canvas may be constructed via the API, then rendered to Javascript via the `.js` or `.to-html` methods.
+A canvas may be constructed via the API, then rendered to Javascript via the `.js` or `.to-html` methods, or save as a PNG via the `.to-png` method.
 
 Backends are available for rendering to PNG or PDF; See below:
 
@@ -12,12 +12,13 @@ Backends are available for rendering to PNG or PDF; See below:
 
 ```
 use v6;
-# Create a simple Canvas. Save as HTML
+# Create a simple Canvas. Save as PNG and HTML
 
 use HTML::Canvas;
-my HTML::Canvas $canvas .= new;
+my HTML::Canvas $canvas .= new: :width(150), :height(100);
 
 $canvas.context: -> \ctx {
+    ctx.strokeRect(0, 0, 150, 100);
     ctx.save; {
         ctx.fillStyle = "orange";
         ctx.fillRect(10, 10, 50, 50);
@@ -30,11 +31,55 @@ $canvas.context: -> \ctx {
     ctx.fillText("Hello World", 40, 75);
 }
 
-# save canvas as HTML
-my $html = "<html><body>{ $canvas.to-html( :width(250), :height(150) ) }</body></html>";
-"t/canvas-demo.html".IO.spurt: $html;
+# save canvas as PNG
+use Cairo;
+use HTML::Canvas::To::Cairo;
+my Cairo::Image $img = HTML::Canvas::To::Cairo.render($canvas);
+$img.write_png: "examples/canvas-demo.png";
+
+# also save canvas as HTML
+my $html = "<html><body>{ $canvas.to-html }</body></html>";
+"examples/canvas-demo.html".IO.spurt: $html;
 
 ```
+
+![canvas-demo.png](examples/canvas-demo.png)
+
+## Saving as PDF
+
+```
+use v6;
+use Cairo;
+use HTML::Canvas;
+use HTML::Canvas::To::Cairo;
+# create a 128 X 128 point PDF
+my $surface = Cairo::Surface::PDF.create("examples/read-me-example.pdf", 128, 128);
+
+# create two pages
+
+for 1..2 -> $page {
+    my HTML::Canvas $canvas .= new;
+    my $feed = HTML::Canvas::To::Cairo.new: :$surface, :$canvas;
+    $canvas.context({
+
+        .font = "10pt times-roman bold";
+        .fillStyle = "orange";
+        .strokeStyle = "blue";
+        .save; {
+            .fillStyle = "rgba(1.0, 0.2, 0.2, 0.25)";
+            .rect(15, 15, 50, 50);
+            .fill;
+            .stroke;
+        }; .restore;
+        .fillText("Page $page/2", 12, 12);
+    });
+    $surface.show_page;
+}
+
+$surface.finish;
+
+```
+
 
 ## Images
 
@@ -207,7 +252,7 @@ my @html-body;
 my \image = HTML::Canvas::Image.open("t/images/crosshair-100x100.jpg");
 @html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
 
-ctx.drawImage(image,  20,  10,  50, 50);
+ctx.drawImage(image,  20, 10,  50, 50);
 
 ## Patterns ##
 
@@ -230,12 +275,8 @@ with ctx.createRadialGradient(75,50,5,90,60,100) -> $grd {
 say ctx.js;
 ```
 
-## Backends
-
-### Available:
-
-- [HTML::Canvas::To::Cairo](https://github.com/p6-css/HTML-Canvas-To-Cairo-p6) - renders to PNG and PDF via Cairo.
+## Additional Rendering Backends
 
 ### Coming soon:
 
-- [HTML::Canvas::To::PDF](https://github.com/p6-pdf/HTML-Canvas-To-PDF-p6) - renders to PDF, using the Perl 6 [PDF](https://github.com/p6-pdf) tool-chain.
+- [HTML::Canvas::To::PDF](https://github.com/p6-pdf/HTML-Canvas-To-PDF-p6) - render to PDF, using the Perl 6 [PDF](https://github.com/p6-pdf) tool-chain.
