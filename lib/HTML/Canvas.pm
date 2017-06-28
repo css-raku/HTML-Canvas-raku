@@ -14,6 +14,7 @@ class HTML::Canvas {
     has Routine @.callback;
     subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction'|'globalAlpha';
     my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath';
+    my subset CanvasOrImage where HTML::Canvas|HTML::Canvas::Image;
 
     has Numeric $.lineWidth = 1.0;
     method lineWidth is rw {
@@ -284,7 +285,7 @@ class HTML::Canvas {
                                 fail "unable to measure text - no current font object";
                             }
                         } ),
-        :drawImage(method (\image, Numeric \dx, Numeric \dy, *@args) {
+        :drawImage(method (CanvasOrImage \image, Numeric \dx, Numeric \dy, *@args) {
                           self!register-node(image);
                       }),
         # :setLineDash - see below
@@ -304,7 +305,7 @@ class HTML::Canvas {
     method createRadialGradient(Numeric $x0, Numeric $y0, Numeric $r0, Numeric $x1, Numeric $y1, Numeric:D $r1) {
         HTML::Canvas::Gradient.new: :$x0, :$y0, :$r0, :$x1, :$y1, :$r1;
     }
-    method createPattern($image, HTML::Canvas::Pattern::Repetition $repetition = 'repeat') {
+    method createPattern(HTML::Canvas::Image $image, HTML::Canvas::Pattern::Repetition $repetition = 'repeat') {
         self!register-node($image);
         HTML::Canvas::Pattern.new: :$image, :$repetition;
     }

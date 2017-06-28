@@ -4,7 +4,7 @@ This a a module for composing HTML-5 canvases.
 
 It supports the majority of the [HTML Canvas 2D Context](https://www.w3.org/TR/2dcontext/) API.
 
-A canvas may be constructed via the API, then rendered to Javascript via the `.js` or `.to-html` methods, or save as a PNG via the `.to-png` method.
+A canvas may be constructed via the API, then rendered to Javascript via the `.js` or `.to-html` methods, or save as a PNG via the `HTML::Canvas::To::Cairo.render` method.
 
 Backends are available for rendering to PNG or PDF; See below:
 

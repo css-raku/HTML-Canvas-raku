@@ -35,7 +35,7 @@ class HTML::Canvas::Image {
     }
 
     multi method open(IO::Path $io-path) {
-        self.open( $io-path.open( :r, :enc<latin-1>) );
+        self.open( $io-path.open( :r, :bin) );
     }
 
     multi method open(IO::Handle $source!) {
@@ -63,7 +63,7 @@ class HTML::Canvas::Image {
     method data-uri is rw {
         Proxy.new(
             FETCH => sub ($) {
-                $!data-uri //= do with $.Str {
+                $!data-uri //= do with $.Blob {
                     my Str $enc = base64-encode($_, :str, :uri);
                     'data:image/%s;base64,%s'.sprintf($.image-type.lc, $enc);
                 }
