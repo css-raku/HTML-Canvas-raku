@@ -4,14 +4,18 @@ class HTML::Canvas {
     use CSS::Declarations:ver(v0.0.4 .. *);
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Pattern;
+    use HTML::Canvas::Image;
+    use HTML::Canvas::ImageData;
     use HTML::Entity;
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
-    has Numeric $.width;
-    has Numeric $.height;
+    has Numeric $.width = 612;
+    has Numeric $.height = 792;
     has Pair @.subpath;
     has Str @!subpath-new;
     has Pair @.calls;
     has Routine @.callback;
+    has $!cairo  = (require ::('HTML::Canvas::To::Cairo')).new: :canvas(self), :$!width, :$!height;
+    method image { $!cairo.surface }
     subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction'|'globalAlpha';
     my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath';
     my subset CanvasOrImage where HTML::Canvas|HTML::Canvas::Image;
@@ -287,6 +291,9 @@ class HTML::Canvas {
                         } ),
         :drawImage(method (CanvasOrImage \image, Numeric \dx, Numeric \dy, *@args) {
                           self!register-node(image);
+                   }),
+        :putImageData(method (HTML::Canvas::ImageData \image-data, Numeric \dx, Numeric \dy, *@args) {
+                          self!register-node(image-data);
                       }),
         # :setLineDash - see below
         :getLineDash(method () { @!lineDash } ),
@@ -300,14 +307,25 @@ class HTML::Canvas {
     );
 
     method createLinearGradient(Numeric $x0, Numeric $y0, Numeric $x1, Numeric $y1) {
-        HTML::Canvas::Gradient.new: :$x0, :$y0, :$x1, :$y1;
+        self!var: HTML::Canvas::Gradient.new: :$x0, :$y0, :$x1, :$y1;
     }
     method createRadialGradient(Numeric $x0, Numeric $y0, Numeric $r0, Numeric $x1, Numeric $y1, Numeric:D $r1) {
-        HTML::Canvas::Gradient.new: :$x0, :$y0, :$r0, :$x1, :$y1, :$r1;
+        self!var: HTML::Canvas::Gradient.new: :$x0, :$y0, :$r0, :$x1, :$y1, :$r1;
     }
     method createPattern(HTML::Canvas::Image $image, HTML::Canvas::Pattern::Repetition $repetition = 'repeat') {
         self!register-node($image);
-        HTML::Canvas::Pattern.new: :$image, :$repetition;
+        self!var: HTML::Canvas::Pattern.new: :$image, :$repetition;
+    }
+    method getImageData(Numeric $sx, Numeric $sy, Numeric $sw, Numeric $sh) {
+        use Cairo;
+        my Cairo::Image $image = Cairo::Image.create(Cairo::FORMAT_ARGB32, $sw, $sh);
+        my $ctx = Cairo::Context.new($image);
+        $ctx.rgb(1.0, 1.0, 1.0);
+        $ctx.paint;
+        $ctx.set_source_surface(self.image, -$sx, -$sy);
+        $ctx.rectangle($sx, $sy, $sh, $sh);
+        $ctx.paint;
+        self!var: HTML::Canvas::ImageData.new: :$image, :$sx, :$sy, :$sw, :$sh;
     }
     # todo: slurping/itemization of @!lineDash?
     method setLineDash(@!lineDash) {
@@ -318,6 +336,10 @@ class HTML::Canvas {
 	    FETCH => sub ($) { @!lineDash },
 	    STORE => sub ($, \l) { self.setLineDash(l) },
 	    )
+    }
+    method !var($object) {
+        @!calls.push: (:$object);
+        $object;
     }
     method !call(Str $name, *@args) {
         @!calls.push: ($name => @args)
@@ -402,71 +424,41 @@ class HTML::Canvas {
         }
     }
 
-    method !build-symbols {
-        my %obj-count{Any};
-
-        for @!calls {
-            # work out what variables we need to allocate:
-            # - ignore simple scalars
-            # - any objects that are referenced multiple times
-            # - gradients, so we can call the .addTabStop method on them
-            # - also consider image arguments passed to patterns
-            for .value.list {
-                when Str|Numeric|Bool|List { }
-                when HTML::Canvas::Gradient {
-                    %obj-count{$_} = 99;
-                }
-                when HTML::Canvas::Pattern {
-                    unless %obj-count{$_}++ {
-                        with .image -> $obj {
-                            %obj-count{$obj}++;
-                        }
-                    }
-                }
-                default {
-                    %obj-count{$_}++;
-                }
-            }
+    has %.var-num;
+    has %.sym{Any};
+    method !check-variable($_, |c) {
+        when Str|Numeric|Bool|List { }
+        when HTML::Canvas::Gradient {
+            %!sym{$_} //= self!declare-variable($_, |c);
         }
-
-        # generate symbols
-        my %var-num;
-        my %sym{Any};
-
-        for %obj-count.pairs {
-            next unless .value > 1;
-            my $obj = .key;
-            my $type = do given $obj {
-                when HTML::Canvas::Gradient { 'grad_' }
-                when HTML::Canvas::Pattern  { 'patt_' }
-                default { .can('js-ref') ?? 'node_' !!  Nil }
-            }
-            with $type {
-                my $var-name = $_ ~ ++%var-num{$_};
-                %sym{$obj} = $var-name;
-            }
+        when HTML::Canvas::Pattern {
+            %!sym{$_} //= self!declare-variable($_, |c)
+                for $_, .image;
         }
-
-        %sym;
+        default {
+            %!sym{$_} //= self!declare-variable($_, |c)
+                if .can('js-ref');
+        }
     }
 
-    #| generate Javascript
-    method js(Str :$context = 'ctx', :$sep = "\n") {
-        use JSON::Fast;
-        my $sym = self!build-symbols;
-        my Str  @js;
+    method !declare-variable($obj, :$context!, :@js!) {
+        my $var-name;
 
-        # declare variables
-        for $sym.pairs.sort: *.value {
-            my $obj = .key;
-            my $var-name = .value;
+        my $type = do given $obj {
+            when HTML::Canvas::Gradient  { 'grad_' }
+            when HTML::Canvas::Pattern   { 'patt_' }
+            when HTML::Canvas::ImageData { 'imgd_' }
+            default { .can('js-ref') ?? 'node_' !!  Nil }
+        }
+        with $type {
+            $var-name = $_ ~ ++%.var-num{$_};
 
             given $obj {
                 when HTML::Canvas::Gradient {
                     @js.append: .to-js($context, $var-name);
                 }
-                when HTML::Canvas::Pattern {
-                    @js.push: 'var %s = %s;'.sprintf($var-name, .to-js($context, :$sym));
+                when HTML::Canvas::Pattern|HTML::Canvas::ImageData {
+                    @js.push: 'var %s = %s;'.sprintf($var-name, .to-js($context, :%!sym));
                 }
                 default {
                     @js.push: 'var %s = %s;'.sprintf($var-name, .js-ref);
@@ -474,24 +466,39 @@ class HTML::Canvas {
             }
         }
 
+        $var-name;
+    }
+
+    #| generate Javascript
+    method js(Str :$context = 'ctx', :$sep = "\n") {
+        use JSON::Fast;
+        my @js;
+
         # process statements (calls and assignments)
         for @!calls {
             my $name = .key;
-            my @args = flat .value.map: {
-                when Str|Numeric|Bool { to-json($_) }
-                when List { '[ ' ~ .map({to-json($_)}).join(', ') ~ ' ]' }
-                when $sym{$_}:exists { $sym{$_} }
-                when HTML::Canvas::Pattern | HTML::Canvas::Gradient {
-                    .to-js($context, :$sym);
+            if $name eq 'object' {
+                self!check-variable(.value, :$context, :@js);
+              }
+            else {
+                my @args = flat .value.map: {
+                    when Str|Numeric|Bool { to-json($_) }
+                    when List { '[ ' ~ .map({to-json($_)}).join(', ') ~ ' ]' }
+                    when %!sym{$_}:exists { %!sym{$_} }
+                    when HTML::Canvas::Pattern|HTML::Canvas::Gradient|HTML::Canvas::ImageData {
+                        self!check-variable($_, :$context, :@js);
+                        %!sym{$_} // .to-js($context, :%!sym);
+                    }
+                    default {
+                        self!check-variable($_, :$context, :@js);
+                        %!sym{$_} // .?js-ref // die "unexpected object: {.perl}";
+                    }
                 }
-                default {
-                    .?js-ref // die "unexpected object: {.perl}";
-                }
-            };
             my \fmt = $name ~~ LValue
                 ?? '%s.%s = %s;'
                 !! '%s.%s(%s);';
             @js.push: fmt.sprintf( $context, $name, @args.join(", ") );
+            }
         }
 
         @js.join: $sep;

@@ -10,11 +10,12 @@
     "depends"     : [ "Cairo", "Color", "HTML::Entity", "CSS::Declarations", "JSON::Fast", "Base64::Native" ],
     "source-url"  : "git://github.com/p6-css/HTML-Canvas-p6.git",
     "provides"    : {
-        "HTML::Canvas"           : "lib/HTML/Canvas.pm",
-        "HTML::Canvas::Gradient" : "lib/HTML/Canvas/Gradient.pm",
-        "HTML::Canvas::Image"    : "lib/HTML/Canvas/Image.pm",
-        "HTML::Canvas::Pattern"  : "lib/HTML/Canvas/Pattern.pm",
-        "HTML::Canvas::Tracer"   : "lib/HTML/Canvas/Tracer.pm",
+        "HTML::Canvas"            : "lib/HTML/Canvas.pm",
+        "HTML::Canvas::Gradient"  : "lib/HTML/Canvas/Gradient.pm",
+        "HTML::Canvas::Image"     : "lib/HTML/Canvas/Image.pm",
+        "HTML::Canvas::ImageData" : "lib/HTML/Canvas/ImageData.pm",
+        "HTML::Canvas::Pattern"   : "lib/HTML/Canvas/Pattern.pm",
+        "HTML::Canvas::Tracer"    : "lib/HTML/Canvas/Tracer.pm",
         "HTML::Canvas::To:Cairo"  : "lib/HTML/Canvas/To/Cairo.pm",
         "HTML::Canvas::To:Cairo::Font"  : "lib/HTML/Canvas/To/Cairo/Font.pm"
     }

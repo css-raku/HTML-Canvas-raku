@@ -7,6 +7,7 @@ class HTML::Canvas::To::Cairo {
     use HTML::Canvas;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Image;
+    use HTML::Canvas::ImageData;
     use HTML::Canvas::Pattern;
     has HTML::Canvas $.canvas is rw .= new;
     has Cairo::Surface $.surface handles <width height>;
@@ -96,7 +97,7 @@ class HTML::Canvas::To::Cairo {
 
         my $patt = do given $gradient.type {
             when 'Linear' {
-              Cairo::Pattern::Gradient::Linear.create(.x0, .y1, .x1, .y0)
+              Cairo::Pattern::Gradient::Linear.create(.x0, .y0, .x1, .y1)
                   with $gradient;
             }
             when 'Radial' {
@@ -250,8 +251,31 @@ class HTML::Canvas::To::Cairo {
             $renderer.surface;
         }
     }
-    my subset CanvasOrImage where HTML::Canvas|HTML::Canvas::Image;
-    multi method drawImage( CanvasOrImage $obj, Numeric \sx, Numeric \sy, Numeric \sw, Numeric \sh, Numeric \dx, Numeric \dy, Numeric \dw, Numeric \dh) {
+    my subset Drawable where HTML::Canvas|HTML::Canvas::Image|HTML::Canvas::ImageData;
+    method !get-surface(Drawable $_,
+                        :$width! is rw,
+                        :$height! is rw --> Cairo::Surface) {
+        when HTML::Canvas {
+            $width = $_ with .html-width;
+            $height = $_ with .html-height;
+            self!canvas-to-surface($_, :$width, :$height);
+        }
+        when HTML::Canvas::ImageData {
+            $width = .sw;
+            $height = .sh;
+            .image;
+        }
+        default {
+            die "Sorry, can't handle image type {.image-type}"
+                unless .image-type eq 'PNG';
+            with (%!canvas-surface-cache{$_} //= Cairo::Image.create(.Blob)) {
+                $width = .width;
+                $height = .height;
+                $_
+            }
+        }
+    }
+    multi method drawImage( Drawable $obj, Numeric \sx, Numeric \sy, Numeric \sw, Numeric \sh, Numeric \dx, Numeric \dy, Numeric \dw, Numeric \dh) {
         unless sw =~= 0 || sh =~= 0 {
             $!ctx.save;
             # position at top right of visible area
@@ -267,20 +291,7 @@ class HTML::Canvas::To::Cairo {
             $!ctx.translate( -sx * x-scale, -sy * y-scale )
                 if sx || sy;
 
-            my Cairo::Surface $surface;
-            my $width;
-            my $height;
-
-            if $obj.isa(HTML::Canvas) {
-                $width = $obj.html-width || dw;
-                $height = $obj.html-height || dh;
-                $surface = self!canvas-to-surface($obj, :$width, :$height);
-            }
-            else {
-                die "Sorry, can't handle image type {$obj.image-type}"
-                    unless $obj.image-type eq 'PNG';
-                $surface = (%!canvas-surface-cache{$obj} //= Cairo::Image.create($obj.Blob));
-            }
+            my Cairo::Surface $surface = self!get-surface($obj, :width(my $), :height(my $));
 
             $!ctx.scale(x-scale, y-scale);
             $!ctx.set_source_surface($surface);
@@ -288,20 +299,11 @@ class HTML::Canvas::To::Cairo {
             $!ctx.restore;
         }
     }
-    multi method drawImage(CanvasOrImage $obj, Numeric $dx, Numeric $dy, Numeric $dw?, Numeric $dh?) is default {
-        my Cairo::Surface $surface;
-        my Numeric $width;
-        my Numeric $height;
-        if $obj.isa(HTML::Canvas) {
-            $width = $obj.html-width // $dw;
-            $height = $obj.html-height // $dh;
-            $surface = self!canvas-to-surface($obj, :$width, :$height);
-        }
-        else {
-            $surface = (%!canvas-surface-cache{$obj} //= Cairo::Image.create($obj.Blob));
-            $width = $surface.width;
-            $height = $surface.height;
-        }
+    multi method drawImage(Drawable $obj, Numeric $dx, Numeric $dy, Numeric $dw?, Numeric $dh?) is default {
+
+        my Numeric $width = $dw;
+        my Numeric $height = $dh;
+        my Cairo::Surface $surface = self!get-surface($obj, :$width, :$height);
 
         $!ctx.save;
         $!ctx.translate($dx, $dy);
@@ -313,6 +315,7 @@ class HTML::Canvas::To::Cairo {
 
 	$!ctx.restore
     }
+    method putImageData(HTML::Canvas::ImageData $image-data, Numeric $dx, Numeric $dy) { self.drawImage( $image-data, $dx, $dy)}
     method quadraticCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \x, Numeric \y) {
         my \cp2x = cp1x + 2/3 * (x - cp1x);
         my \cp2y = cp1y + 2/3 * (y - cp1y);

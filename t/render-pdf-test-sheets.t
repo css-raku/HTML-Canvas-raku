@@ -1,6 +1,6 @@
 use v6;
 use Test;
-plan 12;
+plan 13;
 
 use HTML::Canvas;
 use HTML::Canvas::Image;
@@ -649,6 +649,32 @@ test-sheet( -> \ctx {
 
         $y += h + pad;
     }
+});
+
+test-sheet( -> \ctx {
+      ctx.fillText("Testing imageData", 20, $y += textHeight);
+      $y += pad + 10;
+
+      ctx.drawImage(image,  20,  30,  50, 50);
+      ctx.font = "10pt courier";
+      ctx.fillText("some text", 20, 80);
+      my \imgData=ctx.getImageData(10,30,50,50);
+
+      my $grad = ctx.createLinearGradient(0,0,200,200),
+      $grad.addColorStop(0,"rgb(255,200,200)");
+      $grad.addColorStop(0.5,"rgb(200,255,200)");
+      $grad.addColorStop(1,"rgb(200,200,255)");
+  
+      ctx.fillStyle = $grad;
+      $y = 100;
+      ctx.fillRect(20,$y,400,350);
+
+      $y += pad;
+      ctx.putImageData(imgData, 40, $y);
+
+      # re-get and re-put
+      my \imgData2=ctx.getImageData(35,$y-5,60,60);
+      ctx.putImageData(imgData2, 120, $y);
 });
 
 lives-ok { $surface.finish }, 'surface.finish';

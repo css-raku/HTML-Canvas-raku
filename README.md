@@ -33,8 +33,7 @@ $canvas.context: -> \ctx {
 
 # save canvas as PNG
 use Cairo;
-use HTML::Canvas::To::Cairo;
-my Cairo::Image $img = HTML::Canvas::To::Cairo.render($canvas);
+my Cairo::Image $img = $canvas.image;
 $img.write_png: "examples/canvas-demo.png";
 
 # also save canvas as HTML
@@ -63,11 +62,11 @@ for 1..2 -> $page {
     $canvas.context({
 
         .font = "10pt times-roman bold";
-        .fillStyle = "orange";
-        .strokeStyle = "blue";
+        .fillStyle = "blue";
+        .strokeStyle = "red";
         .save; {
             .fillStyle = "rgba(1.0, 0.2, 0.2, 0.25)";
-            .rect(15, 15, 50, 50);
+            .rect(15, 20, 50, 50);
             .fill;
             .stroke;
         }; .restore;
@@ -274,6 +273,14 @@ with ctx.createRadialGradient(75,50,5,90,60,100) -> $grd {
 
 say ctx.js;
 ```
+
+## Image Data
+
+Currently support for `getImageData` and `putImageData` (3 argument format) only.
+
+#### `getImageData(Numeric sx, Numeric sy, Numeric sw, Numeric sh)`
+
+#### `putImageData(image-data, Numeric dx, Numeric dy)`
 
 ## Additional Rendering Backends
 
