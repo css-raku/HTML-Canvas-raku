@@ -265,14 +265,21 @@ class HTML::Canvas::To::Cairo {
             $height = .sh;
             .image;
         }
-        default {
-            die "Sorry, can't handle image type {.image-type}"
-                unless .image-type eq 'PNG';
+        when .image-type eq 'PNG' {
             with (%!canvas-surface-cache{$_} //= Cairo::Image.create(.Blob)) {
                 $width = .width;
                 $height = .height;
                 $_
             }
+        }
+        default {
+            # Something we can't handle; JPEG, GIF etc.
+            # create place-holder
+            my Cairo::Image $image = Cairo::Image.create(Cairo::FORMAT_ARGB32, $width, $height);
+            my $ctx = Cairo::Context.new($image);
+            $ctx.rgba(.9, .95, .95, .4);
+            $ctx.paint;
+            $image;
         }
     }
     multi method drawImage( Drawable $obj, Numeric \sx, Numeric \sy, Numeric \sw, Numeric \sh, Numeric \dx, Numeric \dy, Numeric \dw, Numeric \dh) {
@@ -291,7 +298,9 @@ class HTML::Canvas::To::Cairo {
             $!ctx.translate( -sx * x-scale, -sy * y-scale )
                 if sx || sy;
 
-            my Cairo::Surface $surface = self!get-surface($obj, :width(my $), :height(my $));
+            my Numeric $width = dw;
+            my Numeric $height = dh;
+            my Cairo::Surface $surface = self!get-surface($obj, :$width, :$height);
 
             $!ctx.scale(x-scale, y-scale);
             $!ctx.set_source_surface($surface);
