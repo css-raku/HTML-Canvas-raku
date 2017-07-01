@@ -28,6 +28,7 @@ class HTML::Canvas::Tracer {
 	$*ERR.say(');');
 
 	$!indent++ if $name eq 'save';
+        Nil;
     }
 
 }

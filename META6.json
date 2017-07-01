@@ -1,7 +1,7 @@
 {
     "perl"        : "6.c",
     "name"        : "HTML::Canvas",
-    "version"     : "0.0.2",
+    "version"     : "0.0.3",
     "auth"        : "github:p6-css",
     "api"         : "2dcontext-20151119",
     "description" : "Construction and rendering of HTML-5 Canvases",

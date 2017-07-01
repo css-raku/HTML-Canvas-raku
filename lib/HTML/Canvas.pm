@@ -76,7 +76,6 @@ class HTML::Canvas {
             FETCH => sub ($) { $!font },
             STORE => sub ($, Str $!font) {
                 $!css.font = $!font;
-                .css = $!css with $!font-object;
                 self!call('font', $!font);
             }
         );
@@ -120,15 +119,6 @@ class HTML::Canvas {
         );
     }
 
-    has $.font-object is rw;
-    method font-object is rw {
-        Proxy.new(
-            FETCH => sub ($) { $!font-object },
-            STORE => sub ($, $!font-object) {
-                .css = $!css with $!font-object;
-            }
-        )
-    }
     subset ColorSpec where Str|HTML::Canvas::Gradient|HTML::Canvas::Pattern;
     has ColorSpec $.fillStyle is rw = 'black';
     method fillStyle is rw {
@@ -157,7 +147,6 @@ class HTML::Canvas {
     has @.gsave;
 
     method TWEAK {
-        .css = $!css with $!font-object;
     }
 
     our %API = BEGIN %(
@@ -207,7 +196,6 @@ class HTML::Canvas {
                             $!direction = %state<direction>;
                             $!textBaseline = %state<textBaseline>;
                             $!css = %state<css>;
-                            .css = $!css with $!font-object;
                         }
                         else {
                             warn "restore without preceding save";
@@ -280,15 +268,6 @@ class HTML::Canvas {
         :strokeText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) {
                            self!setup-stroke();
                        }),
-        :measureText(method (Str $text) {
-                            with $!font-object {
-                                my Numeric $width = self.adjusted-font-size: .stringwidth($text, .em);
-                                my class TextMetrics { has Numeric $.width }.new: :$width;
-                            }
-                            else {
-                                fail "unable to measure text - no current font object";
-                            }
-                        } ),
         :drawImage(method (CanvasOrImage \image, Numeric \dx, Numeric \dy, *@args) {
                           self!register-node(image);
                    }),
@@ -326,6 +305,14 @@ class HTML::Canvas {
         $ctx.rectangle($sx, $sy, $sh, $sh);
         $ctx.paint;
         self!var: HTML::Canvas::ImageData.new: :$image, :$sx, :$sy, :$sw, :$sh;
+    }
+    method measureText(Str $text) {
+        my @measures = @!callback.map({.('measureText', $text)}).grep: *.so;
+        if @measures {
+            with @measures.sum / +@measures -> $width {
+                my class TextMetrics { has Numeric $.width }.new: :$width
+            }
+        }
     }
     # todo: slurping/itemization of @!lineDash?
     method setLineDash(@!lineDash) {
@@ -507,9 +494,7 @@ class HTML::Canvas {
     #| rebuild the canvas, using the given renderer
     method render($renderer, :@calls = self.calls) {
         my @callback = [ $renderer.callback, ];
-        my %opt = :font-object(.clone)
-            with self.font-object;
-        my $canvas = self.new: :@callback, |%opt;
+        my $canvas = self.new: :@callback;
         temp $renderer.canvas = $canvas;
         $canvas.context: {
             for @calls {

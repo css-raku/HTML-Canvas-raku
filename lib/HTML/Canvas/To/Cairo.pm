@@ -12,6 +12,7 @@ class HTML::Canvas::To::Cairo {
     has HTML::Canvas $.canvas is rw .= new;
     has Cairo::Surface $.surface handles <width height>;
     has Cairo::Context $.ctx;
+    has HTML::Canvas::To::Cairo::Font $!font;
 
     submethod TWEAK(Numeric :$width = $!canvas.width, Numeric :$height = $!canvas.height) {
         $!surface //= Cairo::Image.create(Cairo::FORMAT_ARGB32, $width // 128, $height // 128);
@@ -42,7 +43,8 @@ class HTML::Canvas::To::Cairo {
 
     method _start {
 	my $scale = 1.0 / $!canvas.adjusted-font-size(1.0);
-        $!canvas.font-object = HTML::Canvas::To::Cairo::Font.new: :$!ctx, :$scale;
+        $!font = HTML::Canvas::To::Cairo::Font.new: :$!ctx, :$scale;
+        $!font.css = $!canvas.css;
 	self.font;
 	self.lineWidth($!canvas.lineWidth);
     }
@@ -50,10 +52,11 @@ class HTML::Canvas::To::Cairo {
     }
 
     method save {
-        $!ctx.save
+        $!ctx.save;
     }
     method restore {
         $!ctx.restore;
+        $!font.css = $!canvas.css;
     }
     has %!pattern-cache{Any};
     method !make-pattern(HTML::Canvas::Pattern $pattern) {
@@ -161,7 +164,8 @@ class HTML::Canvas::To::Cairo {
         $!ctx.restore;
     }
     method font(Str $?) {
-	with $!canvas.font-object {
+	with $!font {
+            .css = $!canvas.css;
             $!ctx.select_font_face( .family, .slant, .weight);
             $!ctx.set_font_size( $!canvas.adjusted-font-size(.em) );
 	}
@@ -225,7 +229,9 @@ class HTML::Canvas::To::Cairo {
     method setLineDash(List $pattern) {
         $!ctx.set_dash($pattern, +$pattern, $!canvas.lineDashOffset)
     }
-    method measureText(Str $text) {}
+    method measureText(Str $text --> Numeric) {
+        $!canvas.adjusted-font-size: $!font.stringwidth($text, $!font.em);
+    }
     method moveTo(Numeric \x, Numeric \y) { $!ctx.move_to(x, y) }
     method lineTo(Numeric \x, Numeric \y) { $!ctx.line_to(x, y) }
     method stroke {
@@ -252,7 +258,7 @@ class HTML::Canvas::To::Cairo {
         }
     }
     my subset Drawable where HTML::Canvas|HTML::Canvas::Image|HTML::Canvas::ImageData;
-    method !get-surface(Drawable $_,
+    method !to-surface(Drawable $_,
                         :$width! is rw,
                         :$height! is rw --> Cairo::Surface) {
         when HTML::Canvas {
@@ -300,7 +306,7 @@ class HTML::Canvas::To::Cairo {
 
             my Numeric $width = dw;
             my Numeric $height = dh;
-            my Cairo::Surface $surface = self!get-surface($obj, :$width, :$height);
+            my Cairo::Surface $surface = self!to-surface($obj, :$width, :$height);
 
             $!ctx.scale(x-scale, y-scale);
             $!ctx.set_source_surface($surface);
@@ -312,7 +318,7 @@ class HTML::Canvas::To::Cairo {
 
         my Numeric $width = $dw;
         my Numeric $height = $dh;
-        my Cairo::Surface $surface = self!get-surface($obj, :$width, :$height);
+        my Cairo::Surface $surface = self!to-surface($obj, :$width, :$height);
 
         $!ctx.save;
         $!ctx.translate($dx, $dy);
