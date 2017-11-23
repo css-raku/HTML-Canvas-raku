@@ -664,7 +664,7 @@ test-sheet( -> \ctx {
       $grad.addColorStop(0,"rgb(255,200,200)");
       $grad.addColorStop(0.5,"rgb(200,255,200)");
       $grad.addColorStop(1,"rgb(200,200,255)");
-  
+
       ctx.fillStyle = $grad;
       $y = 100;
       ctx.fillRect(20,$y,400,350);

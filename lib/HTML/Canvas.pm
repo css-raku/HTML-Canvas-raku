@@ -360,20 +360,18 @@ class HTML::Canvas {
         self._finish;
     }
 
-    my role HTMLObj {
+    my role HTMLObj[Str $html-id] {
         has Numeric $.html-width is rw;
         has Numeric $.html-height is rw;
-        has Str $.html-id is rw;
+        method html-id {$html-id}
         method js-ref {
             'document.getElementById("%s")'.sprintf(self.html-id);
         }
     }
 
     method !register-node($obj) {
-        unless $obj ~~ HTMLObj {
-            $obj does HTMLObj;
-            $obj.html-id = ~ $obj.WHERE;
-        }
+        $obj.^mixin: HTMLObj[~ $obj.WHERE]
+            unless $obj.does(HTMLObj);
         $obj;
     }
     #| lightweight html generation; canvas + javascript
@@ -393,7 +391,7 @@ class HTML::Canvas {
         }
     }
     method html(Str :$style, Str :$sep = "\n    ", |c) is default {
-        if self ~~ HTMLObj {
+        if self.does(HTMLObj) {
             my $style-att  = do with $style { encode-entities($_).fmt(' style="%s"') } else { '' };
             my $width-att  = do with self.html-width  { ' width="%dpt"'.sprintf($_) } else { '' };
             my $height-att = do with self.html-height { ' height="%dpt"'.sprintf($_) } else { '' };
