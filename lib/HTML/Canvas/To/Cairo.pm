@@ -3,7 +3,9 @@ class HTML::Canvas::To::Cairo {
 
     use Cairo;
     use Color;
-    use HTML::Canvas::To::Cairo::Font;
+    use CSS::Declarations::Font;
+    use Font::FreeType;
+    use Font::FreeType::Native;
     use HTML::Canvas;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Image;
@@ -12,7 +14,8 @@ class HTML::Canvas::To::Cairo {
     has HTML::Canvas $.canvas is rw .= new;
     has Cairo::Surface $.surface handles <width height>;
     has Cairo::Context $.ctx;
-    has HTML::Canvas::To::Cairo::Font $!font;
+    has Font::FreeType $!freetype .= new;
+    has CSS::Declarations::Font $!font .= new;
 
     submethod TWEAK(Numeric :$width = $!canvas.width, Numeric :$height = $!canvas.height) {
         $!surface //= Cairo::Image.create(Cairo::FORMAT_ARGB32, $width // 128, $height // 128);
@@ -43,8 +46,6 @@ class HTML::Canvas::To::Cairo {
 
     method _start {
 	my $scale = 1.0 / $!canvas.adjusted-font-size(1.0);
-        $!font = HTML::Canvas::To::Cairo::Font.new: :$!ctx, :$scale;
-        $!font.css = $!canvas.css;
 	self.font;
 	self.lineWidth($!canvas.lineWidth);
     }
@@ -163,11 +164,22 @@ class HTML::Canvas::To::Cairo {
         self.fillRect(x, y, w, h);
         $!ctx.restore;
     }
+
     method font(Str $?) {
+        state %font-cache;
 	with $!font {
             .css = $!canvas.css;
-            $!ctx.select_font_face( .family, .slant, .weight);
+            my $file = .find-font;
+            my Font::FreeType::Face $face = $!freetype.face($file);
+            my FT_Face $ft-face = %font-cache{$file} //= do with $face.struct {
+                .FT_Reference_Face;
+                $_;
+            }
+            my Cairo::Font $font .= create(
+                $ft-face, :free-type,
+            );
             $!ctx.set_font_size( $!canvas.adjusted-font-size(.em) );
+            $!ctx.set_font_face( $font );
 	}
     }
     method !baseline-shift {
@@ -230,7 +242,7 @@ class HTML::Canvas::To::Cairo {
         $!ctx.set_dash($pattern, +$pattern, $!canvas.lineDashOffset)
     }
     method measureText(Str $text --> Numeric) {
-        $!canvas.adjusted-font-size: $!font.stringwidth($text, $!font.em);
+        $!ctx.text_extents($text).width;
     }
     method moveTo(Numeric \x, Numeric \y) { $!ctx.move_to(x, y) }
     method lineTo(Numeric \x, Numeric \y) { $!ctx.line_to(x, y) }
