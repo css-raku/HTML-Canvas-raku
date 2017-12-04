@@ -127,7 +127,7 @@ class HTML::Canvas {
             STORE => sub ($, ColorSpec $!fillStyle) {
                 $!css.background-color = $!fillStyle
                     if $!fillStyle ~~ Str;
-                @!calls.push: (:fillStyle[ $!fillStyle, ]);
+                self!call('fillStyle', $!fillStyle);
             }
         );
     }
@@ -138,7 +138,7 @@ class HTML::Canvas {
             STORE => sub ($, ColorSpec $!strokeStyle) {
                 $!css.color = $!strokeStyle
                     if $!strokeStyle ~~ Str;
-                @!calls.push: (:strokeStyle[ $!strokeStyle, ]);
+                self!call('strokeStyle', $!strokeStyle);
             }
         );
     }
