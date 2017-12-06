@@ -4,8 +4,6 @@ class HTML::Canvas::To::Cairo {
     use Cairo;
     use Color;
     use CSS::Declarations::Font;
-    use Font::FreeType;
-    use Font::FreeType::Native;
     use HTML::Canvas;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Image;
@@ -14,8 +12,27 @@ class HTML::Canvas::To::Cairo {
     has HTML::Canvas $.canvas is rw .= new;
     has Cairo::Surface $.surface handles <width height>;
     has Cairo::Context $.ctx;
-    has Font::FreeType $!freetype .= new;
-    has CSS::Declarations::Font $!font .= new;
+    class FontCache
+        is CSS::Declarations::Font {
+
+        use Font::FreeType;
+        use Font::FreeType::Native;
+
+        has Font::FreeType $!freetype .= new;
+        has FT_Face $.font-obj;
+
+        method font-obj {
+            state %cache;
+            my Str $file = $.find-font;
+            %cache{$file} //= do {
+                my Font::FreeType::Face $face = $!freetype.face($file);
+                my FT_Face $ft-face = $face.struct;
+                $ft-face.FT_Reference_Face;
+                Cairo::Font.create($ft-face, :free-type);
+            };
+        }
+    }
+    has FontCache $!font .= new;
 
     submethod TWEAK(Numeric :$width = $!canvas.width, Numeric :$height = $!canvas.height) {
         $!surface //= Cairo::Image.create(Cairo::FORMAT_ARGB32, $width // 128, $height // 128);
@@ -166,21 +183,9 @@ class HTML::Canvas::To::Cairo {
     }
 
     method font(Str $?) {
-        state %font-cache;
-	with $!font {
-            .css = $!canvas.css;
-            my $file = .find-font;
-            my Font::FreeType::Face $face = $!freetype.face($file);
-            my FT_Face $ft-face = %font-cache{$file} //= do with $face.struct {
-                .FT_Reference_Face;
-                $_;
-            }
-            my Cairo::Font $font .= create(
-                $ft-face, :free-type,
-            );
-            $!ctx.set_font_size( $!canvas.adjusted-font-size(.em) );
-            $!ctx.set_font_face( $font );
-	}
+        $!font.css = $!canvas.css;
+        $!ctx.set_font_size( $!canvas.adjusted-font-size($!font.em) );
+        $!ctx.set_font_face( $!font.font-obj );
     }
     method !baseline-shift {
 	my \t = $!ctx.text_extents("Q");
