@@ -5,5 +5,4 @@ Makefile
 blib/
 *.pdf
 *.html
-tmp/*
 HTML-Canvas-*
