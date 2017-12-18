@@ -11,7 +11,7 @@ my $sheet-no;
 my @html-body;
 my HTML::Canvas @sheets;
 
-my $surface = Cairo::Surface::PDF.create("t/render-pdf-test-sheets.pdf", 612, 792);
+my $surface = Cairo::Surface::PDF.create("tmp/render-pdf-test-sheets.pdf", 612, 792);
 
 my $y = 0;
 my \h = 20;

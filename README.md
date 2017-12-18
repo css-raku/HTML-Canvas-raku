@@ -114,6 +114,8 @@ HTML::Canvas::To::PDF   | X   | X   | X   | X   |
 
 ## Methods
 
+These methods implement the the majority of the W3C [HTML Canvas 2D Context](https://www.w3.org/TR/2dcontext/) API.
+
 ## Setters/Getters
 
 #### lineWidth

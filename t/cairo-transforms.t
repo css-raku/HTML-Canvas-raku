@@ -82,7 +82,7 @@ test-page(
 });
 
 # save canvas as PNG
-lives-ok {$feed.surface.write_png: "t/transforms.png"}, 'write_png';
+lives-ok {$feed.surface.write_png: "tmp/transforms.png"}, 'write_png';
 
 my $html = "<html><body>" ~ @html-body.join ~ "</body></html>";
 

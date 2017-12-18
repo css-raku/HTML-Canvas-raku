@@ -32,6 +32,6 @@ lives-ok {
 my $html = "<html><body>" ~ @html-body.join ~ "</body></html>";
 "t/images.html".IO.spurt: $html;
 
-$canvas.image.write_png: "t/images.png";
+$canvas.image.write_png: "tmp/images.png";
 
 done-testing;

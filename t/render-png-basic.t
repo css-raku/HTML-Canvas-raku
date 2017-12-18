@@ -61,7 +61,7 @@ $canvas.context: -> \ctx {
 
 # save canvas as PNG
 my Cairo::Surface $surface = $feed.surface;
-$surface.write_png: "t/render-png-basic.png";
+$surface.write_png: "tmp/render-png-basic.png";
 
 # also save comparative HTML
 
