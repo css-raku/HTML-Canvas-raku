@@ -13,7 +13,7 @@ class HTML::Canvas::Gradient {
     method type { with $!r0 // $!r1 { 'Radial' } else { 'Linear' } }
 
     my class ColorStop {
-        use CSS::Declarations;
+        use CSS::Properties;
         use Color;
         has Numeric $.offset;
         has Color $!color;
@@ -25,7 +25,7 @@ class HTML::Canvas::Gradient {
                 default { $_ }
             }
         }
-        method !css { state $css = CSS::Declarations.new; }
+        method !css { state $css = CSS::Properties.new; }
         method !css-writer { state $css-writer = (require CSS::Writer).new: :color-names }
         method !css-color-str(Color $_) {
             self!css-writer.write: |self!css.to-ast($_);

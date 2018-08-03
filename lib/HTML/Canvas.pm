@@ -1,7 +1,7 @@
 use v6;
 
 class HTML::Canvas:ver<0.0.3> {
-    use CSS::Declarations:ver;
+    use CSS::Properties:ver;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Pattern;
     use HTML::Canvas::Image;
@@ -14,7 +14,7 @@ class HTML::Canvas:ver<0.0.3> {
     has Str @!subpath-new;
     has Pair @.calls;
     has Routine @.callback;
-    has $!cairo  = (require ::('HTML::Canvas::To::Cairo')).new: :canvas(self), :$!width, :$!height;
+    has $!cairo = (require ::('HTML::Canvas::To::Cairo')).new: :canvas(self), :$!width, :$!height;
     method image { $!cairo.surface }
     subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction'|'globalAlpha';
     my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath';
@@ -143,11 +143,8 @@ class HTML::Canvas:ver<0.0.3> {
         );
     }
 
-    has CSS::Declarations $.css = CSS::Declarations.new( :background-color($!fillStyle), :color($!strokeStyle), :$!font,  );
+    has CSS::Properties $.css = CSS::Properties.new( :background-color($!fillStyle), :color($!strokeStyle), :$!font,  );
     has @.gsave;
-
-    method TWEAK {
-    }
 
     our %API = BEGIN %(
         :_start(method {} ),
@@ -202,7 +199,7 @@ class HTML::Canvas:ver<0.0.3> {
                         }
                 } ),
         :scale(method (Numeric $x, Numeric $y) {
-                      with @!transformMatrix {
+                      given @!transformMatrix {
                           $_ *= $x for .[0], .[1];
                           $_ *= $y for .[2], .[3];
                       }
@@ -210,7 +207,7 @@ class HTML::Canvas:ver<0.0.3> {
         :rotate(method (Numeric $rad) {
                        my \c = cos($rad);
                        my \s = sin($rad);
-                       with @!transformMatrix {
+                       given @!transformMatrix {
                            .[0..3] = [
                                .[0] * +c + .[2] * s,
                                .[1] * +c + .[3] * s,
@@ -221,13 +218,13 @@ class HTML::Canvas:ver<0.0.3> {
                        }
                   }),
         :translate(method (Numeric $x, Numeric $y) {
-                          with @!transformMatrix {
+                          given @!transformMatrix {
                               .[4] += .[0] * $x + .[2] * $y;
                               .[5] += .[1] * $x + .[3] * $y;
                           }
                   }),
         :transform(method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-                          @!transformMatrix = do with @!transformMatrix {
+                          @!transformMatrix = do given @!transformMatrix {
                               [
                                   .[0] * a + .[2] * b,
                                   .[1] * a + .[3] * b,
@@ -309,7 +306,7 @@ class HTML::Canvas:ver<0.0.3> {
     method measureText(Str $text) {
         my @measures = @!callback.map({.('measureText', $text)}).grep: *.so;
         if @measures {
-            with @measures.sum / +@measures -> $width {
+            given @measures.sum / +@measures -> $width {
                 my class TextMetrics { has Numeric $.width }.new: :$width
             }
         }
@@ -347,7 +344,6 @@ class HTML::Canvas:ver<0.0.3> {
     method !setup-fill { .('fillStyle', $!fillStyle) for @!callback; }
     method !setup-stroke { .('strokeStyle', $!strokeStyle) for @!callback; }
     method !draw-subpath {
-
         @!subpath-new = [];
         for @!subpath -> \s {
             .(s.key, |s.value) for @!callback;
@@ -464,7 +460,7 @@ class HTML::Canvas:ver<0.0.3> {
             my $name = .key;
             if $name eq 'object' {
                 self!check-variable(.value, :$context, :@js);
-              }
+            }
             else {
                 my @args = flat .value.map: {
                     when Str|Numeric|Bool { to-json($_) }
@@ -496,7 +492,7 @@ class HTML::Canvas:ver<0.0.3> {
         temp $renderer.canvas = $canvas;
         $canvas.context: {
             for @calls {
-                with .key -> \call {
+                given .key -> \call {
                     my \args = .value;
                     if +args && call ~~ LValue {
                         $canvas."{call}"() = args[0];

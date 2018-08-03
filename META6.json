@@ -9,7 +9,7 @@
     "Cairo",
     "Color",
     "HTML::Entity",
-    "CSS::Declarations",
+    "CSS::Properties",
     "JSON::Fast",
     "Base64::Native",
     "Font::FreeType"
