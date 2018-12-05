@@ -5,4 +5,4 @@ perl6:
   - '2017.10'
 install:
   - rakudobrew build zef
-  - zef --depsonly install .
+  - zef --serial --depsonly install .
