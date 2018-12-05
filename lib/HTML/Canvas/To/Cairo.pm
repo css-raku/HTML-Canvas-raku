@@ -41,8 +41,8 @@ class HTML::Canvas::To::Cairo {
     has Font $!font .= new;
     has Cache $.cache .= new;
 
-    submethod TWEAK(Numeric :$width = $!canvas.width, Numeric :$height = $!canvas.height) {
-        $!surface //= Cairo::Image.create(Cairo::FORMAT_ARGB32, $width // 128, $height // 128);
+    submethod TWEAK(Numeric :$width = $!canvas.width // 128 , Numeric :$height = $!canvas.height // 128) {
+        $!surface //= Cairo::Image.create(Cairo::FORMAT_ARGB32, $width, $height);
         $!ctx //= Cairo::Context.new($!surface);
         with $!canvas {
             .callback.push: self.callback
@@ -263,11 +263,15 @@ class HTML::Canvas::To::Cairo {
         $!ctx.stroke
     }
     method lineCap(HTML::Canvas::LineCap $cap-name) {
-        my $lc = %( :butt(Cairo::LineCap::LINE_CAP_BUTT), :round(Cairo::LineCap::LINE_CAP_ROUND),  :square(Cairo::LineCap::LINE_CAP_SQUARE)){$cap-name};
+        my $lc = %( :butt(Cairo::LineCap::LINE_CAP_BUTT),
+                    :round(Cairo::LineCap::LINE_CAP_ROUND),
+                    :square(Cairo::LineCap::LINE_CAP_SQUARE)){$cap-name};
         $!ctx.line_cap = $lc;
     }
     method lineJoin(HTML::Canvas::LineJoin $join-name) {
-        my $lc = %( :miter(Cairo::LineJoin::LINE_JOIN_MITER), :round(Cairo::LineJoin::LINE_JOIN_ROUND),  :bevel(Cairo::LineJoin::LINE_JOIN_BEVEL)){$join-name};
+        my $lc = %( :miter(Cairo::LineJoin::LINE_JOIN_MITER),
+                    :round(Cairo::LineJoin::LINE_JOIN_ROUND),
+                    :bevel(Cairo::LineJoin::LINE_JOIN_BEVEL)){$join-name};
         $!ctx.line_join = $lc;
     }
     method clip() {
@@ -310,7 +314,11 @@ class HTML::Canvas::To::Cairo {
             $image;
         }
     }
-    multi method drawImage( Drawable $obj, Numeric \sx, Numeric \sy, Numeric \sw, Numeric \sh, Numeric \dx, Numeric \dy, Numeric \dw, Numeric \dh) {
+    multi method drawImage( Drawable $obj,
+                            Numeric \sx, Numeric \sy,
+                            Numeric \sw, Numeric \sh,
+                            Numeric \dx, Numeric \dy,
+                            Numeric \dw, Numeric \dh) {
         unless sw =~= 0 || sh =~= 0 {
             $!ctx.save;
             # position at top right of visible area
@@ -357,8 +365,10 @@ class HTML::Canvas::To::Cairo {
         my \cp2x = cp1x + 2/3 * (x - cp1x);
         my \cp2y = cp1y + 2/3 * (y - cp1y);
         $!ctx.curve_to( cp1x, cp1y, cp2x, cp2y, x, y);
-     }
-     method bezierCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \cp2x, Numeric \cp2y, Numeric \x, Numeric \y) {
+    }
+    method bezierCurveTo(Numeric \cp1x, Numeric \cp1y,
+                         Numeric \cp2x, Numeric \cp2y,
+                         Numeric \x,    Numeric \y) {
         $!ctx.curve_to( cp1x, cp1y, cp2x, cp2y, x, y);
     }
     method globalAlpha(Numeric) { }

@@ -1,10 +1,10 @@
-# perl6-HTML-Canvas
+# HTML-Canvas-p6
 
-This a a module for composing HTML-5 canvases.
+This a a module for composing and rendering HTML-5 canvases.
 
 It supports the majority of the [HTML Canvas 2D Context](https://www.w3.org/TR/2dcontext/) API.
 
-A canvas may be constructed via the API, then rendered to Javascript via the `.js` or `.to-html` methods, or save as a PNG via the `HTML::Canvas::To::Cairo.render` method.
+A canvas may be constructed via the API, then rendered to Javascript via the `.js` or `.to-html` methods, or saved as a Cairo-support format such as PNG, SVG or PDF.
 
 # Example
 

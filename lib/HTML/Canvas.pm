@@ -1,12 +1,11 @@
 use v6;
 
-class HTML::Canvas:ver<0.0.3> {
+class HTML::Canvas:ver<0.0.5> {
     use CSS::Properties:ver;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Pattern;
     use HTML::Canvas::Image;
     use HTML::Canvas::ImageData;
-    use HTML::Entity;
     has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Numeric $.width = 612;
     has Numeric $.height = 792;
@@ -41,6 +40,12 @@ class HTML::Canvas:ver<0.0.3> {
     }
 
     has Numeric @.lineDash;
+    method lineDash is rw {
+	Proxy.new(
+	    FETCH => sub ($) { @!lineDash },
+	    STORE => sub ($, \l) { self.setLineDash(l) },
+	    )
+    }
     has Numeric $.lineDashOffset = 0.0;
     method lineDashOffset is rw {
         Proxy.new(
@@ -315,12 +320,6 @@ class HTML::Canvas:ver<0.0.3> {
     method setLineDash(@!lineDash) {
         self!call('setLineDash', @!lineDash.item);
     }
-    method lineDash {
-	Proxy.new(
-	    FETCH => sub ($) { @!lineDash },
-	    STORE => sub ($, \l) { self.setLineDash(l) },
-	    )
-    }
     method !var($object) {
         @!calls.push: (:$object);
         $object;
@@ -352,7 +351,7 @@ class HTML::Canvas:ver<0.0.3> {
 
     method context(&do-markup) {
         self._start;
-        &do-markup(self);
+        do-markup(self);
         self._finish;
     }
 
@@ -370,6 +369,15 @@ class HTML::Canvas:ver<0.0.3> {
             unless $obj.does(HTMLObj);
         $obj;
     }
+
+    sub html-escape(Str $_) {
+        .trans:
+            /\&/ => '&amp;',
+            /\</ => '&lt;',
+            /\>/ => '&gt;',
+            /\"/ => '&quot;',
+    }
+
     #| lightweight html generation; canvas + javascript
     method to-html($obj = self, Numeric :$width = $obj.?width // Numeric, Numeric :$height = $obj.?height // Numeric, Str :$style='', |c) {
         self!register-node($obj);
@@ -380,7 +388,7 @@ class HTML::Canvas:ver<0.0.3> {
             $obj.html(:$style, |c);
         }
         elsif $obj.can('data-uri') {
-            sprintf "<img id='%s' style='%s' src='%s' />\n".sprintf( $obj.html-id, encode-entities($style), $obj.data-uri );
+            sprintf "<img id='%s' style='%s' src='%s' />\n".sprintf( $obj.html-id, html-escape($style), $obj.data-uri );
         }
         else {
             die "unable to convert this object to HTML";
@@ -388,7 +396,7 @@ class HTML::Canvas:ver<0.0.3> {
     }
     method html(Str :$style, Str :$sep = "\n    ", |c) is default {
         if self.does(HTMLObj) {
-            my $style-att  = do with $style { encode-entities($_).fmt(' style="%s"') } else { '' };
+            my $style-att  = do with $style { html-escape($_).fmt(' style="%s"') } else { '' };
             my $width-att  = do with self.html-width  { ' width="%dpt"'.sprintf($_) } else { '' };
             my $height-att = do with self.html-height { ' height="%dpt"'.sprintf($_) } else { '' };
 
@@ -510,7 +518,7 @@ class HTML::Canvas:ver<0.0.3> {
         if !@meth {
             with %API{name} -> &api {
                 @meth.push: method (*@a) {
-                    my \r := &api(self, |@a);
+                    my \r := api(self, |@a);
                     self!call(name, |@a);
                     r;
                 };
