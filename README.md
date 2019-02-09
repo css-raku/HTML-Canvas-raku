@@ -6,6 +6,19 @@ It supports the majority of the [HTML Canvas 2D Context](https://www.w3.org/TR/2
 
 A canvas may be constructed via the API, then rendered to Javascript via the `.js` or `.to-html` methods, or saved as a Cairo-support format such as PNG, SVG or PDF.
 
+# Install
+
+This package depends on PDF::FontLoader, and may also require additional fonts on your system:
+
+- the [freetype](https://www.freetype.org/download.html) native library needs to be on your system prior to installing PDF::FontLoader
+
+- Installation of the [fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) package is also required.
+
+- Some additional fonts, may also be required. For example font-config's `fc-match`, should find fonts matching both 'arial;weight=bold' and 'courier:weight=bold'
+
+    % fc-match 'arial;weight=bold'
+    DejaVuSans.ttf: "DejaVu Sans" "Book"
+
 # Example
 
 ```
