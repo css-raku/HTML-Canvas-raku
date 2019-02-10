@@ -4,7 +4,7 @@ This a a module for composing and rendering HTML-5 canvases.
 
 It supports the majority of the [HTML Canvas 2D Context](https://www.w3.org/TR/2dcontext/) API.
 
-A canvas may be constructed via the API, then rendered to Javascript via the `.js` or `.to-html` methods, or saved as a Cairo-support format such as PNG, SVG or PDF.
+A canvas may be constructed via the API, then rendered to JavaScript via the `.js` or `.to-html` methods, or saved as a Cairo-supported format such as PNG, SVG or PDF.
 
 # Install
 
@@ -128,7 +128,7 @@ my $html = "<html><body>" ~ @html-body.join ~ "</body></html>";
 
 Currently supported image formats are:
 
-Backend                 | PNG | GIF |JPEG | PNG | BMP
+Back-end                | PNG | GIF |JPEG | PNG | BMP
 ---                     | --- | --- | --- | --- | ---
 HTML::Canvas (HTML)     | X   | X   | X   | X   | X
 HTML::Canvas::To::Cairo | X   |     |     |     |
