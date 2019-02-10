@@ -26,8 +26,8 @@
     "HTML::Canvas::To::Cairo" : "lib/HTML/Canvas/To/Cairo.pm",
     "HTML::Canvas::Tracer" : "lib/HTML/Canvas/Tracer.pm"
   },
-  "resources" : [ ],
-  "source-url" : "git://github.com/p6-css/HTML-Canvas-p6.git",
+  "resources" : [ "font/FreeMono.ttf" ],
+  "source-url" : "https://github.com/p6-css/HTML-Canvas-p6.git",
   "tags" : [
     "html",
     "javascript",
@@ -36,5 +36,5 @@
     "pdf"
   ],
   "test-depends" : [ ],
-  "version" : "0.0.5"
+  "version" : "0.0.6"
 }

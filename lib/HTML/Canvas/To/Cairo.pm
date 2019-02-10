@@ -29,9 +29,21 @@ class HTML::Canvas::To::Cairo {
         has FT_Face $.font-obj;
 
         method font-obj(:$cache!) {
-            my Str $file = $.find-font;
-            $cache.font{$file} //= do {
-                my Font::FreeType::Face $face = $!freetype.face($file);
+            my Str $font-path;
+            try {
+                $font-path = $.find-font;
+                CATCH {
+                    default {
+                        warn $_;
+                        $font-path = %?RESOURCES<font/FreeMono.ttf>.absolute;
+                        warn "falling back to mono-spaced font: $font-path";
+                        
+                    }
+                }
+            }
+            
+            $cache.font{$font-path} //= do {
+                my Font::FreeType::Face $face = $!freetype.face($font-path);
                 my FT_Face $ft-face = $face.struct;
                 $ft-face.FT_Reference_Face;
                 Cairo::Font.create($ft-face, :free-type);

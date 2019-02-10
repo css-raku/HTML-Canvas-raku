@@ -1,6 +1,6 @@
 use v6;
 
-class HTML::Canvas:ver<0.0.5> {
+class HTML::Canvas:ver<0.0.6> {
     use CSS::Properties:ver;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Pattern;

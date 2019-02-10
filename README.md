@@ -12,12 +12,19 @@ This package depends on PDF::FontLoader, and may also require additional fonts o
 
 - the [freetype](https://www.freetype.org/download.html) native library needs to be on your system prior to installing PDF::FontLoader
 
-- Installation of the [fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) package is also required.
+- Installation of the [fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) package is also currently required.
 
-- Some additional fonts, may also be required. For example font-config's `fc-match`, should find fonts matching both 'arial;weight=bold' and 'courier:weight=bold'
+# Font Resolution
+
+Fonts are currently found using fontconfig's fc-match utility. For example:
 
     % fc-match 'arial;weight=bold'
     DejaVuSans.ttf: "DejaVu Sans" "Book"
+
+If fc-match is unable to find a font. HTML::Canvas currently falls back to using a mono-spaced font (FreeMono).
+
+The font may need to be installed on your system and/or fontconfig may
+need additional configuration to ensure it finds the correct font.
 
 # Example
 
