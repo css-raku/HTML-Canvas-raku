@@ -4,17 +4,24 @@ This a a module for composing and rendering HTML-5 canvases.
 
 It supports the majority of the [HTML Canvas 2D Context](https://www.w3.org/TR/2dcontext/) API.
 
-A canvas may be constructed via the API, then rendered to JavaScript via the `.js` or `.to-html` methods, or saved as a Cairo-supported format such as PNG, SVG or PDF.
+A canvas may be constructed via the API, then rendered to JavaScript via the `.js` or `.to-html` methods, or saved to a Cairo-supported format such as PNG, SVG or PDF.
+
+The module includes classes:
+
+- `HTML::Canvas`, a Perl 6 implementation of the basic HTML Canvas 2D API.
+- `HTML::Canvas::Image` - for image loading in a variety of formats
+- `HTML::Canvas::To::Cairo` - a built-in renderer, which can output to several formats,
+ including PNG, SVG and PDF.
 
 # Install
 
-This package depends on PDF::FontLoader, and may also require additional fonts on your system:
+This package depends on Font::FreeType, and may also require additional fonts on your system:
 
 - the [freetype](https://www.freetype.org/download.html) native library needs to be on your system prior to installing PDF::FontLoader
 
 - Installation of the [fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) package is also currently required.
 
-# Font Resolution
+## Install - Fonts
 
 Fonts are currently found using fontconfig's fc-match utility. For example:
 
@@ -70,16 +77,16 @@ use Cairo;
 use HTML::Canvas;
 use HTML::Canvas::To::Cairo;
 # create a 128 X 128 point PDF
-my $surface = Cairo::Surface::PDF.create("examples/read-me-example.pdf", 128, 128);
+my Cairo::Surface::PDF $surface .= create("examples/read-me-example.pdf", 128, 128);
 
 # create a PDF with two pages
 # use a common cache for objects shared between pages such as
 # fonts and images. This reduces both processing times and PDF file sizes.
-my $cache = HTML::Canvas::To::Cairo::Cache.new;
+my  HTML::Canvas::To::Cairo::Cache $cache .= new;
 
 for 1..2 -> $page {
     my HTML::Canvas $canvas .= new;
-    my $feed = HTML::Canvas::To::Cairo.new: :$surface, :$canvas, :$cache;
+    my HTML::Canvas::To::Cairo $feed .= new: :$surface, :$canvas, :$cache;
     $canvas.context({
 
         .font = "10pt times-roman bold";
@@ -113,7 +120,7 @@ use HTML::Canvas::Image;
 my HTML::Canvas $canvas .= new;
 my @html-body;
 # add the image, as a hidden DOM item
-my \image = HTML::Canvas::Image.open("t/images/camelia-logo.png");
+my HTML::Canvas::Image \image .= open("t/images/camelia-logo.png");
 @html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
 # draw it
 $canvas.context( -> \ctx {
@@ -126,20 +133,21 @@ my $html = "<html><body>" ~ @html-body.join ~ "</body></html>";
 
 ```
 
+`HTML::Canvas::Image` can load a variety of image formats. The built-in
+`HTML::Canvas::To::Cairo` renderer only supports PNG images, as below:
+
 Currently supported image formats are:
 
-Back-end                | PNG | GIF |JPEG | PNG | BMP
----                     | --- | --- | --- | --- | ---
-HTML::Canvas (HTML)     | X   | X   | X   | X   | X
-HTML::Canvas::To::Cairo | X   |     |     |     |
-HTML::Canvas::To::PDF   | X   | X   | X   | X   |
-
-
+Back-end                  | PNG | GIF |JPEG | BMP
+---                       | --- | --- | --- | ---
+`HTML::Canvas (HTML)`     | X   | X   | X   | X
+`HTML::Canvas::To::Cairo` | X   |     |     |
+`HTML::Canvas::To::PDF`   | X   | X   | X   |
 
 
 ## Methods
 
-These methods implement the the majority of the W3C [HTML Canvas 2D Context](https://www.w3.org/TR/2dcontext/) API.
+The methods below implement the majority of the W3C [HTML Canvas 2D Context](https://www.w3.org/TR/2dcontext/) API.
 
 ## Setters/Getters
 
@@ -264,24 +272,28 @@ These methods implement the the majority of the W3C [HTML Canvas 2D Context](htt
 
 #### `createPattern($image, HTML::Canvas::Pattern::Repetition $repetition = 'repeat')`
 
+Example:
+
 ```
 use HTML::Canvas;
 use HTML::Canvas::Image;
 
-my HTML::Canvas \ctx = HTML::Canvas.new;
+my HTML::Canvas \ctx .= new;
 my @html-body;
 
 ## Images ##
 
-my \image = HTML::Canvas::Image.open("t/images/crosshair-100x100.jpg");
-@html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
+my HTML::Canvas::Image \image .= open("t/images/crosshair-100x100.jpg");
 
+# save to HTML
+@html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
+# draw on the canvas
 ctx.drawImage(image,  20, 10,  50, 50);
 
 ## Patterns ##
 
 my \pat = ctx.createPattern(image,'repeat');
-ctx.fillStyle=pat;
+ctx.fillStyle = pat;
 ctx.translate(10,50);
 ctx.fillRect(10,10,150,100);
 
@@ -308,7 +320,5 @@ Currently support for `getImageData` and `putImageData` (3 argument format) only
 #### `putImageData(image-data, Numeric dx, Numeric dy)`
 
 ## Additional Rendering Backends
-
-### Coming soon:
 
 - [HTML::Canvas::To::PDF](https://github.com/p6-pdf/HTML-Canvas-To-PDF-p6) - render to PDF, using the Perl 6 [PDF](https://github.com/p6-pdf) tool-chain.

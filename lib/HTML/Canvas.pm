@@ -1,15 +1,13 @@
 use v6;
 
-class HTML::Canvas:ver<0.0.6> {
-    use CSS::Properties:ver;
+class HTML::Canvas:ver<0.0.7> {
+    use CSS::Properties;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Pattern;
     use HTML::Canvas::Image;
     use HTML::Canvas::ImageData;
-    has Numeric @.transformMatrix is rw = [ 1, 0, 0, 1, 0, 0, ];
     has Numeric $.width = 612;
     has Numeric $.height = 792;
-    has Pair @.subpath;
     has Str @!subpath-new;
     has Pair @.calls;
     has Routine @.callback;
@@ -19,7 +17,18 @@ class HTML::Canvas:ver<0.0.6> {
     my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath';
     my subset CanvasOrImage where HTML::Canvas|HTML::Canvas::Image;
 
-    has Numeric $.lineWidth = 1.0;
+    # -- Graphics Variables --
+    my Attribute %GraphicVars;
+    multi trait_mod:<is>(Attribute $att, :$graphics!) {
+        my $name = $att.name.substr(2);
+        %GraphicVars{$name} = $att;
+    }
+
+    has Numeric @.transformMatrix is rw is graphics = [ 1, 0, 0, 1, 0, 0, ];
+
+    has Pair @.subpath is graphics;
+
+    has Numeric $.lineWidth is graphics = 1.0;
     method lineWidth is rw {
         Proxy.new(
             FETCH => sub ($) { $!lineWidth },
@@ -29,7 +38,7 @@ class HTML::Canvas:ver<0.0.6> {
         );
     }
 
-    has Numeric $.globalAlpha = 1.0;
+    has Numeric $.globalAlpha is graphics = 1.0;
     method globalAlpha is rw {
         Proxy.new(
             FETCH => sub ($) { $!globalAlpha },
@@ -39,14 +48,14 @@ class HTML::Canvas:ver<0.0.6> {
         );
     }
 
-    has Numeric @.lineDash;
+    has Numeric @.lineDash is graphics;
     method lineDash is rw {
 	Proxy.new(
 	    FETCH => sub ($) { @!lineDash },
 	    STORE => sub ($, \l) { self.setLineDash(l) },
 	    )
     }
-    has Numeric $.lineDashOffset = 0.0;
+    has Numeric $.lineDashOffset is graphics = 0.0;
     method lineDashOffset is rw {
         Proxy.new(
             FETCH => sub ($) { $!lineDashOffset },
@@ -56,7 +65,7 @@ class HTML::Canvas:ver<0.0.6> {
         );
     }
     subset LineCap of Str where 'butt'|'round'|'square';
-    has LineCap $.lineCap = 'butt';
+    has LineCap $.lineCap is graphics = 'butt';
     method lineCap is rw {
         Proxy.new(
             FETCH => sub ($) { $!lineCap },
@@ -66,7 +75,7 @@ class HTML::Canvas:ver<0.0.6> {
         );
     }
     subset LineJoin of Str where 'bevel'|'round'|'miter';
-    has LineJoin $.lineJoin = 'bevel';
+    has LineJoin $.lineJoin is graphics = 'bevel';
     method lineJoin is rw {
         Proxy.new(
             FETCH => sub ($) { $!lineJoin },
@@ -75,7 +84,7 @@ class HTML::Canvas:ver<0.0.6> {
             }
         );
     }
-    has Str $.font = '10pt times-roman';
+    has Str $.font is graphics = '10pt times-roman';
     method font is rw {
         Proxy.new(
             FETCH => sub ($) { $!font },
@@ -92,7 +101,7 @@ class HTML::Canvas:ver<0.0.6> {
     }
 
     subset Baseline of Str where 'alphabetic'|'top'|'hanging'|'middle'|'ideographic'|'bottom';
-    has Baseline $.textBaseline = 'alphabetic';
+    has Baseline $.textBaseline is graphics = 'alphabetic';
     method textBaseline is rw {
         Proxy.new(
             FETCH => sub ($) { $!textBaseline },
@@ -103,7 +112,7 @@ class HTML::Canvas:ver<0.0.6> {
     }
 
     subset TextAlignment of Str where 'start'|'end'|'left'|'right'|'center';
-    has TextAlignment $.textAlign = 'start';
+    has TextAlignment $.textAlign is graphics = 'start';
     method textAlign is rw {
         Proxy.new(
             FETCH => sub ($) { $!textAlign },
@@ -114,7 +123,7 @@ class HTML::Canvas:ver<0.0.6> {
     }
 
     subset TextDirection of Str where 'ltr'|'rtl';
-    has TextDirection $.direction = 'ltr';
+    has TextDirection $.direction is graphics = 'ltr';
     method direction is rw {
         Proxy.new(
             FETCH => sub ($) { $!direction },
@@ -125,7 +134,7 @@ class HTML::Canvas:ver<0.0.6> {
     }
 
     subset ColorSpec where Str|HTML::Canvas::Gradient|HTML::Canvas::Pattern;
-    has ColorSpec $.fillStyle is rw = 'black';
+    has ColorSpec $.fillStyle is graphics = 'black';
     method fillStyle is rw {
         Proxy.new(
             FETCH => sub ($) { $!fillStyle },
@@ -136,7 +145,7 @@ class HTML::Canvas:ver<0.0.6> {
             }
         );
     }
-    has ColorSpec $.strokeStyle is rw = 'black';
+    has ColorSpec $.strokeStyle is graphics = 'black';
     method strokeStyle is rw {
         Proxy.new(
             FETCH => sub ($) { $!strokeStyle },
@@ -148,7 +157,7 @@ class HTML::Canvas:ver<0.0.6> {
         );
     }
 
-    has CSS::Properties $.css = CSS::Properties.new( :background-color($!fillStyle), :color($!strokeStyle), :$!font,  );
+    has CSS::Properties $.css is graphics = CSS::Properties.new( :background-color($!fillStyle), :color($!strokeStyle), :$!font,  );
     has @.gsave;
 
     our %API = BEGIN %(
@@ -162,42 +171,27 @@ class HTML::Canvas:ver<0.0.6> {
                             if @!gsave;
                     } ),
         :save(method {
-                     my @ctm = @!transformMatrix;
-		     my @path = @!subpath;
-                     @!gsave.push: {
-                         :@ctm,
-			 :@path,
-                         :$!strokeStyle,
-                         :$!fillStyle,
-			 :$!globalAlpha,
-			 :$!lineWidth,
-			 :$!lineCap,
-			 :$!lineJoin,
-			 :$!font,
-                         :$!textAlign,
-                         :$!direction,
-			 :$!textBaseline,
-                         :$!css,
-                     };
+                     my %gstate = %GraphicVars.pairs.map: {
+                         my Str $key       = .key;
+                         my Attribute $att = .value;
+                         my $val           = $att.get_value(self);
+                         $val .= clone if $val ~~ Array;
+                         $key => $val;
+                     }
+
+                     @!gsave.push: %gstate;
                      $!css = $!css.new: :copy($!css);
                  } ),
         :restore(method {
                         if @!gsave {
-                            my %state = @!gsave.pop;
+                            my %gstate = @!gsave.pop;
 
-                            @!transformMatrix = %state<ctm>.list;
-                            @!subpath = %state<path>.list;
-                            $!strokeStyle = %state<strokeStyle>;
-                            $!fillStyle = %state<fillStyle>;
-                            $!globalAlpha = %state<globalAlpha>;
-                            $!lineWidth = %state<lineWidth>;
-                            $!lineCap = %state<lineCap>;
-                            $!lineJoin = %state<lineJoin>;
-			    $!font = %state<font>;
-                            $!textAlign = %state<textAlign>;
-                            $!direction = %state<direction>;
-                            $!textBaseline = %state<textBaseline>;
-                            $!css = %state<css>;
+                            for %gstate.pairs {
+                                my Str $key       = .key;
+                                my Attribute $att = %GraphicVars{$key};
+                                my $val           = .value;
+                                $att.set_value(self, $val ~~ Array ?? @$val !! $val);
+                            }
                         }
                         else {
                             warn "restore without preceding save";

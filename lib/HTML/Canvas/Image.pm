@@ -1,7 +1,8 @@
 class HTML::Canvas::Image {
 
     use Base64::Native;
-    has Str $.data-uri;
+    my subset DataURI of Str where /^('data:' [<t=.ident> '/' <s=.ident>]? $<b64>=";base64"? $<start>=",") /;
+    has DataURI $.data-uri;
     my subset Str-or-IO-Handle where Str|IO::Handle;
     has Str-or-IO-Handle $.source;
     has Str $.image-type;
@@ -13,11 +14,11 @@ class HTML::Canvas::Image {
         when m:i/^ svg $/      { 'SVG' }
         when m:i/^ bmp $/      { 'BMP' }
         default {
-            die "unknown image type: $path";
+            fail "unknown image type: $path";
         }
     }
 
-    multi method open(Str $data-uri where /^('data:' [<t=.ident> '/' <s=.ident>]? $<b64>=";base64"? $<start>=",") /) {
+    multi method open(DataURI $data-uri) {
         my $path = ~ $0;
         my Str \mime-type = ( $0<t> // '(missing)').lc;
         my Str \mime-subtype = ( $0<s> // '').lc;
@@ -30,11 +31,7 @@ class HTML::Canvas::Image {
         self.new(:$image-type, :$data-uri);
     }
 
-    multi method open(Str $path! ) {
-        self.open( $path.IO );
-    }
-
-    multi method open(IO::Path $io-path) {
+    multi method open(IO() $io-path) {
         self.open( $io-path.open( :r, :bin) );
     }
 

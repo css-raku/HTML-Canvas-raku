@@ -1,3 +1,5 @@
+Release 0.0.7
+- Fix save and restore methods to include lineDash and lineDashOffset
 Release 0.0.6
 - Provide a fallback font resources/font/FreeMono.ttf for
   missing fonts. Assists with smoke testing and basic installation.
