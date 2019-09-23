@@ -44,7 +44,7 @@ class HTML::Canvas::To::Cairo {
             
             $cache.font{$font-path} //= do {
                 my Font::FreeType::Face $face = $!freetype.face($font-path);
-                my FT_Face $ft-face = $face.struct;
+                my FT_Face $ft-face = $face.native;
                 $ft-face.FT_Reference_Face;
                 Cairo::Font.create($ft-face, :free-type);
             };

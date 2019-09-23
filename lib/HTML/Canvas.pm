@@ -1,6 +1,6 @@
 use v6;
 
-class HTML::Canvas:ver<0.0.7> {
+class HTML::Canvas:ver<0.0.8> {
     use CSS::Properties;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Pattern;
@@ -517,16 +517,34 @@ class HTML::Canvas:ver<0.0.7> {
                     r;
                 };
             }
-            self.^add_method(name, @meth[0]) if @meth;
+            self.^add_method(name, $_) with @meth[0];
         }
         @meth;
     }
     method dispatch:<.?>(\name, |c) is raw {
         self.can(name) ?? self."{name}"(|c) !! Nil
     }
-    method FALLBACK(Str \name, |c) {
-        self.can(name)
-            ?? self."{name}"(|c)
-            !! die die X::Method::NotFound.new( :method(name), :typename(self.^name) );
+    # approximate JS associative access to attributes / methods
+    # ctx["fill"]()
+    # ctx["strokeStyle"] = "rgb(100, 200, 100);
+    # console.log(ctx["strokeStyle"])
+    multi method AT-KEY(LValue:D $_) { self."$_"() }
+        
+    multi method AT-KEY(Str:D() $_) is default {
+        die X::Method::NotFound.new( :method($_), :typename(self.^name) )
+            unless self.can($_);
+
+        -> |c { self."$_"(|c) }
+    }
+    method AT-STORE(Str:D() $method, $value) {
+        self.can($method)
+            ?? (self."$method"() = $value)
+            !! die X::Method::NotFound.new( :$method, :typename(self.^name) );
+    }
+
+    method FALLBACK(Str:D $method, |c) {
+        self.can($method)
+            ?? self."$method"(|c)
+            !! die die X::Method::NotFound.new( :$method, :typename(self.^name) );
     }
 }
