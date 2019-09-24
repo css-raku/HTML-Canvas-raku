@@ -528,15 +528,16 @@ class HTML::Canvas:ver<0.0.8> {
     # ctx["fill"]()
     # ctx["strokeStyle"] = "rgb(100, 200, 100);
     # console.log(ctx["strokeStyle"])
-    multi method AT-KEY(LValue:D $_) { self."$_"() }
+    multi method AT-KEY(LValue:D $_) is rw { self."$_"() }
         
-    multi method AT-KEY(Str:D() $_) is default {
+    multi method AT-KEY(Str:D $_) {
         die X::Method::NotFound.new( :method($_), :typename(self.^name) )
             unless self.can($_);
 
         -> |c { self."$_"(|c) }
     }
-    method AT-STORE(Str:D() $method, $value) {
+    method AT-STORE(Str:D() $method, $value) is rw {
+        warn "store $method";
         self.can($method)
             ?? (self."$method"() = $value)
             !! die X::Method::NotFound.new( :$method, :typename(self.^name) );

@@ -12,7 +12,7 @@ dies-ok { $canvas.rect(100,100, 50); }, "incorrect API call - dies";
 dies-ok { $canvas.foo(42) }, "unknown call - dies";
 $canvas.fill;
 $canvas<scale>(2.0, 3.0);
-$canvas.font = "30px Arial";
+$canvas<font> = "30px Arial";
 $canvas.fillText("Hello World",10,50);
 
 is-deeply [$canvas.transformMatrix], [2.0, 0.0, 0.0, 3.0, 0, 0], '.TransformMatrix';
