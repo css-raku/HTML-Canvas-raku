@@ -1,7 +1,7 @@
 Release 0.0.8
 - Add AT-KEY and AT-STORE methods to approximate Javascript
   associative access, to methods and attributes, e.g.:
-      $canvas<scale>(2.0, 3.0); $canvas<font> = "30px Arial";
+      $canvas<scale> = (2.0, 3.0); $canvas<font> = "30px Arial";
 Release 0.0.7
 - Fix save and restore methods to include lineDash and lineDashOffset
 Release 0.0.6
