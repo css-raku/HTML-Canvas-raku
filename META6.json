@@ -1,11 +1,12 @@
 {
-  "api" : "2dcontext-20151119",
-  "auth" : "github:p6-css",
-  "authors" : [
+  "api": "2dcontext-20151119",
+  "auth": "github:p6-css",
+  "authors": [
     "David Warring"
   ],
-  "build-depends" : [ ],
-  "depends" : [
+  "build-depends": [
+  ],
+  "depends": [
     "Cairo",
     "Color",
     "CSS::Properties",
@@ -13,28 +14,31 @@
     "Base64::Native",
     "Font::FreeType"
   ],
-  "description" : "Construction and rendering of HTML-5 Canvases",
-  "license" : "Artistic-2.0",
-  "name" : "HTML::Canvas",
-  "perl" : "6.c",
-  "provides" : {
-    "HTML::Canvas" : "lib/HTML/Canvas.pm",
-    "HTML::Canvas::Gradient" : "lib/HTML/Canvas/Gradient.pm",
-    "HTML::Canvas::Image" : "lib/HTML/Canvas/Image.pm",
-    "HTML::Canvas::ImageData" : "lib/HTML/Canvas/ImageData.pm",
-    "HTML::Canvas::Pattern" : "lib/HTML/Canvas/Pattern.pm",
-    "HTML::Canvas::To::Cairo" : "lib/HTML/Canvas/To/Cairo.pm",
-    "HTML::Canvas::Tracer" : "lib/HTML/Canvas/Tracer.pm"
+  "description": "Construction and rendering of HTML-5 Canvases",
+  "license": "Artistic-2.0",
+  "name": "HTML::Canvas",
+  "perl": "6.c",
+  "provides": {
+    "HTML::Canvas": "lib/HTML/Canvas.rakumod",
+    "HTML::Canvas::Gradient": "lib/HTML/Canvas/Gradient.rakumod",
+    "HTML::Canvas::Image": "lib/HTML/Canvas/Image.rakumod",
+    "HTML::Canvas::ImageData": "lib/HTML/Canvas/ImageData.rakumod",
+    "HTML::Canvas::Pattern": "lib/HTML/Canvas/Pattern.rakumod",
+    "HTML::Canvas::To::Cairo": "lib/HTML/Canvas/To/Cairo.rakumod",
+    "HTML::Canvas::Tracer": "lib/HTML/Canvas/Tracer.rakumod"
   },
-  "resources" : [ "font/FreeMono.ttf" ],
-  "source-url" : "https://github.com/p6-css/HTML-Canvas-p6.git",
-  "tags" : [
+  "resources": [
+    "font/FreeMono.ttf"
+  ],
+  "source-url": "https://github.com/p6-css/HTML-Canvas-p6.git",
+  "tags": [
     "html",
     "javascript",
     "png",
     "svg",
     "pdf"
   ],
-  "test-depends" : [ ],
-  "version" : "0.0.8"
+  "test-depends": [
+  ],
+  "version": "0.0.0"
 }
