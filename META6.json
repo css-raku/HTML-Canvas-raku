@@ -1,6 +1,6 @@
 {
   "api": "2dcontext-20151119",
-  "auth": "github:p6-css",
+  "auth": "github:css-raku",
   "authors": [
     "David Warring"
   ],
@@ -30,7 +30,7 @@
   "resources": [
     "font/FreeMono.ttf"
   ],
-  "source-url": "https://github.com/p6-css/HTML-Canvas-p6.git",
+  "source-url": "https://github.com/css-raku/HTML-Canvas-raku.git",
   "tags": [
     "html",
     "javascript",
@@ -40,5 +40,5 @@
   ],
   "test-depends": [
   ],
-  "version": "0.0.0"
+  "version": "0.0.9"
 }

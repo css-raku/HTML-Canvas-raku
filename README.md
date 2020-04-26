@@ -1,6 +1,6 @@
-# HTML-Canvas-p6
+# HTML-Canvas-raku
 
-This a a module for composing and rendering HTML-5 canvases.
+This is a Raku module for composing and rendering HTML-5 canvases.
 
 It supports the majority of the [HTML Canvas 2D Context](https://www.w3.org/TR/2dcontext/) API.
 
@@ -321,4 +321,4 @@ Currently support for `getImageData` and `putImageData` (3 argument format) only
 
 ## Additional Rendering Backends
 
-- [HTML::Canvas::To::PDF](https://github.com/p6-pdf/HTML-Canvas-To-PDF-p6) - render to PDF, using the Perl 6 [PDF](https://github.com/p6-pdf) tool-chain.
+- [HTML::Canvas::To::PDF](https://github.com/pdf-raku/HTML-Canvas-To-PDF-raku) - render to PDF, using the Perl 6 [PDF](https://github.com/pdf-raku) tool-chain.
