@@ -8,7 +8,7 @@ A canvas may be constructed via the API, then rendered to JavaScript via the `.j
 
 The module includes classes:
 
-- `HTML::Canvas`, a Perl 6 implementation of the basic HTML Canvas 2D API.
+- `HTML::Canvas`, a Raku implementation of the basic HTML Canvas 2D API.
 - `HTML::Canvas::Image` - for image loading in a variety of formats
 - `HTML::Canvas::To::Cairo` - a built-in renderer, which can output to several formats,
  including PNG, SVG and PDF.
@@ -123,9 +123,9 @@ my @html-body;
 my HTML::Canvas::Image \image .= open("t/images/camelia-logo.png");
 @html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
 # draw it
-$canvas.context( -> \ctx {
+$canvas.context: -> \ctx {
     ctx.drawImage(image, 10, 10  );  
-});
+};
 
 @html-body.push: $canvas.to-html;
 
@@ -321,4 +321,4 @@ Currently support for `getImageData` and `putImageData` (3 argument format) only
 
 ## Additional Rendering Backends
 
-- [HTML::Canvas::To::PDF](https://github.com/pdf-raku/HTML-Canvas-To-PDF-raku) - render to PDF, using the Perl 6 [PDF](https://github.com/pdf-raku) tool-chain.
+- [HTML::Canvas::To::PDF](https://pdf-raku.github.io/HTML-Canvas-To-PDF-raku) - render to PDF, using the Perl 6 [PDF](https://pdf-raku.github.io) tool-chain.

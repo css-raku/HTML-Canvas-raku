@@ -23,7 +23,7 @@ class HTML::Canvas::To::Cairo {
         is CSS::Properties::Font {
 
         use Font::FreeType;
-        use Font::FreeType::Native;
+        use Font::FreeType::Raw;
 
         has Font::FreeType $!freetype .= new;
         has FT_Face $.font-obj;
@@ -44,7 +44,7 @@ class HTML::Canvas::To::Cairo {
             
             $cache.font{$font-path} //= do {
                 my Font::FreeType::Face $face = $!freetype.face($font-path);
-                my FT_Face $ft-face = $face.native;
+                my FT_Face $ft-face = $face.raw;
                 $ft-face.FT_Reference_Face;
                 Cairo::Font.create($ft-face, :free-type);
             };
@@ -158,7 +158,7 @@ class HTML::Canvas::To::Cairo {
             $!ctx.pattern: self!make-gradient($_);
 	}
 	default {
-	    with $color {
+	    with $color -> Color $_ {
 		my Numeric @rgba[4] = .rgba.map: ( */255 );
                 @rgba[3] *= $!canvas.globalAlpha;
 		$!ctx.rgba(|@rgba);
@@ -174,11 +174,11 @@ class HTML::Canvas::To::Cairo {
     method scale(Numeric \x, Numeric \y) { $!ctx.scale(x, y); }
     method rotate(Numeric \r) { $!ctx.rotate(r) }
     method translate(Numeric \x, Numeric \y) { $!ctx.translate(x, y) }
-    method transform(Num(Cool) $xx, Num(Cool) $yx, Num(Cool) $xy, Num(Cool) $yy, Num(Cool) $x0, Num(Cool) $y0) {
+    method transform(Num() $xx, Num() $yx, Num() $xy, Num() $yy, Num() $x0, Num() $y0) {
         my Cairo::Matrix $matrix .= new.init: :$xx, :$yx, :$xy, :$yy, :$x0, :$y0;
         $!ctx.transform( $matrix );
     }
-    method setTransform(Num(Cool) $xx, Num(Cool) $yx, Num(Cool) $xy, Num(Cool) $yy, Num(Cool) $x0, Num(Cool) $y0) {
+    method setTransform(Num() $xx, Num() $yx, Num() $xy, Num() $yy, Num() $x0, Num() $y0) {
         my Cairo::Matrix $matrix .= new.init: :$xx, :$yx, :$xy, :$yy, :$x0, :$y0;
         $!ctx.matrix = $matrix;
     }
