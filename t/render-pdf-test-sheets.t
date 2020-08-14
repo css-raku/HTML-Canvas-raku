@@ -177,8 +177,8 @@ test-sheet( -> \ctx {
       my $text = "< Measured Text >";
       ctx.fillText($text, 20, $y + textHeight);
       my $text-width = ctx.measureText($text).width;
-      ok(110 < $text-width < 130, 'MeasureText')
-          or diag "text measurement $text-width outside of range: 110...130";
+      ok(110 < $text-width < 150, 'MeasureText')
+          or diag "text measurement $text-width outside of range: 110...150";
 
       # Create a red line before and after text
       ctx.strokeStyle="red";
