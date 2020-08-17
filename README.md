@@ -15,10 +15,10 @@ The module includes classes:
 
 # Install
 
-This package depends on Font::FreeType, and may also require additional fonts on your system:
+This package depends on Cario, Font::FreeType, and may also require additional fonts on your system:
 
-- the [freetype](https://www.freetype.org/download.html) native library needs to be on your system prior to installing PDF::FontLoader
-
+- the [freetype](https://www.freetype.org/download.html) native library needs to be on your system to enable Font::FreeType installation
+- the native `Cairo` library is also needed. See instructions at https://cairographics.org/download/.
 - Installation of the [fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) package is also currently required.
 
 ## Install - Fonts

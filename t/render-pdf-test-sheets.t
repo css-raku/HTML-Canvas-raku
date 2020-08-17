@@ -38,7 +38,7 @@ sub test-sheet(&markup) {
                 warn "stopped on image $sheet-no: {.message}";
                 $clean = False;
                 # flush
-                $canvas.beginPath if $canvas.subpath;
+                $canvas.path.flush;
                 $canvas.restore while $canvas.gsave;
                 $canvas._finish;
             }

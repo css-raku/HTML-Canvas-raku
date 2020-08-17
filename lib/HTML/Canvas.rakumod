@@ -3,19 +3,15 @@ use v6;
 class HTML::Canvas:ver<0.0.10> {
     use CSS::Properties;
     use HTML::Canvas::Gradient;
-    use HTML::Canvas::Pattern;
     use HTML::Canvas::Image;
     use HTML::Canvas::ImageData;
+    use HTML::Canvas::Path2D;
+    use HTML::Canvas::Pattern;
     has Numeric $.width = 612;
     has Numeric $.height = 792;
-    has Str @!subpath-new;
     has Pair @.calls;
     has Routine @.callback;
     has $!cairo = (require ::('HTML::Canvas::To::Cairo')).new: :canvas(self), :$!width, :$!height;
-    method image { $!cairo.surface }
-    subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction'|'globalAlpha';
-    my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath';
-    my subset CanvasOrImage where HTML::Canvas|HTML::Canvas::Image;
 
     # -- Graphics Variables --
     my Attribute %GraphicVars;
@@ -24,9 +20,16 @@ class HTML::Canvas:ver<0.0.10> {
         %GraphicVars{$name} = $att;
     }
 
+    has HTML::Canvas::Path2D $.path is graphics .= new;
+    method subpath is DEPRECATED<path> { $.path.calls }
+
+    method image { $!cairo.surface }
+    subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction'|'globalAlpha';
+    my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath';
+    my subset CanvasOrImage where HTML::Canvas|HTML::Canvas::Image;
+
     has Numeric @.transformMatrix is rw is graphics = [ 1, 0, 0, 1, 0, 0, ];
 
-    has Pair @.subpath is graphics;
 
     has Numeric $.lineWidth is graphics = 1.0;
     method lineWidth is rw {
@@ -163,9 +166,9 @@ class HTML::Canvas:ver<0.0.10> {
     our %API = BEGIN %(
         :_start(method {} ),
         :_finish(method {
-                        warn "{@!subpath-new.join: ', '} not followed by fill() or stroke() at end of canvas context"
-                            if @!subpath-new;
-                        @!subpath = [];
+                        warn "{$!path.calls.map(*.key).join: ', '} not closed by fill() or stroke() at end of canvas context"
+                            if $!path && !$!path.closed;
+                        $!path.flush;
 
                         die "'save' unmatched by 'restore' at end of canvas context"
                             if @!gsave;
@@ -246,7 +249,7 @@ class HTML::Canvas:ver<0.0.10> {
         :strokeRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) {
                            self!setup-stroke();
          }),
-        :beginPath(method () { @!subpath = @!subpath-new = []; }),
+        :beginPath(method () { $!path.flush }),
         :fill(method () {
                      self!setup-fill();
                      self!draw-subpath()
@@ -324,10 +327,9 @@ class HTML::Canvas:ver<0.0.10> {
 
         if $name ~~ PathOps {
             #| draw later (via $.fill or $.stroke)
-            @!subpath-new.push: $name;
-            @!subpath.push: ($name => @args);
+            $!path.calls.push: ($name => @args);
         }
-        elsif $name eq 'fill'|'stroke' && ! @!subpath {
+        elsif $name eq 'fill'|'stroke' && ! $!path {
             warn "no current path to $name";
         }
         else {
@@ -337,10 +339,10 @@ class HTML::Canvas:ver<0.0.10> {
     method !setup-fill { .('fillStyle', $!fillStyle) for @!callback; }
     method !setup-stroke { .('strokeStyle', $!strokeStyle) for @!callback; }
     method !draw-subpath {
-        @!subpath-new = [];
-        for @!subpath -> \s {
+        for $!path.calls -> \s {
             .(s.key, |s.value) for @!callback;
         }
+        $!path.close();
     }
 
     method context(&do-markup) {
