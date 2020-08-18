@@ -23,6 +23,13 @@ class HTML::Canvas:ver<0.0.10>
         %GraphicVars{$name} = $att;
     }
 
+    role API-Trait {
+        has Bool $.wrapped is rw;
+    }
+
+    multi trait_mod:<is>(Method $m, :$api!) {
+        $m does API-Trait;
+    }
     has HTML::Canvas::Path2D $.path is graphics .= new;
     method subpath is DEPRECATED<path> { $.path.calls }
 
@@ -166,126 +173,137 @@ class HTML::Canvas:ver<0.0.10>
     has CSS::Properties $.css is graphics = CSS::Properties.new( :background-color($!fillStyle), :color($!strokeStyle), :$!font,  );
     has @.gsave;
 
-    our %API = BEGIN %(
-        :_start(method {} ),
-        :_finish(method {
-                        warn "{$!path.calls.map(*.key).join: ', '} not closed by fill() or stroke() at end of canvas context"
-                            if $!path && !$!path.closed;
-                        $!path.flush;
+    method _start() is api {}
+    method _finish is api {
+        warn "{$!path.calls.map(*.key).join: ', '} not closed by fill() or stroke() at end of canvas context"
+            if $!path && !$!path.closed;
+        $!path.flush;
 
-                        die "'save' unmatched by 'restore' at end of canvas context"
-                            if @!gsave;
-                    } ),
-        :save(method {
-                     my %gstate = %GraphicVars.pairs.map: {
-                         my Str $key       = .key;
-                         my Attribute $att = .value;
-                         my $val           = $att.get_value(self);
-                         $val .= clone if $val ~~ Array;
-                         $key => $val;
-                     }
+        die "'save' unmatched by 'restore' at end of canvas context"
+        if @!gsave;
+    }
+    method save is api {
+          my %gstate = %GraphicVars.pairs.map: {
+              my Str $key       = .key;
+              my Attribute $att = .value;
+              my $val           = $att.get_value(self);
+              $val .= clone if $val ~~ Array;
+              $key => $val;
+          }
 
-                     @!gsave.push: %gstate;
-                     $!css = $!css.new: :copy($!css);
-                 } ),
-        :restore(method {
-                        if @!gsave {
-                            my %gstate = @!gsave.pop;
+          @!gsave.push: %gstate;
+          $!css = $!css.new: :copy($!css);
+    }
+    method restore is api {
+        if @!gsave {
+              my %gstate = @!gsave.pop;
 
-                            for %gstate.pairs {
-                                my Str $key       = .key;
-                                my Attribute $att = %GraphicVars{$key};
-                                my $val           = .value;
-                                $att.set_value(self, $val ~~ Array ?? @$val !! $val);
-                            }
-                        }
-                        else {
-                            warn "restore without preceding save";
-                        }
-                } ),
-        :scale(method (Numeric $x, Numeric $y) {
-                      given @!transformMatrix {
-                          $_ *= $x for .[0], .[1];
-                          $_ *= $y for .[2], .[3];
-                      }
-                  }),
-        :rotate(method (Numeric $rad) {
-                       my \c = cos($rad);
-                       my \s = sin($rad);
-                       given @!transformMatrix {
-                           .[0..3] = [
-                               .[0] * +c + .[2] * s,
-                               .[1] * +c + .[3] * s,
-                               .[0] * -s + .[2] * c,
-                               .[1] * -s + .[3] * c,
-                           ]
- 
-                       }
-                  }),
-        :translate(method (Numeric $x, Numeric $y) {
-                          given @!transformMatrix {
-                              .[4] += .[0] * $x + .[2] * $y;
-                              .[5] += .[1] * $x + .[3] * $y;
-                          }
-                  }),
-        :transform(method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-                          @!transformMatrix = do given @!transformMatrix {
-                              [
-                                  .[0] * a + .[2] * b,
-                                  .[1] * a + .[3] * b,
+              for %gstate.pairs {
+                  my Str $key       = .key;
+                  my Attribute $att = %GraphicVars{$key};
+                  my $val           = .value;
+                  $att.set_value(self, $val ~~ Array ?? @$val !! $val);
+              }
+          }
+          else {
+              warn "restore without preceding save";
+          }
+    }
+    method scale(Numeric $x, Numeric $y) is api {
+        given @!transformMatrix {
+            $_ *= $x for .[0], .[1];
+            $_ *= $y for .[2], .[3];
+        }
+    }
+    method rotate(Numeric $rad) is api {
+        my \c = cos($rad);
+        my \s = sin($rad);
+        given @!transformMatrix {
+            .[0..3] = [
+                .[0] * +c + .[2] * s,
+                .[1] * +c + .[3] * s,
+                .[0] * -s + .[2] * c,
+                .[1] * -s + .[3] * c,
+            ]
+            
+        }
+    }
+    method translate(Numeric $x, Numeric $y) is api {
+        given @!transformMatrix {
+            .[4] += .[0] * $x + .[2] * $y;
+            .[5] += .[1] * $x + .[3] * $y;
+        }
+    }
+    method transform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) is api {
+        @!transformMatrix = do given @!transformMatrix {
+            [
+                .[0] * a + .[2] * b,
+                .[1] * a + .[3] * b,
 
-                                  .[0] * c + .[2] * d,
-                                  .[1] * c + .[3] * d,
+                .[0] * c + .[2] * d,
+                .[1] * c + .[3] * d,
 
-                                  .[0] * e + .[2] * f + .[4],
-                                  .[1] * e + .[3] * f + .[5],
-                              ];
-                          }
-                      }),
-        :setTransform(method (Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) {
-                             @!transformMatrix = [a, b, c, d, e, f];
-                         }),
-        :clearRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
-        :fillRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) {
-                         self!setup-fill();
-                     }),
-        :strokeRect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) {
-                           self!setup-stroke();
-         }),
-        :beginPath(method () { $!path.flush }),
-        :fill(method () {
-                     self!setup-fill();
-                     self!draw-subpath()
-                 }),
-        :stroke(method () {
-                       self!setup-stroke();
-                       self!draw-subpath()
-                   }),
-        :clip(method () {
-                     self!draw-subpath();
-                 }),
-        :fillText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) {
-                         self!setup-fill();
-                     }),
-        :strokeText(method (Str $text, Numeric $x, Numeric $y, Numeric $max-width?) {
-                           self!setup-stroke();
-                       }),
-        :drawImage(method (CanvasOrImage \image, Numeric \dx, Numeric \dy, *@args) {
-                          self!register-node(image);
-                   }),
-        :putImageData(method (HTML::Canvas::ImageData \image-data, Numeric \dx, Numeric \dy, *@args) {
-                          self!register-node(image-data);
-                      }),
-        # :setLineDash - see below
-        :getLineDash(method () { @!lineDash } ),
-        :closePath(method () {}),
-        :moveTo(method (Numeric \x, Numeric \y) {} ),
-        :lineTo(method (Numeric \x, Numeric \y) {} ),
-        :quadraticCurveTo(method (Numeric \cp1x, Numeric \cp1y, Numeric \x, Numeric \y) {} ),
-        :bezierCurveTo(method (Numeric \cp1x, Numeric \cp1y, Numeric \cp2x, Numeric \cp2y, Numeric \x, Numeric \y) {} ),
-        :rect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
-        :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
-    );
+                .[0] * e + .[2] * f + .[4],
+                .[1] * e + .[3] * f + .[5],
+            ];
+        }
+    }
+    method setTransform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) is api {
+        @!transformMatrix = [a, b, c, d, e, f];
+    }
+    method clearRect(Numeric $x, Numeric $y, Numeric $w, Numeric $h) is api { }
+    method fillRect(Numeric $x, Numeric $y, Numeric $w, Numeric $h) is api {
+        self!setup-fill();
+    }
+    method strokeRect(Numeric $x, Numeric $y, Numeric $w, Numeric $h) is api {
+        self!setup-stroke();
+    }
+    method beginPath is api { $!path.flush }
+    method fill is api {
+        self!setup-fill();
+        self!draw-subpath()
+    }
+    method stroke is api {
+        self!setup-stroke();
+        self!draw-subpath()
+    }
+    method clip is api {
+        self!draw-subpath();
+    }
+    method fillText(Str $text, Numeric $x, Numeric $y, Numeric $max-width?) is api {
+        self!setup-fill();
+    }
+    method strokeText(Str $text, Numeric $x, Numeric $y, Numeric $max-width?) is api {
+        self!setup-stroke();
+    }
+    method drawImage(CanvasOrImage \image, Numeric \dx, Numeric \dy, *@args) is api {
+        self!register-node(image);
+    }
+    method putImageData(HTML::Canvas::ImageData \image-data, Numeric \dx, Numeric \dy, *@args) is api {
+        self!register-node(image-data);
+    }
+    method setLineDash(@!lineDash) is api {
+    }
+    method getLineDash is api { @!lineDash }
+    method closePath is api {}
+    method moveTo(Numeric \x, Numeric \y) is api {}
+    method lineTo(Numeric \x, Numeric \y) is api {}
+    method quadraticCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \x, Numeric \y) is api {}
+    method bezierCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \cp2x, Numeric \cp2y, Numeric \x, Numeric \y) is api {}
+    method rect(Numeric $x, Numeric $y, Numeric $w, Numeric $h) is api { }
+    method arc(Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) is api { }
+
+    BEGIN {
+        for $?CLASS.^methods.grep(* ~~ API-Trait) -> &meth {
+            my \name = &meth.name;
+            &meth.wrap: method (*@a) is hidden-from-backtrace {
+                my \rv = callsame();
+                self!call(name, |@a);
+                rv;
+            }
+        }
+    }
+
     method createLinearGradient(Numeric $x0, Numeric $y0, Numeric $x1, Numeric $y1) {
         self!var: HTML::Canvas::Gradient.new: :$x0, :$y0, :$x1, :$y1;
     }
@@ -315,10 +333,6 @@ class HTML::Canvas:ver<0.0.10>
             }
         }
     }
-    # todo: slurping/itemization of @!lineDash?
-    method setLineDash(@!lineDash) {
-        self!call('setLineDash', @!lineDash.item);
-    }
     method !var($object) {
         @!calls.push: (:$object);
         $object;
@@ -340,6 +354,7 @@ class HTML::Canvas:ver<0.0.10>
     }
     method !setup-fill { .('fillStyle', $!fillStyle) for @!callback; }
     method !setup-stroke { .('strokeStyle', $!strokeStyle) for @!callback; }
+
     method !draw-subpath {
         for $!path.calls -> \s {
             .(s.key, |s.value) for @!callback;
@@ -511,23 +526,6 @@ class HTML::Canvas:ver<0.0.10>
         }
     }
 
-    method can(Str \name) {
-        my @meth = callsame;
-        if !@meth {
-            with %API{name} -> &api {
-                @meth.push: method (*@a) {
-                    my \r := api(self, |@a);
-                    self!call(name, |@a);
-                    r;
-                };
-            }
-            self.^add_method(name, $_) with @meth[0];
-        }
-        @meth;
-    }
-    method dispatch:<.?>(\name, |c) is raw {
-        with self.can(name) { .[0](self, |c) } else { Nil }
-    }
     # approximate JS associative access to attributes / methods
     # ctx["fill"]()
     # ctx["strokeStyle"] = "rgb(100, 200, 100)";
@@ -535,7 +533,7 @@ class HTML::Canvas:ver<0.0.10>
 
     #++ Hash::Agnostic interface
     method new(|c) { self.bless: |c; }
-    method keys {%API.keys}
+    method keys { self.^methods.grep(* ~~ API-Trait)>>.name }
     multi method AT-KEY(LValue:D $_) is rw { self.can($_)[0](self) }
     multi method AT-KEY(Str:D $_) is rw {
         with self.can($_) {
@@ -550,13 +548,4 @@ class HTML::Canvas:ver<0.0.10>
         }
     }
     #--
-
-    method FALLBACK(Str:D $meth, |c) {
-        with self.can($meth) {
-            .[0](self, |c);
-        }
-        else {
-            die X::Method::NotFound.new( :method($_), :typename(self.^name) )
-        }
-    }
 }

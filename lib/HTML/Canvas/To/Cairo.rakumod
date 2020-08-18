@@ -263,8 +263,8 @@ class HTML::Canvas::To::Cairo {
         $!ctx.line_width = $width;
     }
     method getLineDash() {}
-    method setLineDash(List $pattern) {
-        $!ctx.set_dash($pattern, +$pattern, $!canvas.lineDashOffset)
+    method setLineDash(*@pattern) {
+        $!ctx.set_dash(@pattern, +@pattern, $!canvas.lineDashOffset)
     }
     method measureText(Str $text --> Numeric) {
         $!ctx.text_extents($text).width;
