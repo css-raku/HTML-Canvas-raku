@@ -23,19 +23,16 @@ class HTML::Canvas:ver<0.0.10>
         %GraphicVars{$name} = $att;
     }
 
-    role API-Trait {
-        has Bool $.wrapped is rw;
-    }
+    role API-Trait {  }
 
     multi trait_mod:<is>(Method $m, :$api!) {
         $m does API-Trait;
     }
-    has HTML::Canvas::Path2D $.path is graphics .= new;
+    has HTML::Canvas::Path2D $.path is graphics handles<moveTo lineTo quadraticCurveTo bezierCurveTo arcTo arc rect closePath> .= new: :sync(self);
     method subpath is DEPRECATED<path> { $.path.calls }
 
     method image { $!cairo.surface }
     subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction'|'globalAlpha';
-    my subset PathOps of Str where 'moveTo'|'lineTo'|'quadraticCurveTo'|'bezierCurveTo'|'arcTo'|'arc'|'rect'|'closePath';
     my subset CanvasOrImage where HTML::Canvas|HTML::Canvas::Image;
 
     has Numeric @.transformMatrix is rw is graphics = [ 1, 0, 0, 1, 0, 0, ];
@@ -285,13 +282,6 @@ class HTML::Canvas:ver<0.0.10>
     method setLineDash(@!lineDash) is api {
     }
     method getLineDash is api { @!lineDash }
-    method closePath is api {}
-    method moveTo(Numeric \x, Numeric \y) is api {}
-    method lineTo(Numeric \x, Numeric \y) is api {}
-    method quadraticCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \x, Numeric \y) is api {}
-    method bezierCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \cp2x, Numeric \cp2y, Numeric \x, Numeric \y) is api {}
-    method rect(Numeric $x, Numeric $y, Numeric $w, Numeric $h) is api { }
-    method arc(Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) is api { }
 
     BEGIN {
         for $?CLASS.^methods.grep(* ~~ API-Trait) -> &meth {
@@ -333,19 +323,15 @@ class HTML::Canvas:ver<0.0.10>
             }
         }
     }
-    method !var($object) {
-        @!calls.push: (:$object);
-        $object;
+    method !var($var) {
+        @!calls.push: (:$var);
+        $var;
     }
     method !call(Str $name, *@args) {
         @!calls.push: ($name => @args)
             unless $name ~~ '_start'|'_finish';
 
-        if $name ~~ PathOps {
-            #| draw later (via $.fill or $.stroke)
-            $!path.calls.push: ($name => @args);
-        }
-        elsif $name ~~ 'fill'|'stroke' && ! $!path {
+        if $name ~~ 'fill'|'stroke' && ! $!path {
             warn "no current path to $name";
         }
         else {
@@ -479,7 +465,7 @@ class HTML::Canvas:ver<0.0.10>
         # process statements (calls and assignments)
         for @!calls {
             my $name = .key;
-            if $name eq 'object' {
+            if $name eq 'var' {
                 self!check-variable(.value, :$context, :@js);
             }
             else {
