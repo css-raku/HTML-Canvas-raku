@@ -1,6 +1,9 @@
 use v6;
 
-class HTML::Canvas:ver<0.0.10> {
+use Hash::Agnostic;
+
+class HTML::Canvas:ver<0.0.10>
+    does Hash::Agnostic {
     use CSS::Properties;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Image;
@@ -283,7 +286,6 @@ class HTML::Canvas:ver<0.0.10> {
         :rect(method (Numeric $x, Numeric $y, Numeric $w, Numeric $h) { }),
         :arc(method (Numeric $x, Numeric $y, Numeric $radius, Numeric $startAngle, Numeric $endAngle, Bool $counterClockwise?) { }),
     );
-
     method createLinearGradient(Numeric $x0, Numeric $y0, Numeric $x1, Numeric $y1) {
         self!var: HTML::Canvas::Gradient.new: :$x0, :$y0, :$x1, :$y1;
     }
@@ -323,13 +325,13 @@ class HTML::Canvas:ver<0.0.10> {
     }
     method !call(Str $name, *@args) {
         @!calls.push: ($name => @args)
-            unless $name eq '_start'|'_finish';
+            unless $name ~~ '_start'|'_finish';
 
         if $name ~~ PathOps {
             #| draw later (via $.fill or $.stroke)
             $!path.calls.push: ($name => @args);
         }
-        elsif $name eq 'fill'|'stroke' && ! $!path {
+        elsif $name ~~ 'fill'|'stroke' && ! $!path {
             warn "no current path to $name";
         }
         else {
@@ -524,30 +526,37 @@ class HTML::Canvas:ver<0.0.10> {
         @meth;
     }
     method dispatch:<.?>(\name, |c) is raw {
-        self.can(name) ?? self."{name}"(|c) !! Nil
+        with self.can(name) { .[0](self, |c) } else { Nil }
     }
     # approximate JS associative access to attributes / methods
     # ctx["fill"]()
-    # ctx["strokeStyle"] = "rgb(100, 200, 100);
+    # ctx["strokeStyle"] = "rgb(100, 200, 100)";
     # console.log(ctx["strokeStyle"])
-    multi method AT-KEY(LValue:D $_) is rw { self."$_"() }
-        
-    multi method AT-KEY(Str:D $_) {
-        die X::Method::NotFound.new( :method($_), :typename(self.^name) )
-            unless self.can($_);
 
-        -> |c { self."$_"(|c) }
+    #++ Hash::Agnostic interface
+    method new(|c) { self.bless: |c; }
+    method keys {%API.keys}
+    multi method AT-KEY(LValue:D $_) is rw { self.can($_)[0](self) }
+    multi method AT-KEY(Str:D $_) is rw {
+        with self.can($_) {
+            my &meth := .[0];
+            my &curried;
+            Proxy.new:
+              FETCH => -> $ { &curried //= -> |c { &meth(self, |c); } },
+              STORE => -> $, $val { &meth(self) = $val; }
+        }
+        else {
+            die X::Method::NotFound.new( :method($_), :typename(self.^name) )
+        }
     }
-    method AT-STORE(Str:D() $method, $value) is rw {
-        warn "store $method";
-        self.can($method)
-            ?? (self."$method"() = $value)
-            !! die X::Method::NotFound.new( :$method, :typename(self.^name) );
-    }
+    #--
 
-    method FALLBACK(Str:D $method, |c) {
-        self.can($method)
-            ?? self."$method"(|c)
-            !! die die X::Method::NotFound.new( :$method, :typename(self.^name) );
+    method FALLBACK(Str:D $meth, |c) {
+        with self.can($meth) {
+            .[0](self, |c);
+        }
+        else {
+            die X::Method::NotFound.new( :method($_), :typename(self.^name) )
+        }
     }
 }

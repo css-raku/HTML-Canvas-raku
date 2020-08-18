@@ -9,6 +9,7 @@
     "Cairo",
     "Color",
     "CSS::Properties",
+    "Hash::Agnostic",  
     "JSON::Fast",
     "Base64::Native",
     "Font::FreeType:ver<0.3.0+>"

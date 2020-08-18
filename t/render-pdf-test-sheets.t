@@ -25,7 +25,7 @@ sub test-sheet(&markup) {
     my Bool $clean = True;
     $sheet-no++;
 
-    try {
+    do {
         $canvas.context(
             -> \ctx {
                 $y = 0;
@@ -35,7 +35,7 @@ sub test-sheet(&markup) {
 
         CATCH {
             default {
-                warn "stopped on image $sheet-no: {.message}";
+                note "stopped on image $sheet-no: {.message}";
                 $clean = False;
                 # flush
                 $canvas.path.flush;

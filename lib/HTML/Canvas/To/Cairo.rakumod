@@ -71,8 +71,8 @@ class HTML::Canvas::To::Cairo {
 
     method callback {
         sub (Str $op, |c) {
-            if self.can: $op {
-                self."{$op}"(|c);
+            with self.can: $op {
+                .[0](self, |c);
             }
             else {
                 warn "Canvas call not supported in Cairo: $op"
