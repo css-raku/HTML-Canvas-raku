@@ -29,7 +29,7 @@ ctx.translate(100, 100);
 ctx.fillStyle = 'blue';
 ctx.fill(region);
 
-# save canv as as PNG
+# save canvas as as PNG
 my Cairo::Surface $surface = $feed.surface;
 $surface.write_png: "tmp/path2d.png";
 
