@@ -31,7 +31,7 @@ sub test-sheet(&markup) {
         &markup(ctx);
     };
 
-    if 0 {
+    with $! {
         note "stopped on image $sheet-no: {.message}";
         $clean = False;
         # flush
