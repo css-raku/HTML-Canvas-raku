@@ -152,18 +152,16 @@ class HTML::Canvas::To::Cairo {
         }
     }
     method !make-color($_, $color) {
-	when HTML::Canvas::Pattern {
+	when HTML::Canvas::Pattern:D {
             $!ctx.pattern: self!make-pattern($_);
 	}
-	when HTML::Canvas::Gradient {
+	when HTML::Canvas::Gradient:D {
             $!ctx.pattern: self!make-gradient($_);
 	}
 	default {
-	    with $color -> Color $_ {
-		my Numeric @rgba[4] = .rgba.map: ( */255 );
-                @rgba[3] *= $!canvas.globalAlpha;
-		$!ctx.rgba(|@rgba);
-	    }
+	    my Numeric @rgba[4] = $color.rgba.map: ( */255 );
+            @rgba[3] *= $!canvas.globalAlpha;
+	    $!ctx.rgba(|@rgba);
         }
     }
     method fillStyle($_) {

@@ -21,7 +21,7 @@ my $cache = HTML::Canvas::To::Cairo::Cache.new;
 
 sub test-sheet(&markup) {
     my HTML::Canvas $canvas .= new;
-    my $feed = HTML::Canvas::To::Cairo.new: :$surface, :$canvas, ; #:$cache;
+    my $feed = HTML::Canvas::To::Cairo.new: :$surface, :$canvas, :$cache;
     my Bool $clean = True;
     $sheet-no++;
 
