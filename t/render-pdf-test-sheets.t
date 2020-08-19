@@ -25,24 +25,19 @@ sub test-sheet(&markup) {
     my Bool $clean = True;
     $sheet-no++;
 
-    do {
-        $canvas.context(
-            -> \ctx {
-                $y = 0;
-                ctx.font = "20pt times";
-                &markup(ctx);
-            });
+    try $canvas.context: -> \ctx {
+        $y = 0;
+        ctx.font = "20pt times";
+        &markup(ctx);
+    };
 
-        CATCH {
-            default {
-                note "stopped on image $sheet-no: {.message}";
-                $clean = False;
-                # flush
-                $canvas.path.flush;
-                $canvas.restore while $canvas.gsave;
-                $canvas._finish;
-            }
-        }
+    if 0 {
+        note "stopped on image $sheet-no: {.message}";
+        $clean = False;
+        # flush
+        $canvas.path.flush;
+        $canvas.restore while $canvas.gsave;
+        $canvas._finish;
     }
 
     ok $clean, "completion of image $sheet-no";

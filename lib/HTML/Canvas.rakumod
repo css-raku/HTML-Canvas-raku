@@ -34,6 +34,7 @@ class HTML::Canvas:ver<0.0.10>
     method image { $!cairo.surface }
     subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction'|'globalAlpha';
     my subset CanvasOrImage where HTML::Canvas|HTML::Canvas::Image;
+    my subset FillRule is export(:FillRule) of Str where 'nonzero'|'evenodd';
 
     has Numeric @.transformMatrix is rw is graphics = [ 1, 0, 0, 1, 0, 0, ];
 
@@ -256,13 +257,21 @@ class HTML::Canvas:ver<0.0.10>
         self!setup-stroke();
     }
     method beginPath is api { $!path.flush }
-    method fill is api {
+    proto method fill($?, $?) is api {*}
+    multi method fill(FillRule $rule = 'nonzero') {
         self!setup-fill();
         self!draw-subpath()
     }
-    method stroke is api {
+    multi method fill(HTML::Canvas::Path2D $path, FillRule $rule = 'nonzero') {
+        self!setup-fill();
+    }
+    proto method stroke($?) is api {*}
+    multi method stroke {
         self!setup-stroke();
         self!draw-subpath()
+    }
+    multi method stroke(HTML::Canvas::Path2D $path) {
+        self!setup-stroke();
     }
     method clip is api {
         self!draw-subpath();
@@ -331,7 +340,7 @@ class HTML::Canvas:ver<0.0.10>
         @!calls.push: ($name => @args)
             unless $name ~~ '_start'|'_finish';
 
-        if $name ~~ 'fill'|'stroke' && ! $!path {
+        if $name ~~ 'fill'|'stroke' && ! (@args[0] ~~ HTML::Canvas::Path2D ?? @args[0] !! $!path) {
             warn "no current path to $name";
         }
         else {
@@ -414,9 +423,9 @@ class HTML::Canvas:ver<0.0.10>
 
     has %.var-num;
     has %.sym{Any};
-    method !check-variable($_, |c) {
+    method !var-ref($_, |c) {
         when Str|Numeric|Bool|List { }
-        when HTML::Canvas::Gradient {
+        when HTML::Canvas::Gradient|HTML::Canvas::Path2D {
             %!sym{$_} //= self!declare-variable($_, |c);
         }
         when HTML::Canvas::Pattern {
@@ -435,6 +444,7 @@ class HTML::Canvas:ver<0.0.10>
         my $type = do given $obj {
             when HTML::Canvas::Gradient  { 'grad_' }
             when HTML::Canvas::Pattern   { 'patt_' }
+            when HTML::Canvas::Path2D    { 'path_' }
             when HTML::Canvas::ImageData { 'imgd_' }
             default { .can('js-ref') ?? 'node_' !!  Nil }
         }
@@ -442,7 +452,7 @@ class HTML::Canvas:ver<0.0.10>
             $var-name = $_ ~ ++%.var-num{$_};
 
             given $obj {
-                when HTML::Canvas::Gradient {
+                when HTML::Canvas::Gradient|HTML::Canvas::Path2D {
                     @js.append: .to-js($context, $var-name);
                 }
                 when HTML::Canvas::Pattern|HTML::Canvas::ImageData {
@@ -466,19 +476,19 @@ class HTML::Canvas:ver<0.0.10>
         for @!calls {
             my $name = .key;
             if $name eq 'var' {
-                self!check-variable(.value, :$context, :@js);
+                self!var-ref(.value, :$context, :@js);
             }
             else {
                 my @args = flat .value.map: {
                     when Str|Numeric|Bool { to-json($_) }
                     when List { '[ ' ~ .map({to-json($_)}).join(', ') ~ ' ]' }
                     when %!sym{$_}:exists { %!sym{$_} }
-                    when HTML::Canvas::Pattern|HTML::Canvas::Gradient|HTML::Canvas::ImageData {
-                        self!check-variable($_, :$context, :@js);
+                    when HTML::Canvas::Pattern|HTML::Canvas::Gradient|HTML::Canvas::ImageData|HTML::Canvas::Path2D {
+                        self!var-ref($_, :$context, :@js);
                         %!sym{$_} // .to-js($context, :%!sym);
                     }
                     default {
-                        self!check-variable($_, :$context, :@js);
+                        self!var-ref($_, :$context, :@js);
                         %!sym{$_} // .?js-ref // die "unexpected object: {.perl}";
                     }
                 }

@@ -1,5 +1,8 @@
 Release 0.0.11
 - Add Hash::Agnostic role to HTML::Canvas
+- Support seperate Path2D objects. Not part of the w3c standard, afaik,
+  but supported by major browsers. For an example, see:
+  https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/fill
 Release 0.0.10
 - Fix MeasureText test in render-pdf-test-sheets.t
 Release 0.0.9

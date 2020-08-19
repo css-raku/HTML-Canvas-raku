@@ -1,13 +1,14 @@
 use v6;
 class HTML::Canvas::To::Cairo {
 
-    use Cairo;
+    need Cairo;
     use Color;
     use CSS::Properties::Font;
-    use HTML::Canvas;
+    use HTML::Canvas :FillRule;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Image;
     use HTML::Canvas::ImageData;
+    use HTML::Canvas::Path2D;
     use HTML::Canvas::Pattern;
     has HTML::Canvas $.canvas is rw .= new;
     has Cairo::Surface $.surface handles <width height>;
@@ -249,8 +250,18 @@ class HTML::Canvas::To::Cairo {
 	$!ctx.stroke;
 	$!ctx.restore;
     }
-    method fill() {
+    multi method fill(FillRule $rule = 'nonzero') {
+
+        temp $!ctx.fill_rule = $rule eq 'evenodd'
+            ?? Cairo::FILL_RULE_EVEN_ODD
+            !! Cairo::FILL_RULE_WINDING;
+
 	$!ctx.fill;
+    }
+    multi method fill(HTML::Canvas::Path2D $path, FillRule $rule = 'nonzero') {
+        $!ctx.new_path;
+        self."{.key}"(|.value) for $path.calls();
+        self.fill($rule);
     }
     method arc(Numeric \x, Numeric \y, Numeric \r,
                Numeric \startAngle, Numeric \endAngle, Bool $negative = False) {
@@ -258,6 +269,9 @@ class HTML::Canvas::To::Cairo {
     }
     method beginPath {
 	$!ctx.new_path;
+    }
+    method closePath {
+        $!ctx.close_path;
     }
     method lineWidth(Numeric $width) {
         $!ctx.line_width = $width;
@@ -271,9 +285,15 @@ class HTML::Canvas::To::Cairo {
     }
     method moveTo(Numeric \x, Numeric \y) { $!ctx.move_to(x, y) }
     method lineTo(Numeric \x, Numeric \y) { $!ctx.line_to(x, y) }
-    method stroke {
+    multi method stroke() {
         $!ctx.stroke
     }
+    multi method stroke(HTML::Canvas::Path2D $path) {
+        $!ctx.new_path;
+        self."{.key}"(|.value) for $path.calls();
+        self.stroke();
+    }
+
     method lineCap(HTML::Canvas::LineCap $cap-name) {
         my $lc = %( :butt(Cairo::LineCap::LINE_CAP_BUTT),
                     :round(Cairo::LineCap::LINE_CAP_ROUND),

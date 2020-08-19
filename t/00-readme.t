@@ -1,5 +1,5 @@
 use Test;
-plan 4;
+plan 5;
 
 # ensure consistant document ID generation
 srand(123456);

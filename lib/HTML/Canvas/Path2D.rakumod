@@ -1,5 +1,7 @@
 unit class HTML::Canvas::Path2D;
 
+use JSON::Fast;
+
 has Pair @.calls handles<Bool>;
 has Bool $.closed;
 has $.sync;
@@ -35,4 +37,14 @@ method arc(Numeric \x, Numeric \y, Numeric \r, Numeric \startAngle, Numeric \end
 }
 method closePath {
     self!call('closePath', []);
+}
+
+method to-js(Str, Str $var = 'path' --> Array) {
+    my @js = 'var %s = new Path2D();'.sprintf($var);
+    for self.calls {
+        my $meth = .key;
+        my $args = .value.map({to-json($_)}).join: ', ';
+        @js.push: '%s.%s(%s);'.sprintf($var, $meth, $args);
+    }
+    @js;
 }
