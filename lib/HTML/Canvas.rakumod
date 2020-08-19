@@ -4,6 +4,7 @@ use Hash::Agnostic;
 
 class HTML::Canvas:ver<0.0.11>
     does Hash::Agnostic {
+
     use CSS::Properties;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Image;
