@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/css-raku/HTML-Canvas-raku.svg?branch=master)](https://travis-ci.org/css-raku/HTML-Canvas-raku)
+
 # HTML-Canvas-raku
 
 This is a Raku module for composing and rendering HTML-5 canvases.
