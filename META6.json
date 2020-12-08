@@ -6,13 +6,15 @@
   "build-depends": [
   ],
   "depends": [
+    "Base64::Native",
     "Cairo",
     "Color",
     "CSS::Properties",
+    "Font::FreeType:ver<0.3.0+>",
+    "HarfBuzz",  
     "Hash::Agnostic",  
     "JSON::Fast",
-    "Base64::Native",
-    "Font::FreeType:ver<0.3.0+>"
+    "Method::Also"
   ],
   "description": "Construction and rendering of HTML-5 Canvases",
   "license": "Artistic-2.0",

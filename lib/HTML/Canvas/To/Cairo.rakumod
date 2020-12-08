@@ -10,9 +10,13 @@ class HTML::Canvas::To::Cairo {
     use HTML::Canvas::ImageData;
     use HTML::Canvas::Path2D;
     use HTML::Canvas::Pattern;
+    use HarfBuzz::Shaper;
+    use Method::Also;
+
     has HTML::Canvas $.canvas is rw .= new;
     has Cairo::Surface $.surface handles <width height>;
     has Cairo::Context $.ctx;
+
     my subset Drawable where HTML::Canvas|HTML::Canvas::Image|HTML::Canvas::ImageData;
     class Cache {
         has %.image{Drawable};
@@ -24,12 +28,12 @@ class HTML::Canvas::To::Cairo {
         is CSS::Properties::Font {
 
         use Font::FreeType;
+        use Font::FreeType::Face;
         use Font::FreeType::Raw;
 
         has Font::FreeType $!freetype .= new;
-        has FT_Face $.font-obj;
 
-        method font-obj(:$cache!) {
+        method !cached-font(:$cache!) {
             my Str $font-path;
             try {
                 $font-path = $.find-font;
@@ -45,14 +49,18 @@ class HTML::Canvas::To::Cairo {
             
             $cache.font{$font-path} //= do {
                 my Font::FreeType::Face $face = $!freetype.face($font-path);
-                my FT_Face $ft-face = $face.raw;
-                $ft-face.FT_Reference_Face;
-                Cairo::Font.create($ft-face, :free-type);
+                [$face, Cairo::Font.create($face.raw, :free-type)];
             };
         }
+        method font-obj(:$cache! --> Cairo::Font) { self!cached-font(:$cache)[1] }
+        method ft-face(:$cache! --> Font::FreeType::Face) { self!cached-font(:$cache)[0] }
     }
+
     has Font $!font .= new;
     has Cache $.cache .= new;
+    method ft-face {
+        $!font.ft-face(:$!cache);
+    }
 
     submethod TWEAK(Numeric :$width = $!canvas.width // 128 , Numeric :$height = $!canvas.height // 128) {
         $!surface //= Cairo::Image.create(Cairo::FORMAT_ARGB32, $width, $height);
@@ -201,10 +209,11 @@ class HTML::Canvas::To::Cairo {
         $!ctx.restore;
     }
 
+    method !font-size { $!canvas.adjusted-font-size($!font.em) }
     method font(Str $?) {
         $!font.css = $!canvas.css;
-        $!ctx.set_font_size( $!canvas.adjusted-font-size($!font.em) );
-        $!ctx.set_font_face( $!font.font-obj(:$!cache) );
+        $!ctx.set_font_size: self!font-size;
+        $!ctx.set_font_face: $!font.font-obj(:$!cache);
     }
     method !baseline-shift {
 	my \t = $!ctx.text_extents("Q");
@@ -220,31 +229,39 @@ class HTML::Canvas::To::Cairo {
 	}
     }
     method textBaseline($) { }
-    method !align(Str $text) {
+    method !align(HarfBuzz::Shaper $shaper) {
 	my HTML::Canvas::Baseline $baseline = $!canvas.textBaseline;
         my HTML::Canvas::TextAlignment $align = do given $!canvas.textAlign {
             when 'start' { $!canvas.direction eq 'ltr' ?? 'left' !! 'right' }
             when 'end'   { $!canvas.direction eq 'rtl' ?? 'left' !! 'right' }
             default { $_ }
         }
-	my $text-extents = $!ctx.text_extents($text);
-	my $dx = - $text-extents.width * %( :left(0.0), :center(0.5), :right(1.0) ){$align};
+	my $dx = $align eq 'left'
+            ?? 0
+            !! - $shaper.measure.re;
+        $dx /= 2 if $align eq 'center';
 	my $dy = self!baseline-shift;
 	($dx, $dy);
     }
     method textAlign($) { }
     method direction(Str $_) {}
-    method fillText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?) {
-	my ($dx, $dy) = self!align($text);
-	$!ctx.move_to($x + $dx, $y + $dy);
-        $!ctx.show_text($text);
+    method fillText(Str $text, Numeric $x0, Numeric $y0, Numeric $maxWidth?) {
+        my HarfBuzz::Shaper $shaper = self!shaper: :$text;
+	my ($dx, $dy) = self!align($shaper);
+        my $x = $x0 + $dx;
+        my $y = $y0 + $dy;
+        my Cairo::Glyphs $glyphs = $shaper.cairo-glyphs: :$x, :$y;
+        $!ctx.show_glyphs($glyphs);
     }
-    method strokeText(Str $text, Numeric $x, Numeric $y, Numeric $maxWidth?) {
-	my ($dx, $dy) = self!align($text);
+    method strokeText(Str $text, Numeric $x0, Numeric $y0, Numeric $maxWidth?) {
+        my HarfBuzz::Shaper $shaper = self!shaper: :$text;
+	my ($dx, $dy) = self!align($shaper);
 	$!ctx.save;
 	$!ctx.new_path;
-	$!ctx.move_to($x + $dx, $y + $dy);
-        $!ctx.text_path($text);
+        my $x = $x0 + $dx;
+        my $y = $y0 + $dy;
+        my Cairo::Glyphs $glyphs = $shaper.cairo-glyphs: :$x, :$y;
+        $!ctx.glyph_path($glyphs);
 	$!ctx.stroke;
 	$!ctx.restore;
     }
@@ -278,8 +295,13 @@ class HTML::Canvas::To::Cairo {
     method setLineDash(*@pattern) {
         $!ctx.set_dash(@pattern, +@pattern, $!canvas.lineDashOffset)
     }
+    method !shaper(Str:D :$text!) {
+        my $size = self!font-size();
+        my $direction = $!canvas.direction;
+        HarfBuzz::Shaper.new: :buf{:$text}, :font{ :$.ft-face, :$size, :$direction };
+    }
     method measureText(Str $text --> Numeric) {
-        $!ctx.text_extents($text).width;
+        self!shaper(:$text).measure.re;
     }
     method moveTo(Numeric \x, Numeric \y) { $!ctx.move_to(x, y) }
     method lineTo(Numeric \x, Numeric \y) { $!ctx.line_to(x, y) }
