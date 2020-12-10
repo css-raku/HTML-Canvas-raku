@@ -1,9 +1,12 @@
 use v6;
 use Test;
-plan 13;
+plan 14;
 
 use HTML::Canvas;
+use HTML::Canvas::To::Cairo;
+
 my HTML::Canvas $canvas .= new;
+my $feed = HTML::Canvas::To::Cairo.new: :width(612), :height(792), :$canvas;
 
 $canvas.context: -> \ctx {
     ctx.save; {
@@ -62,6 +65,7 @@ $canvas.context: -> \ctx {
         ctx.fillRect(10, 10, 150, 100);
     }
 }
+lives-ok {$feed.surface.write_png: "tmp/transforms.png"}, 'write_png';
 
 my $html = "<html><body>{ $canvas.to-html( :width(612), :height(792) ) }</body></html>";
 "t/transforms.html".IO.spurt: $html;

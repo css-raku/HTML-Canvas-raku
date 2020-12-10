@@ -296,10 +296,21 @@ class HTML::Canvas:ver<0.0.11>
     BEGIN {
         for $?CLASS.^methods.grep(* ~~ API-Trait) -> &meth {
             my \name = &meth.name;
-            &meth.wrap: method (*@a) is hidden-from-backtrace {
-                my \rv = callsame();
-                self!call(name, |@a);
-                rv;
+            my Signature $sig = &meth.signature;
+            if $sig.arity == 2 && $sig.params[1].type ~~ Positional {
+                # e.g. self.setDash(@pat);
+                &meth.wrap: method (@a) is hidden-from-backtrace {
+                    my \rv = callsame();
+                    self!call(name, $@a);
+                    rv;
+                }
+            }
+            else {
+                &meth.wrap: method (*@a) is hidden-from-backtrace {
+                    my \rv = callsame();
+                    self!call(name, |@a);
+                    rv;
+                }
             }
         }
     }
@@ -480,8 +491,9 @@ class HTML::Canvas:ver<0.0.11>
                 self!var-ref(.value, :$context, :@js);
             }
             else {
-                my @args = flat .value.map: {
-                    when Str|Numeric|Bool { to-json($_) }
+                my @args = .value.map: {
+                    when Str|Bool|Int { to-json($_) }
+                    when Numeric  { to-json(.round(.0001)) }
                     when List { '[ ' ~ .map({to-json($_)}).join(', ') ~ ' ]' }
                     when %!sym{$_}:exists { %!sym{$_} }
                     when HTML::Canvas::Pattern|HTML::Canvas::Gradient|HTML::Canvas::ImageData|HTML::Canvas::Path2D {

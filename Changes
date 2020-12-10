@@ -1,3 +1,10 @@
+Release 0.0.12
+- Fix HTML/JS setDash(@patt) output
+- Use HarfBuzz::Shaper and Cairo::Glyphs for more accurate text reandering
+- Partial support for direction=rtl on Cairo backend. todo: fully reverses all
+  text (wanted Text::Bidi or similar to implement CSS unicode-bidi handling)
+- Round floating point output in HTML/JS generation. Output to several decimal
+  places
 Release 0.0.11
 - Add Hash::Agnostic role to HTML::Canvas
 - Support seperate Path2D objects. Not part of the w3c standard, afaik,

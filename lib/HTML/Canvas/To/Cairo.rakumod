@@ -46,10 +46,10 @@ class HTML::Canvas::To::Cairo {
                     }
                 }
             }
-            
             $cache.font{$font-path} //= do {
-                my Font::FreeType::Face $face = $!freetype.face($font-path);
-                [$face, Cairo::Font.create($face.raw, :free-type)];
+                my Font::FreeType::Face $ft-face = $!freetype.face($font-path);
+                my $font-obj = Cairo::Font.create($ft-face.raw, :free-type);
+                [$ft-face, $font-obj];
             };
         }
         method font-obj(:$cache! --> Cairo::Font) { self!cached-font(:$cache)[1] }
@@ -412,7 +412,9 @@ class HTML::Canvas::To::Cairo {
 
 	$!ctx.restore
     }
-    method putImageData(HTML::Canvas::ImageData $image-data, Numeric $dx, Numeric $dy) { self.drawImage( $image-data, $dx, $dy)}
+    method putImageData(HTML::Canvas::ImageData $image-data, Numeric $dx, Numeric $dy) {
+        self.drawImage( $image-data, $dx, $dy)
+    }
     method quadraticCurveTo(Numeric \cp1x, Numeric \cp1y, Numeric \x, Numeric \y) {
         my \cp2x = cp1x + 2/3 * (x - cp1x);
         my \cp2y = cp1y + 2/3 * (y - cp1y);

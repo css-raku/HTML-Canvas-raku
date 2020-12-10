@@ -6,6 +6,10 @@ perl6:
 install:
   - rakudobrew build zef
   - zef --depsonly install .
+  - git clone https://github.com/timo/cairo-p6.git -b glyphs
+  - (cd cairo-p6/ && zef install .)
+  - git clone https://github.com/pdf-raku/HarfBuzz-raku.git
+  - (cd HarfBuzz-raku/ && zef install .)
 script:
   - prove -ve "raku -I."
   - zef install .

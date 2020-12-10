@@ -82,10 +82,10 @@ test-page(
 });
 
 # save canvas as PNG
-lives-ok {$feed.surface.write_png: "tmp/transforms.png"}, 'write_png';
+lives-ok {$feed.surface.write_png: "tmp/cairo-transforms.png"}, 'write_png';
 
 my $html = "<html><body>" ~ @html-body.join ~ "</body></html>";
 
-"t/transforms.html".IO.spurt: $html;
+"t/cairo-transforms.html".IO.spurt: $html;
 
 done-testing;
