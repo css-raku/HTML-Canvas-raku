@@ -230,6 +230,7 @@ class HTML::Canvas::To::Cairo {
     }
     method textBaseline($) { }
     method !align(HarfBuzz::Shaper $shaper) {
+        enum <x y>;
 	my HTML::Canvas::Baseline $baseline = $!canvas.textBaseline;
         my HTML::Canvas::TextAlignment $align = do given $!canvas.textAlign {
             when 'start' { $!canvas.direction eq 'ltr' ?? 'left' !! 'right' }
@@ -238,7 +239,7 @@ class HTML::Canvas::To::Cairo {
         }
 	my $dx = $align eq 'left'
             ?? 0
-            !! - $shaper.measure.re;
+            !! - $shaper.text-advance[x];
         $dx /= 2 if $align eq 'center';
 	my $dy = self!baseline-shift;
 	($dx, $dy);
@@ -256,14 +257,14 @@ class HTML::Canvas::To::Cairo {
     method strokeText(Str $text, Numeric $x0, Numeric $y0, Numeric $maxWidth?) {
         my HarfBuzz::Shaper $shaper = self!shaper: :$text;
 	my ($dx, $dy) = self!align($shaper);
-	$!ctx.save;
+        $!ctx.save;
 	$!ctx.new_path;
         my $x = $x0 + $dx;
         my $y = $y0 + $dy;
         my Cairo::Glyphs $glyphs = $shaper.cairo-glyphs: :$x, :$y;
         $!ctx.glyph_path($glyphs);
 	$!ctx.stroke;
-	$!ctx.restore;
+        $!ctx.restore;
     }
     multi method fill(FillRule $rule = 'nonzero') {
 
@@ -298,10 +299,10 @@ class HTML::Canvas::To::Cairo {
     method !shaper(Str:D :$text!) {
         my $size = self!font-size();
         my $direction = $!canvas.direction;
-        HarfBuzz::Shaper.new: :buf{:$text}, :font{ :$.ft-face, :$size, :$direction };
+        HarfBuzz::Shaper.new: :buf{ :$text }, :font{ :$.ft-face, :$size, :$direction };
     }
     method measureText(Str $text --> Numeric) {
-        self!shaper(:$text).measure.re;
+        self!shaper(:$text).text-advance[0];
     }
     method moveTo(Numeric \x, Numeric \y) { $!ctx.move_to(x, y) }
     method lineTo(Numeric \x, Numeric \y) { $!ctx.line_to(x, y) }
