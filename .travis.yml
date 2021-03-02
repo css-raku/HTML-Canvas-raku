@@ -2,14 +2,13 @@ language: perl6
 sudo: false
 perl6:
   - latest
-  - '2019.11'
+  - '2020.02.1'
+before_install:
+  - sudo apt-get -y install libharfbuzz-dev
+  - sudo apt-get -y install libfribidi-dev
 install:
   - rakudobrew build zef
   - zef --depsonly install .
-  - git clone https://github.com/timo/cairo-p6.git -b glyphs
-  - (cd cairo-p6/ && zef install .)
-  - git clone https://github.com/pdf-raku/HarfBuzz-raku.git
-  - (cd HarfBuzz-raku/ && zef install .)
 script:
   - prove -ve "raku -I."
   - zef install .

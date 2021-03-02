@@ -10,7 +10,10 @@ class HTML::Canvas::To::Cairo {
     use HTML::Canvas::ImageData;
     use HTML::Canvas::Path2D;
     use HTML::Canvas::Pattern;
-    use HarfBuzz::Shaper;
+    use HarfBuzz::Shaper::Cairo;
+    use HarfBuzz::Raw::Defs :hb-direction;
+    use Text::FriBidi::Raw::Defs :FriBidiPar;
+    use Text::FriBidi::Line;
     use Method::Also;
 
     has HTML::Canvas $.canvas is rw .= new;
@@ -102,7 +105,7 @@ class HTML::Canvas::To::Cairo {
     }
     method restore {
         $!ctx.restore;
-        $!font.css = $!canvas.css;
+        self.font();
     }
     method !make-pattern(HTML::Canvas::Pattern $pattern) {
         $!cache.pattern{$pattern} //= do {
@@ -229,34 +232,35 @@ class HTML::Canvas::To::Cairo {
 	}
     }
     method textBaseline($) { }
-    method !align(HarfBuzz::Shaper $shaper) {
-        enum <x y>;
+    method !align(Numeric $advance-x) {
 	my HTML::Canvas::Baseline $baseline = $!canvas.textBaseline;
+        my $direction = $!canvas.direction;
         my HTML::Canvas::TextAlignment $align = do given $!canvas.textAlign {
-            when 'start' { $!canvas.direction eq 'ltr' ?? 'left' !! 'right' }
-            when 'end'   { $!canvas.direction eq 'rtl' ?? 'left' !! 'right' }
+            when 'start' { $direction eq 'ltr' ?? 'left' !! 'right' }
+            when 'end'   { $direction eq 'rtl' ?? 'left' !! 'right' }
             default { $_ }
         }
 	my $dx = $align eq 'left'
             ?? 0
-            !! - $shaper.text-advance[x];
+            !! - $advance-x;
         $dx /= 2 if $align eq 'center';
 	my $dy = self!baseline-shift;
 	($dx, $dy);
     }
     method textAlign($) { }
     method direction(Str $_) {}
+    enum <x y>;
     method fillText(Str $text, Numeric $x0, Numeric $y0, Numeric $maxWidth?) {
-        my HarfBuzz::Shaper $shaper = self!shaper: :$text;
-	my ($dx, $dy) = self!align($shaper);
+        my HarfBuzz::Shaper::Cairo $shaper = self!shaper: :$text;
+	my ($dx, $dy) = self!align($shaper.text-advance[x]);
         my $x = $x0 + $dx;
         my $y = $y0 + $dy;
         my Cairo::Glyphs $glyphs = $shaper.cairo-glyphs: :$x, :$y;
         $!ctx.show_glyphs($glyphs);
     }
     method strokeText(Str $text, Numeric $x0, Numeric $y0, Numeric $maxWidth?) {
-        my HarfBuzz::Shaper $shaper = self!shaper: :$text;
-	my ($dx, $dy) = self!align($shaper);
+        my HarfBuzz::Shaper::Cairo $shaper = self!shaper: :$text;
+	my ($dx, $dy) = self!align($shaper.text-advance[x]);
         $!ctx.save;
 	$!ctx.new_path;
         my $x = $x0 + $dx;
@@ -296,10 +300,15 @@ class HTML::Canvas::To::Cairo {
     method setLineDash(*@pattern) {
         $!ctx.set_dash(@pattern, +@pattern, $!canvas.lineDashOffset)
     }
-    method !shaper(Str:D :$text!) {
+    method !shaper(Str:D :text($str)!) {
+        my $file = $!font.find-font;
         my $size = self!font-size();
-        my $direction = $!canvas.direction;
-        HarfBuzz::Shaper.new: :buf{ :$text }, :font{ :$.ft-face, :$size, :$direction };
+        my $direction = HB_DIRECTION_LTR;
+        my UInt $dir = $!canvas.direction eq 'rtl'
+            ?? FRIBIDI_PAR_RTL
+            !! FRIBIDI_PAR_LTR;
+        my Str() $text = Text::FriBidi::Line.new(:$str, :$dir);
+        HarfBuzz::Shaper::Cairo.new: :buf{ :$text, :$direction}, :font{ :$file, :$size, };
     }
     method measureText(Str $text --> Numeric) {
         self!shaper(:$text).text-advance[0];

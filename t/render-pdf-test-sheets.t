@@ -193,23 +193,23 @@ test-sheet( -> \ctx {
 
       # Show the different textAlign values
       ctx.textAlign="start"; 
-      ctx.fillText("< textAlign=start",150,$y += textHeight + pad); 
+      ctx.fillText("< textAlign=start |",150,$y += textHeight + pad); 
       ctx.textAlign="end"; 
-      ctx.fillText("textAlign=end >",150, $y); 
+      ctx.fillText("| textAlign=end >",150, $y); 
 
       ctx.direction = 'rtl';
 
       ctx.textAlign="start"; 
-      ctx.fillText("textAlign=start (rtl) >",150,$y += textHeight + pad); 
+      ctx.fillText("< textAlign=start (rtl) |",150,$y += textHeight + pad); 
       ctx.textAlign="end"; 
-      ctx.fillText("< textAlign=end (rtl)",150, $y); 
+      ctx.fillText("| textAlign=end (rtl) >",150, $y); 
 
       ctx.textAlign="left"; 
-      ctx.fillText("< textAlign=left",150, $y += textHeight + pad);
+      ctx.fillText("| textAlign=left >",150, $y += textHeight + pad);
       ctx.textAlign="center"; 
-      ctx.fillText("< textAlign=center >",150, $y += textHeight + pad); 
+      ctx.fillText("| textAlign=center |",150, $y += textHeight + pad); 
       ctx.textAlign="right"; 
-      ctx.fillText("textAlign=right >",150, $y += textHeight + pad);
+      ctx.fillText("< textAlign=right |",150, $y += textHeight + pad);
       ctx.restore;
 
       # Create a red line in position 150
@@ -675,7 +675,7 @@ test-sheet( -> \ctx {
 
 lives-ok { $surface.finish }, 'surface.finish';
 
-my $html = "<html><body>" ~ @html-body.join ~ "</body></html>";
+my $html = "<html><head><meta charset='UTF-8'></head><body>" ~ @html-body.join ~ "</body></html>";
 
 "t/render-pdf-test-sheets.html".IO.spurt: $html;
 

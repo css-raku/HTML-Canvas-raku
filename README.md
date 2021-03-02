@@ -19,9 +19,10 @@ The module includes classes:
 
 # Install
 
-This package depends on Cario, Font::FreeType, and may also require additional fonts on your system:
+This package depends on Cairo, Font::FreeType, Text::FriBidi and HarfBuzz. Additional fonts may also be required on your system on your system:
 
 - the [freetype](https://www.freetype.org/download.html) native library needs to be on your system to enable Font::FreeType installation
+- Text::FriBidi is required for handling of BiDirectional text.
 - the native `Cairo` library is also needed. See instructions at https://cairographics.org/download/.
 - Installation of the [fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) package is also currently required.
 

@@ -1,6 +1,10 @@
+{{$NEXT}}
+   - Use Text::FriBidi module for correct handling of Bi-Directional text
+     on the Cairo back-end.
+
 Release 0.0.12
 - Fix HTML/JS setDash(@patt) output
-- Use HarfBuzz::Shaper and Cairo::Glyphs for more accurate text reandering
+- Use HarfBuzz::Shaper and Cairo::Glyphs for more accurate text rendering
 - Partial support for direction=rtl on Cairo backend. todo: fully reverses all
   text (wanted Text::Bidi or similar to implement CSS unicode-bidi handling)
 - Round floating point output in HTML/JS generation. Output to several decimal
