@@ -186,7 +186,7 @@ class HTML::Canvas:ver<0.0.11>
               my Str $key       = .key;
               my Attribute $att = .value;
               my $val           = $att.get_value(self);
-              $val .= clone if $val ~~ Array;
+              $val .= clone unless $val ~~ Str|Numeric;
               $key => $val;
           }
 
@@ -203,6 +203,7 @@ class HTML::Canvas:ver<0.0.11>
                   my $val           = .value;
                   $att.set_value(self, $val ~~ Array ?? @$val !! $val);
               }
+              $!css.font = $!font;
           }
           else {
               warn "restore without preceding save";

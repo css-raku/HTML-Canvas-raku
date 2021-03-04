@@ -12,6 +12,7 @@
     "CSS::Properties",
     "Font::FreeType:ver<0.3.7+>",
     "HarfBuzz:ver<0.0.2+>",  
+    "Text::FriBidi",
     "Hash::Agnostic",  
     "JSON::Fast",
     "Method::Also"

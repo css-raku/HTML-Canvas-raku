@@ -1,6 +1,7 @@
 {{$NEXT}}
    - Use Text::FriBidi module for correct handling of Bi-Directional text
      on the Cairo back-end.
+   - Fix font restore
 
 Release 0.0.12
 - Fix HTML/JS setDash(@patt) output
