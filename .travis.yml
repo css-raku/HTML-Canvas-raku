@@ -9,7 +9,7 @@ before_install:
 install:
   - rakudobrew build zef
   - git clone https://github.com/harfbuzz-raku/Text-FriBidi-raku.git
-  - (cd Text-FriBidi-raku-raku/ && zef install .)
+  - (cd Text-FriBidi-raku/ && zef install .)
   - zef --depsonly install .
 script:
   - prove -ve "raku -I."
