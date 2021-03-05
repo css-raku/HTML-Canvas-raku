@@ -24,11 +24,13 @@ jobs:
       - uses: Raku/setup-raku@v1
         with:
           raku-version: ${{ matrix.raku-version }}
-      - name: Install Dependencies
+      - name: Install Library Dependencies
         run: |
           sudo apt-get install -y libfribidi-dev
           wget https://github.com/harfbuzz/harfbuzz/archive/2.7.4.tar.gz
-          (tar xzf 2.7.4.tar.gz && cd harfbuzz-2.7.4 && ./autogen.sh && make)
+          (tar xzf 2.7.4.tar.gz && cd harfbuzz-2.7.4 && ./autogen.sh && make && sudo make install)
+      - name: Install Raku Dependencies
+        run: |
           export LD_LIBRARY_PATH=harfbuzz-2.7.4/src/.libs
           zef install --/test App::Prove6
           git clone https://github.com/harfbuzz-raku/Text-FriBidi-raku.git

@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/css-raku/HTML-Canvas-raku.svg?branch=master)](https://travis-ci.org/css-raku/HTML-Canvas-raku)
+[![Actions Status](https://github.com/css-raku/HTML-Canvas-raku/workflows/test/badge.svg)](https://github.com/css-raku/HTML-Canvas-raku/actions)
 
 # HTML-Canvas-raku
 
