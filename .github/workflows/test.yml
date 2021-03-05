@@ -26,8 +26,9 @@ jobs:
           raku-version: ${{ matrix.raku-version }}
       - name: Install Dependencies
         run: |
-          sudo apt-get install -y libharfbuzz-dev
           sudo apt-get install -y libfribidi-dev
+          wget https://github.com/harfbuzz/harfbuzz/archive/2.7.4.tar.gz
+          (tar xzf 2.7.4.tar.gz && cd harfbuzz-2.7.4 && ./autogen.sh && make)
           zef install --/test App::Prove6
           git clone https://github.com/harfbuzz-raku/Text-FriBidi-raku.git
           (cd Text-FriBidi-raku/ && zef install .)
