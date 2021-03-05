@@ -32,13 +32,11 @@ jobs:
           sudo ldconfig
       - name: Install Raku Dependencies
         run: |
-          export LD_LIBRARY_PATH=harfbuzz-2.7.4/src/.libs
           zef install --/test App::Prove6
           git clone https://github.com/harfbuzz-raku/Text-FriBidi-raku.git
           (cd Text-FriBidi-raku/ && zef install .)
           zef --deps-only install .
       - name: Run Tests
         run: |
-          export LD_LIBRARY_PATH=harfbuzz-2.7.4/src/.libs
           prove6 -l t
           zef install .
