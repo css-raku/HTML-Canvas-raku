@@ -35,5 +35,6 @@ jobs:
           zef --deps-only install .
       - name: Run Tests
         run: |
+          export LD_LIBRARY_PATH=harfbuzz-2.7.4/src/.libs
           prove6 -l t
           zef install .
