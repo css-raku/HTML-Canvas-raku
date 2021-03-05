@@ -1,0 +1,38 @@
+name: test
+
+on:
+  push:
+    branches:
+      - '*'
+    tags-ignore:
+      - '*'
+  pull_request:
+
+jobs:
+  raku:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          #- macOS-latest
+          #- windows-latest
+        raku-version:
+          - 'latest'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: Raku/setup-raku@v1
+        with:
+          raku-version: ${{ matrix.raku-version }}
+      - name: Install Dependencies
+        run: |
+          sudo apt-get install -y harfbuzz-dev
+          sudo apt-get install -y libfribidi-dev
+          zef install --/test App::Prove6
+          git clone https://github.com/harfbuzz-raku/Text-FriBidi-raku.git
+          (cd Text-FriBidi-raku/ && zef install .)
+          zef --deps-only install .
+      - name: Run Tests
+        run: |
+          prove6 -l t
+          zef install .
