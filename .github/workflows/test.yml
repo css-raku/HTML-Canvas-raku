@@ -29,6 +29,7 @@ jobs:
           sudo apt-get install -y libfribidi-dev
           wget https://github.com/harfbuzz/harfbuzz/archive/2.7.4.tar.gz
           (tar xzf 2.7.4.tar.gz && cd harfbuzz-2.7.4 && ./autogen.sh && make && sudo make install)
+          sudo ldconfig
       - name: Install Raku Dependencies
         run: |
           export LD_LIBRARY_PATH=harfbuzz-2.7.4/src/.libs
