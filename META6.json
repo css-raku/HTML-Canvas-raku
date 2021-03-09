@@ -12,9 +12,9 @@
     "CSS::Properties",
     "Font::FreeType:ver<0.3.7+>",
     "HarfBuzz::Font::FreeType:ver<0.0.5+>",
-    "HarfBuzz::Shaper::Cairo",  
+    "HarfBuzz::Shaper::Cairo",
     "Text::FriBidi",
-    "Hash::Agnostic",  
+    "Hash::Agnostic",
     "JSON::Fast",
     "Method::Also"
   ],
