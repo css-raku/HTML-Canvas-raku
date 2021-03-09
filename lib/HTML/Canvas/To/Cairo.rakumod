@@ -10,9 +10,10 @@ class HTML::Canvas::To::Cairo {
     use HTML::Canvas::ImageData;
     use HTML::Canvas::Path2D;
     use HTML::Canvas::Pattern;
+    use HarfBuzz::Buffer;
     use HarfBuzz::Shaper::Cairo;
     use HarfBuzz::Raw::Defs :hb-direction;
-    use Text::FriBidi::Raw::Defs :FriBidiPar;
+    use Text::FriBidi::Defs :FriBidiPar;
     use Text::FriBidi::Line;
     use Method::Also;
 
@@ -300,15 +301,15 @@ class HTML::Canvas::To::Cairo {
     method setLineDash(*@pattern) {
         $!ctx.set_dash(@pattern, +@pattern, $!canvas.lineDashOffset)
     }
-    method !shaper(Str:D :text($str)!) {
+    method !shaper(Str:D :$text!) {
         my $file = $!font.find-font;
         my $size = self!font-size();
-        my $direction = HB_DIRECTION_LTR;
-        my UInt $dir = $!canvas.direction eq 'rtl'
+        my UInt $direction = $!canvas.direction eq 'rtl'
             ?? FRIBIDI_PAR_RTL
             !! FRIBIDI_PAR_LTR;
-        my Str() $text = Text::FriBidi::Line.new(:$str, :$dir);
-        HarfBuzz::Shaper::Cairo.new: :buf{ :$text, :$direction}, :font{ :$file, :$size, };
+        my Text::FriBidi::Line $line .= new(:$text, :$direction);
+        my HarfBuzz::Buffer() $buf = %( :text($line.Str), :direction(HB_DIRECTION_LTR));
+        HarfBuzz::Shaper::Cairo.new: :$buf, :font{ :$file, :$size, };
     }
     method measureText(Str $text --> Numeric) {
         self!shaper(:$text).text-advance[0];
