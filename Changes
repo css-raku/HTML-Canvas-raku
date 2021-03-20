@@ -1,4 +1,5 @@
 {{$NEXT}}
+  - Improved font cacheing in Cairo backend
 
 0.0.12  2021-03-09T15:10:03+13:00
   - Fix HTML/JS setDash(@patt) output

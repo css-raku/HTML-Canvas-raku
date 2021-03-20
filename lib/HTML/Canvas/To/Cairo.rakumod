@@ -11,6 +11,7 @@ class HTML::Canvas::To::Cairo {
     use HTML::Canvas::Path2D;
     use HTML::Canvas::Pattern;
     use HarfBuzz::Buffer;
+    use HarfBuzz::Font::FreeType;
     use HarfBuzz::Shaper::Cairo;
     use HarfBuzz::Raw::Defs :hb-direction;
     use Text::FriBidi::Defs :FriBidiPar;
@@ -53,11 +54,13 @@ class HTML::Canvas::To::Cairo {
             $cache.font{$font-path} //= do {
                 my Font::FreeType::Face $ft-face = $!freetype.face($font-path);
                 my $font-obj = Cairo::Font.create($ft-face.raw, :free-type);
-                [$ft-face, $font-obj];
+                my HarfBuzz::Font::FreeType() $shaping-font = %( :$ft-face );
+                [$ft-face, $font-obj, $shaping-font];
             };
         }
         method font-obj(:$cache! --> Cairo::Font) { self!cached-font(:$cache)[1] }
         method ft-face(:$cache! --> Font::FreeType::Face) { self!cached-font(:$cache)[0] }
+        method shaping-font(:$cache! --> HarfBuzz::Font::FreeType) { self!cached-font(:$cache)[2] }
     }
 
     has Font $!font .= new;
@@ -302,14 +305,16 @@ class HTML::Canvas::To::Cairo {
         $!ctx.set_dash(@pattern, +@pattern, $!canvas.lineDashOffset)
     }
     method !shaper(Str:D :$text!) {
-        my $file = $!font.find-font;
         my $size = self!font-size();
         my UInt $direction = $!canvas.direction eq 'rtl'
             ?? FRIBIDI_PAR_RTL
             !! FRIBIDI_PAR_LTR;
-        my Text::FriBidi::Line $line .= new(:$text, :$direction);
+        my Text::FriBidi::Line $line .= new: :$text, :$direction;
         my HarfBuzz::Buffer() $buf = %( :text($line.Str), :direction(HB_DIRECTION_LTR));
-        HarfBuzz::Shaper::Cairo.new: :$buf, :font{ :$file, :$size, };
+        given $!font.shaping-font(:$!cache) {
+            .size = $size;
+            HarfBuzz::Shaper::Cairo.new: :$buf, :font($_);
+        }
     }
     method measureText(Str $text --> Numeric) {
         self!shaper(:$text).text-advance[0];

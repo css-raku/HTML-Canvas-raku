@@ -3,7 +3,6 @@ plan 1;
 
 use HTML::Canvas;
 use HTML::Canvas::To::Cairo;
-use Text::FriBidi::Line;
 use Cairo;
 
 constant $LRM = 0x200E.chr;
@@ -12,7 +11,7 @@ constant $RLO = 0x202E.chr;
 constant $PDF = 0x202C.chr;
 
 my HTML::Canvas $canvas .= new: :width(150), :height(100);
-my $feed = HTML::Canvas::To::Cairo.new: :width(650), :height(400), :$canvas;
+my HTML::Canvas::To::Cairo $feed .= new: :width(650), :height(400), :$canvas;
 $canvas.context: {
     # example adapted from from https://stackoverflow.com/questions/8961636/html5-canvas-filltext-with-right-to-left-string/15979861#15979861
     .textAlign = 'right';
