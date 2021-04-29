@@ -13,11 +13,13 @@ class HTML::Canvas::Gradient {
     method type { with $!r0 // $!r1 { 'Radial' } else { 'Linear' } }
 
     my class ColorStop {
-        use CSS::Properties;
+        use CSS::Properties :&to-ast;
         use Color;
         has Numeric $.offset;
         has Color $!color;
         method color is rw { $!color }
+        has CSS::Properties $!css;
+        has $!css-writer;
         subset ColorOrStr where Color|Str;
         submethod TWEAK(ColorOrStr:D :$color!) {
             $!color = do given $color {
@@ -25,10 +27,10 @@ class HTML::Canvas::Gradient {
                 default { $_ }
             }
         }
-        method !css { state $css = CSS::Properties.new; }
-        method !css-writer { state $css-writer = (require CSS::Writer).new: :color-names }
+        method !css { $!css //= CSS::Properties.new; }
+        method !css-writer { $!css-writer //= (require CSS::Writer).new: :color-names }
         method !css-color-str(Color $_) {
-            self!css-writer.write: |self!css.to-ast($_);
+            self!css-writer.write: |to-ast($_);
         }
 
         method to-js(Str $var) {

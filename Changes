@@ -1,5 +1,6 @@
 {{$NEXT}}
   - Improved font cacheing in Cairo backend
+  - Adjust to CSS::Properties v0.6.6+
 
 0.0.12  2021-03-09T15:10:03+13:00
   - Fix HTML/JS setDash(@patt) output

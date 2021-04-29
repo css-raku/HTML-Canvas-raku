@@ -1,5 +1,5 @@
 {
-  "auth": "github:css-raku",
+  "auth": "cpan:WARRINGD",
   "authors": [
     "David Warring"
   ],
@@ -9,7 +9,7 @@
     "Base64::Native",
     "Cairo",
     "Color",
-    "CSS::Properties",
+    "CSS::Properties:ver<0.6.6+>",
     "Font::FreeType:ver<0.3.7+>",
     "HarfBuzz::Font::FreeType:ver<0.0.5+>",
     "HarfBuzz::Shaper::Cairo",
