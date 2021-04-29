@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+0.0.13  2021-04-29T13:02:29+12:00
   - Improved font cacheing in Cairo backend
   - Adjust to CSS::Properties v0.6.6+
 

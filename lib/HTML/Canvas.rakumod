@@ -2,7 +2,7 @@ use v6;
 
 use Hash::Agnostic;
 
-class HTML::Canvas:ver<0.0.12>
+class HTML::Canvas:ver<0.0.13>
     does Hash::Agnostic {
 
     use CSS::Properties;
