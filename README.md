@@ -110,7 +110,6 @@ for 1..2 -> $page {
         .fillText("Page $page/2", 12, 12);
     };
     $surface.show_page;
-"/tmp/page-$page.txt".IO.spurt: $canvas.ToDataURL;
 }
 
 $surface.finish;

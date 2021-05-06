@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+0.0.14  2021-05-07T09:53:52+12:00
   - Implement ToDataURL() method (PNG format only)
 
 0.0.13  2021-04-29T13:02:29+12:00
