@@ -6,7 +6,7 @@ This is a Raku module for composing and rendering HTML-5 canvases.
 
 It supports the majority of the [HTML Canvas 2D Context](https://www.w3.org/TR/2dcontext/) API.
 
-A canvas may be constructed via the API, then rendered to JavaScript via the `.js` or `.to-html` methods, or saved to a Cairo-supported format such as PNG, SVG or PDF.
+A canvas may be constructed via the API, then rendered to JavaScript via the `ToDataURL()`,  `.js()` or `.to-html()` methods, or saved to a Cairo-supported format such as PNG, SVG or PDF.
 
 The module includes classes:
 
@@ -66,9 +66,14 @@ use Cairo;
 my Cairo::Image $img = $canvas.image;
 $img.write_png: "examples/canvas-demo.png";
 
-# also save canvas as HTML
+# also save canvas as HTML, source or binary:
+#  1. Source Javascript
 my $html = "<html><body>{ $canvas.to-html }</body></html>";
-"examples/canvas-demo.html".IO.spurt: $html;
+"examples/canvas-demo-js.html".IO.spurt: $html;
+#  2. Data URL Image
+my $data-uri = $canvas.ToDataURL();
+$html = "<html><body><img src='$data-uri'/></body></html>";
+"examples/canvas-demo-url.html".IO.spurt: $html;
 
 ```
 
@@ -87,7 +92,7 @@ my Cairo::Surface::PDF $surface .= create("examples/read-me-example.pdf", 128, 1
 # create a PDF with two pages
 # use a common cache for objects shared between pages such as
 # fonts and images. This reduces both processing times and PDF file sizes.
-my  HTML::Canvas::To::Cairo::Cache $cache .= new;
+my HTML::Canvas::To::Cairo::Cache $cache .= new;
 
 for 1..2 -> $page {
     my HTML::Canvas $canvas .= new;
@@ -105,6 +110,7 @@ for 1..2 -> $page {
         .fillText("Page $page/2", 12, 12);
     };
     $surface.show_page;
+"/tmp/page-$page.txt".IO.spurt: $canvas.ToDataURL;
 }
 
 $surface.finish;

@@ -3,9 +3,9 @@ class HTML::Canvas::Image {
     use Base64::Native;
     my subset DataURI of Str where /^('data:' [<t=.ident> '/' <s=.ident>]? $<b64>=";base64"? $<start>=",") /;
     has DataURI $.data-uri;
-    my subset Str-or-IO-Handle where Str|IO::Handle;
-    has Str-or-IO-Handle $.source;
-    has Str $.image-type;
+    my subset Source where Blob|Str|IO::Handle;
+    has Source:D $.source is required;
+    has Str $.image-type is required;
 
     method !image-type($_, :$path!) {
         when m:i/^ jpe?g $/    { 'JPEG' }
@@ -42,18 +42,18 @@ class HTML::Canvas::Image {
     }
 
     method Str returns Str {
-        with $!source {
-            .isa(Str)
-                ?? .substr(0)
-                !! .path.IO.slurp(:enc<latin-1>);
+        given $!source {
+            when Str  { .substr(0); }
+            when Blob { .decode("latin-1"); }
+            default   { .path.IO.slurp(:enc<latin-1>); }
         }
     }
 
     method Blob returns Blob {
-        with $!source {
-            .isa(Str)
-                ?? .encode("latin-1")
-                !! .path.IO.slurp(:bin);
+        given $!source {
+            when Blob { $_; }
+            when Str  { .encode("latin-1"); }
+            default   { .path.IO.slurp(:bin); }
         }
     }
 

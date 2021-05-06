@@ -294,6 +294,19 @@ class HTML::Canvas:ver<0.0.13>
     }
     method getLineDash is api { @!lineDash }
 
+    #| non-api method to serialize canvas
+    method ToDataURL($fmt?, Numeric $res?) {
+        with $fmt {
+            fail "can only handle PNG format"
+                unless .lc.contains('png');
+        }
+        warn "ignoring resolution: $_" with $res;
+
+        my Blob $source = $!cairo.Blob;
+        my HTML::Canvas::Image $image .= new: :image-type<PNG>, :$source;
+        $image.data-uri;
+    }
+
     BEGIN {
         for $?CLASS.^methods.grep(* ~~ API-Trait) -> &meth {
             my \name = &meth.name;

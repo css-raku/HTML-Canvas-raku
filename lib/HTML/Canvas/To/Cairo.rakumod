@@ -19,7 +19,7 @@ class HTML::Canvas::To::Cairo {
     use Method::Also;
 
     has HTML::Canvas $.canvas is rw .= new;
-    has Cairo::Surface $.surface handles <width height>;
+    has Cairo::Surface $.surface handles <width height Blob>;
     has Cairo::Context $.ctx;
 
     my subset Drawable where HTML::Canvas|HTML::Canvas::Image|HTML::Canvas::ImageData;

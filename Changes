@@ -1,4 +1,5 @@
 {{$NEXT}}
+  - Implement ToDataURL() method (PNG format only)
 
 0.0.13  2021-04-29T13:02:29+12:00
   - Improved font cacheing in Cairo backend
