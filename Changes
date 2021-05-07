@@ -1,7 +1,7 @@
 {{$NEXT}}
 
-0.0.14  2021-05-07T09:53:52+12:00
-  - Implement ToDataURL() method (PNG format only)
+0.0.15  2021-05-07T12:14:57+12:00
+  - Implement toDataURL() method (PNG format only)
 
 0.0.13  2021-04-29T13:02:29+12:00
   - Improved font cacheing in Cairo backend

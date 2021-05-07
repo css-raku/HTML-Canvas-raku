@@ -6,7 +6,7 @@ This is a Raku module for composing and rendering HTML-5 canvases.
 
 It supports the majority of the [HTML Canvas 2D Context](https://www.w3.org/TR/2dcontext/) API.
 
-A canvas may be constructed via the API, then rendered to JavaScript via the `ToDataURL()`,  `.js()` or `.to-html()` methods, or saved to a Cairo-supported format such as PNG, SVG or PDF.
+A canvas may be constructed via the API, then rendered to JavaScript via the `toDataURL()`,  `.js()` or `.to-html()` methods, or saved to a Cairo-supported format such as PNG, SVG or PDF.
 
 The module includes classes:
 
@@ -66,12 +66,12 @@ use Cairo;
 my Cairo::Image $img = $canvas.image;
 $img.write_png: "examples/canvas-demo.png";
 
-# also save canvas as HTML, source or binary:
-#  1. Source Javascript
+# also save canvas as HTML, source and data URL:
+#  1. Save source Javascript
 my $html = "<html><body>{ $canvas.to-html }</body></html>";
 "examples/canvas-demo-js.html".IO.spurt: $html;
-#  2. Data URL Image
-my $data-uri = $canvas.ToDataURL();
+#  2. Save data URL Image
+my $data-uri = $canvas.toDataURL();
 $html = "<html><body><img src='$data-uri'/></body></html>";
 "examples/canvas-demo-url.html".IO.spurt: $html;
 

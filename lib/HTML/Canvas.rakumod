@@ -2,7 +2,7 @@ use v6;
 
 use Hash::Agnostic;
 
-class HTML::Canvas:ver<0.0.14>
+class HTML::Canvas:ver<0.0.15>
     does Hash::Agnostic {
 
     use CSS::Properties;
@@ -295,7 +295,7 @@ class HTML::Canvas:ver<0.0.14>
     method getLineDash is api { @!lineDash }
 
     #| non-api method to serialize canvas
-    method ToDataURL($fmt?, Numeric $res?) {
+    method toDataURL($fmt?, Numeric $res?) {
         with $fmt {
             fail "can only handle PNG format"
                 unless .lc.contains('png');
