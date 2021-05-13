@@ -1,5 +1,8 @@
 {{$NEXT}}
 
+0.0.16  2021-05-13T14:12:51+12:00
+  - Adjust to CSS::Properties v0.0.0+
+
 0.0.15  2021-05-07T12:14:57+12:00
   - Implement toDataURL() method (PNG format only)
 
