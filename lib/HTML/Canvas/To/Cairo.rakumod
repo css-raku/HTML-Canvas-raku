@@ -3,7 +3,7 @@ class HTML::Canvas::To::Cairo {
 
     need Cairo;
     use Color;
-    use CSS::Properties::Font;
+    use CSS::Font;
     use HTML::Canvas :FillRule;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Image;
@@ -30,11 +30,10 @@ class HTML::Canvas::To::Cairo {
         has %.font;
     }
     class Font
-        is CSS::Properties::Font {
+        is CSS::Font {
 
         use Font::FreeType;
         use Font::FreeType::Face;
-        use Font::FreeType::Raw;
 
         has Font::FreeType $!freetype .= new;
 
