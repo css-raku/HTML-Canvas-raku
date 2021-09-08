@@ -1,7 +1,8 @@
 {{$NEXT}}
+  - Add font loading via CSS::Font::Descriptor (@font-face) resources.
 
 0.0.16  2021-05-13T14:12:51+12:00
-  - Adjust to CSS::Properties v0.0.0+
+  - Adjust to CSS::Properties v0.7.0+
 
 0.0.15  2021-05-07T12:14:57+12:00
   - Implement toDataURL() method (PNG format only)
@@ -21,7 +22,7 @@
 Release 0.0.11
 - Add Hash::Agnostic role to HTML::Canvas
 - Support seperate Path2D objects. Not part of the w3c standard, afaik,
-  but supported by major browsers. For an example, see:
+  but implemented by major browsers. For an example, see:
   https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/fill
 Release 0.0.10
 - Fix MeasureText test in render-pdf-test-sheets.t

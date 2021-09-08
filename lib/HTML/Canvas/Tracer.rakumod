@@ -20,7 +20,7 @@ class HTML::Canvas::Tracer {
 
 	$*ERR.print(('  ' x $!indent) ~ $name ~ '(');
 
-        my Str @pretty = @args.map: *.perl;
+        my Str @pretty = @args».raku;
         @pretty.push: ':%s(%s)'.sprintf( .key, .value.gist)
             for %opts.pairs.sort; 
 	$*ERR.print( @pretty.join: ', ' );

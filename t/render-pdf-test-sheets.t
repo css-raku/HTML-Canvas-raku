@@ -578,10 +578,11 @@ test-sheet( -> \ctx {
       my $shift = 0;
       for 1 .. 3 {
           ctx.drawImage($canvas, $shift, $shift, 240, 220,  $x,  $y, 50, 50);
+last;
           $x += 60;
           $shift += 20;
       }
-
+if 0 {
       $shift = 0;
       for 1 .. 3 {
           ctx.drawImage($canvas, 0, 0, 200 + $shift, 220,  $x,  $y, 50, 50);
@@ -597,7 +598,7 @@ test-sheet( -> \ctx {
       ctx.drawImage($canvas, 160, $y, 100, 150);
       ctx.drawImage($canvas,                    30, 30, 400, 500,
                                    300, $y, 100, 150);
-
+}
 });
 
 test-sheet( -> \ctx {

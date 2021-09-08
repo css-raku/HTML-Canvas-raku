@@ -16,7 +16,6 @@ class HTML::Canvas::To::Cairo {
     use HarfBuzz::Raw::Defs :hb-direction;
     use Text::FriBidi::Defs :FriBidiPar;
     use Text::FriBidi::Line;
-    use Method::Also;
 
     has HTML::Canvas $.canvas is rw .= new;
     has Cairo::Surface $.surface handles <width height Blob>;
@@ -34,23 +33,25 @@ class HTML::Canvas::To::Cairo {
 
         use Font::FreeType;
         use Font::FreeType::Face;
-
+        use CSS::Font::Descriptor;
+        use CSS::Font::Resources;
+        use CSS::Font::Resources::Source;
+        my constant Resources = CSS::Font::Resources;
+        my constant Source = CSS::Font::Resources::Source;
         has Font::FreeType $!freetype .= new;
+        has CSS::Font::Descriptor @.font-face;
 
         method !cached-font(:$cache!) {
-            my Str $font-path;
-            try {
-                $font-path = $.find-font;
-                CATCH {
-                    default {
-                        warn $_;
-                        $font-path = %?RESOURCES<font/FreeMono.ttf>.absolute;
-                        warn "falling back to mono-spaced font: $font-path";
-                        
-                    }
+            my Source $source = .head
+                 with Resources.sources(:font(self), :@!font-face);
+            my $key = do with $source { .Str } else { '' };
+
+            $cache.font{$key} //= do {
+                my $font-path = .IO.path with $source;
+                $font-path ||= do {
+                    warn "falling back to mono-spaced font";
+                    %?RESOURCES<font/FreeMono.ttf>.absolute;
                 }
-            }
-            $cache.font{$font-path} //= do {
                 my Font::FreeType::Face $ft-face = $!freetype.face($font-path);
                 my $font-obj = Cairo::Font.create($ft-face.raw, :free-type);
                 my HarfBuzz::Font::FreeType() $shaping-font = %( :$ft-face );
@@ -72,6 +73,7 @@ class HTML::Canvas::To::Cairo {
         $!surface //= Cairo::Image.create(Cairo::FORMAT_ARGB32, $width, $height);
         $!ctx //= Cairo::Context.new($!surface);
         with $!canvas {
+            $!font.font-face = .font-face;
             .callback.push: self.callback
         }
     }

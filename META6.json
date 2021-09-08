@@ -10,13 +10,13 @@
     "Cairo",
     "Color",
     "CSS::Properties:ver<0.7.0+>",
+    "CSS::Font::Resources:ver<0.0.2+>",
     "Font::FreeType:ver<0.3.7+>",
     "HarfBuzz::Font::FreeType:ver<0.0.5+>",
     "HarfBuzz::Shaper::Cairo",
     "Text::FriBidi",
     "Hash::Agnostic",
-    "JSON::Fast",
-    "Method::Also"
+    "JSON::Fast"
   ],
   "description": "Construction and rendering of HTML-5 Canvases",
   "license": "Artistic-2.0",

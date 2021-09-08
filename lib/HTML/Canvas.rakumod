@@ -6,6 +6,7 @@ class HTML::Canvas:ver<0.0.16>
     does Hash::Agnostic {
 
     use CSS::Properties;
+    use CSS::Font::Descriptor;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Image;
     use HTML::Canvas::ImageData;
@@ -16,6 +17,7 @@ class HTML::Canvas:ver<0.0.16>
     has Pair @.calls;
     has Routine @.callback;
     has $!cairo = (require ::('HTML::Canvas::To::Cairo')).new: :canvas(self), :$!width, :$!height;
+    has CSS::Font::Descriptor @.font-face;
 
     # -- Graphics Variables --
     my Attribute %GraphicVars;
@@ -38,8 +40,6 @@ class HTML::Canvas:ver<0.0.16>
     my subset FillRule is export(:FillRule) of Str where 'nonzero'|'evenodd';
 
     has Numeric @.transformMatrix is rw is graphics = [ 1, 0, 0, 1, 0, 0, ];
-
-
     has Numeric $.lineWidth is graphics = 1.0;
     method lineWidth is rw {
         Proxy.new(
@@ -260,11 +260,11 @@ class HTML::Canvas:ver<0.0.16>
     }
     method beginPath is api { $!path.flush }
     proto method fill($?, $?) is api {*}
-    multi method fill(FillRule $rule = 'nonzero') {
+    multi method fill(FillRule $ = 'nonzero') {
         self!setup-fill();
         self!draw-subpath()
     }
-    multi method fill(HTML::Canvas::Path2D $path, FillRule $rule = 'nonzero') {
+    multi method fill(HTML::Canvas::Path2D $, FillRule $ = 'nonzero') {
         self!setup-fill();
     }
     proto method stroke($?) is api {*}
@@ -272,7 +272,7 @@ class HTML::Canvas:ver<0.0.16>
         self!setup-stroke();
         self!draw-subpath()
     }
-    multi method stroke(HTML::Canvas::Path2D $path) {
+    multi method stroke(HTML::Canvas::Path2D $) {
         self!setup-stroke();
     }
     method clip is api {

@@ -195,6 +195,36 @@ The following methods can be used in path construction:
 - `arc(Numeric \x, Numeric \y, Numeric \r, Numeric \startAngle, Numeric \endAngle, Bool \antiClockwise = False)`
 - `closePath()`
 
+## Font Resources
+
+This module integrates with the [CSS::Font::Resources](https://css-raku.github.io/CSS-Font-Resources-raku/CSS/Font/Resources).
+
+A list of `@font-face` CSS font descriptors can be passed to the canvas object. These
+specify the font sources. For example:
+
+```
+use HTML::Canvas;
+use HTML::Canvas::To::Cairo;
+use CSS::Font::Descriptor;
+use Cairo;
+
+my CSS::Font::Descriptor $ugly .= new: :font-family<arial>, :src<url(resources/font/FreeMono.ttf)>;
+my HTML::Canvas $canvas .= new: :font-face[$ugly];
+my HTML::Canvas::To::Cairo $feed .= new: :width(650), :height(400), :$canvas;
+$canvas<scale>(2.0, 3.0);
+$canvas<font> = "30px Arial";
+$canvas.fillText("Hello World",10,50);
+# save canvas as PNG
+my Cairo::Surface $surface = $feed.surface;
+$surface.write_png: "tmp/ariel-ugly.png";
+
+```
+
+Note that supported fonts may be backend dependant.
+
+-- L<HTML::Canvas::To::Cairo> supports almost all common font formats via the FreeType/Cairo itegration
+-- L<HTML::Canvas::To::PDF> supports a smaller set of font formats; Fonts with extensions `*.otf`, `*.ttf`, `*.cff`, `*.pfa`, `*.pfb` should work. But resources with extensions `*.woff`, `*.woff2`, and `*.eot` are ignored.
+
 ## Methods
 
 The methods below implement the majority of the W3C [HTML Canvas 2D Context](https://www.w3.org/TR/2dcontext/) API.
