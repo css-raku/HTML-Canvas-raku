@@ -17,7 +17,8 @@ jobs:
           #- macOS-latest
           #- windows-latest
         raku-version:
-          - 'latest'
+          #- 'latest'
+          - '2020.11'
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
