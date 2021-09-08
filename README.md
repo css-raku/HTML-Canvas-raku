@@ -26,18 +26,6 @@ This package depends on Cairo, Font::FreeType, Text::FriBidi and HarfBuzz. Addit
 - the native `Cairo` library is also needed. See instructions at https://cairographics.org/download/.
 - Installation of the [fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) package is also currently required.
 
-## Install - Fonts
-
-Fonts are currently found using fontconfig's fc-match utility. For example:
-
-    % fc-match 'arial;weight=bold'
-    DejaVuSans.ttf: "DejaVu Sans" "Book"
-
-If fc-match is unable to find a font. HTML::Canvas currently falls back to using a mono-spaced font (FreeMono).
-
-The font may need to be installed on your system and/or fontconfig may
-need additional configuration to ensure it finds the correct font.
-
 # Example
 
 ```
@@ -195,12 +183,17 @@ The following methods can be used in path construction:
 - `arc(Numeric \x, Numeric \y, Numeric \r, Numeric \startAngle, Numeric \endAngle, Bool \antiClockwise = False)`
 - `closePath()`
 
-## Font Resources
 
-This module integrates with the [CSS::Font::Resources](https://css-raku.github.io/CSS-Font-Resources-raku/CSS/Font/Resources).
+## Font Loading
 
-A list of `@font-face` CSS font descriptors can be passed to the canvas object. These
-specify the font sources. For example:
+### Font Resources
+
+This module integrates with the [CSS::Font::Resources](https://css-raku.github.io/CSS-Font-Resources-raku/CSS/Font/Resources) module.
+
+A list of `@font-face` CSS font descriptors can be passed to the canvas object to specify font sources. Fonts are resolved
+the same way as [`@font-face` rules in a stylesheet](https://www.w3.org/TR/2018/REC-css-fonts-3-20180920/#font-resources).
+
+For example:
 
 ```
 use HTML::Canvas;
@@ -222,8 +215,20 @@ $surface.write_png: "tmp/ariel-ugly.png";
 
 Note that supported fonts may be backend dependant.
 
--- L<HTML::Canvas::To::Cairo> supports almost all common font formats via the FreeType/Cairo itegration
--- L<HTML::Canvas::To::PDF> supports a smaller set of font formats; Fonts with extensions `*.otf`, `*.ttf`, `*.cff`, `*.pfa`, `*.pfb` should work. But resources with extensions `*.woff`, `*.woff2`, and `*.eot` are ignored.
+- `HTML::Canvas::To::Cairo` supports almost all common font formats via the FreeType/Cairo itegration
+- `HTML::Canvas::To::PDF` supports a smaller set of font formats; Fonts with extensions `*.otf`, `*.ttf`, `*.cff`, `*.pfa`, `*.pfb` should work. But resources with extensions `*.woff`, `*.woff2`, and `*.eot` are ignored.
+
+### Font System Loading
+
+Local fonts and fonts without matching `@font-face` font descriptors are resolved using fontconfig's fc-match utility. For example:
+
+    % fc-match 'arial;weight=bold'
+    DejaVuSans.ttf: "DejaVu Sans" "Book"
+
+If fc-match is unable to find a font. HTML::Canvas currently falls back to using a mono-spaced font (FreeMono).
+
+The font may need to be installed on your system and/or fontconfig may
+need additional configuration to ensure it finds the correct font.
 
 ## Methods
 
