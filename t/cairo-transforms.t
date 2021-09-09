@@ -14,8 +14,7 @@ my $y = 0;
 my \h = 20;
 my \pad = 10;
 my \textHeight = 20;
-my HTML::Canvas $canvas .= new;
-my $feed = HTML::Canvas::To::Cairo.new: :width(612), :height(792), :$canvas;
+my HTML::Canvas $canvas .= new: :width(612), :height(792);
 
 sub test-page(&markup) {
     my Bool $clean = True;
@@ -39,8 +38,8 @@ sub test-page(&markup) {
     }
 
     ok $clean, "completion of page $page-no";
-    my $width = $feed.width;
-    my $height = $feed.height;
+    my $width = $canvas.width;
+    my $height = $canvas.height;
     @html-body.push: "<hr/>" ~ $canvas.to-html( :$width, :$height );
     @sheets.push: $canvas;
 }
@@ -82,7 +81,7 @@ test-page(
 });
 
 # save canvas as PNG
-lives-ok {$feed.surface.write_png: "tmp/cairo-transforms.png"}, 'write_png';
+lives-ok {$canvas.image.write_png: "tmp/cairo-transforms.png"}, 'write_png';
 
 my $html = "<html><body>" ~ @html-body.join ~ "</body></html>";
 

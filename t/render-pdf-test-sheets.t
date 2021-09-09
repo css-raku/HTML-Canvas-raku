@@ -11,17 +11,16 @@ my $sheet-no;
 my @html-body;
 my HTML::Canvas @sheets;
 
-my $surface = Cairo::Surface::PDF.create("tmp/render-pdf-test-sheets.pdf", 612, 792);
-
 my $y = 0;
 my \h = 20;
 my \pad = 10;
 my \textHeight = 20;
+my $surface = Cairo::Surface::PDF.create("tmp/render-pdf-test-sheets.pdf", 612, 792);
+
 my $cache = HTML::Canvas::To::Cairo::Cache.new;
 
 sub test-sheet(&markup) {
-    my HTML::Canvas $canvas .= new;
-    my $feed = HTML::Canvas::To::Cairo.new: :$surface, :$canvas, :$cache;
+    my HTML::Canvas $canvas .= new: :$surface, :$cache;
     my Bool $clean = True;
     $sheet-no++;
 
@@ -41,8 +40,8 @@ sub test-sheet(&markup) {
     }
 
     ok $clean, "completion of image $sheet-no";
-    my $width = $feed.width;
-    my $height = $feed.height;
+    my $width = $canvas.width;
+    my $height = $canvas.height;
     @html-body.push: "<hr/>" ~ $canvas.to-html( :$width, :$height );
     $surface.show_page;
     @sheets.push: $canvas;
@@ -578,11 +577,10 @@ test-sheet( -> \ctx {
       my $shift = 0;
       for 1 .. 3 {
           ctx.drawImage($canvas, $shift, $shift, 240, 220,  $x,  $y, 50, 50);
-last;
           $x += 60;
           $shift += 20;
       }
-if 0 {
+
       $shift = 0;
       for 1 .. 3 {
           ctx.drawImage($canvas, 0, 0, 200 + $shift, 220,  $x,  $y, 50, 50);
@@ -598,7 +596,6 @@ if 0 {
       ctx.drawImage($canvas, 160, $y, 100, 150);
       ctx.drawImage($canvas,                    30, 30, 400, 500,
                                    300, $y, 100, 150);
-}
 });
 
 test-sheet( -> \ctx {

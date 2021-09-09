@@ -83,8 +83,7 @@ my Cairo::Surface::PDF $surface .= create("examples/read-me-example.pdf", 128, 1
 my HTML::Canvas::To::Cairo::Cache $cache .= new;
 
 for 1..2 -> $page {
-    my HTML::Canvas $canvas .= new;
-    my HTML::Canvas::To::Cairo $feed .= new: :$surface, :$canvas, :$cache;
+    my HTML::Canvas $canvas .= new: :$surface, :$cache;
     $canvas.context: {
         .font = "10pt times-roman bold";
         .fillStyle = "blue";
@@ -202,13 +201,12 @@ use CSS::Font::Descriptor;
 use Cairo;
 
 my CSS::Font::Descriptor $ugly .= new: :font-family<arial>, :src<url(resources/font/FreeMono.ttf)>;
-my HTML::Canvas $canvas .= new: :font-face[$ugly];
-my HTML::Canvas::To::Cairo $feed .= new: :width(650), :height(400), :$canvas;
+my HTML::Canvas $canvas .= new: :font-face[$ugly], :width(650), :height(400);
 $canvas<scale>(2.0, 3.0);
 $canvas<font> = "30px Arial";
 $canvas.fillText("Hello World",10,50);
 # save canvas as PNG
-my Cairo::Surface $surface = $feed.surface;
+my Cairo::Surface $surface = $canvas.image;
 $surface.write_png: "tmp/ariel-ugly.png";
 
 ```

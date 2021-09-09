@@ -6,10 +6,9 @@ use HTML::Canvas;
 use HTML::Canvas::To::Cairo;
 use Cairo;
 
-my HTML::Canvas $canvas .= new;
-my $feed = HTML::Canvas::To::Cairo.new: :width(612), :height(792), :$canvas;
-is $feed.width, 612, 'renderer default width';
-is $feed.height, 792, 'rendered default height';
+my HTML::Canvas $canvas .= new: :width(612), :height(792);
+is $canvas.width, 612, 'renderer default width';
+is $canvas.height, 792, 'rendered default height';
 
 $canvas.context: -> \ctx {
     ctx.save; {
@@ -60,13 +59,13 @@ $canvas.context: -> \ctx {
 }
 
 # save canvas as PNG
-my Cairo::Surface $surface = $feed.surface;
+my Cairo::Surface $surface = $canvas.image;
 $surface.write_png: "tmp/render-png-basic.png";
 
 # also save comparative HTML
 
-my $width = $feed.width;
-my $height = $feed.height;
+my $width = $canvas.width;
+my $height = $canvas.height;
 my $html = "<html><body>{ $canvas.to-html( :$width, :$height ) }</body></html>";
 "t/render-png-basic.html".IO.spurt: $html;
 

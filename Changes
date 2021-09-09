@@ -1,4 +1,7 @@
 {{$NEXT}}
+  - Add HTML::Canvas `$.surface` attribute. To allow reuse of
+    specialized surfaces such as Cairo::Surface::PDF. Adjusted
+    PDF examples in README and tests, which are now a bit easier.
 
 0.0.17  2021-09-08T13:10:04+12:00
   - Add font loading via CSS::Font::Descriptor (@font-face) resources.

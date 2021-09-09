@@ -18,7 +18,6 @@ class HTML::Canvas::To::Cairo {
     use Text::FriBidi::Line;
 
     has HTML::Canvas $.canvas is rw .= new;
-    has Cairo::Surface $.surface handles <width height Blob>;
     has Cairo::Context $.ctx;
 
     my subset Drawable where HTML::Canvas|HTML::Canvas::Image|HTML::Canvas::ImageData;
@@ -64,19 +63,26 @@ class HTML::Canvas::To::Cairo {
     }
 
     has Font $!font .= new;
-    has Cache $.cache .= new;
+    has Cache $.cache;
     method ft-face {
         $!font.ft-face(:$!cache);
     }
 
-    submethod TWEAK(Numeric :$width = $!canvas.width // 128 , Numeric :$height = $!canvas.height // 128) {
-        $!surface //= Cairo::Image.create(Cairo::FORMAT_ARGB32, $width, $height);
-        $!ctx //= Cairo::Context.new($!surface);
+    submethod TWEAK(:$cache) is hidden-from-backtrace {
+        with $cache {
+            $!cache = $_;
+        }
+        else {
+            $!cache .= new;
+        }
+        $!ctx //= Cairo::Context.new(self.surface);
         with $!canvas {
             $!font.font-face = .font-face;
             .callback.push: self.callback
         }
     }
+
+    method surface handles<width height Blob> { $.canvas.surface }
 
     method render(HTML::Canvas $canvas --> Cairo::Surface) {
         my $width = $canvas.width // 128;

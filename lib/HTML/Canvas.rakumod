@@ -5,6 +5,7 @@ use Hash::Agnostic;
 class HTML::Canvas:ver<0.0.17>
     does Hash::Agnostic {
 
+    need Cairo;
     use CSS::Properties;
     use CSS::Font::Descriptor;
     use HTML::Canvas::Gradient;
@@ -16,8 +17,18 @@ class HTML::Canvas:ver<0.0.17>
     has Numeric $.height = 792;
     has Pair @.calls;
     has Routine @.callback;
-    has $!cairo = (require ::('HTML::Canvas::To::Cairo')).new: :canvas(self), :$!width, :$!height;
+    has $!feed;
     has CSS::Font::Descriptor @.font-face;
+    has Cairo::Surface $.surface = Cairo::Image.create(Cairo::FORMAT_ARGB32, $!width, $!height);
+    submethod TWEAK(
+        :$cache;
+    ) {
+        # setup our primary feed
+        my %o;
+        %o<cache> = $_ with $cache;
+        my $class = (require ::('HTML::Canvas::To::Cairo'));
+        $!feed = $class.new: :canvas(self), |%o;
+    }
 
     # -- Graphics Variables --
     my Attribute %GraphicVars;
@@ -34,7 +45,7 @@ class HTML::Canvas:ver<0.0.17>
     has HTML::Canvas::Path2D $.path is graphics handles<moveTo lineTo quadraticCurveTo bezierCurveTo arcTo arc rect closePath> .= new: :sync(self);
     method subpath is DEPRECATED<path> { $.path.calls }
 
-    method image { $!cairo.surface }
+    method image { $!surface }
     subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction'|'globalAlpha';
     my subset CanvasOrImage where HTML::Canvas|HTML::Canvas::Image;
     my subset FillRule is export(:FillRule) of Str where 'nonzero'|'evenodd';
@@ -302,7 +313,7 @@ class HTML::Canvas:ver<0.0.17>
         }
         warn "ignoring resolution: $_" with $res;
 
-        my Blob $source = $!cairo.Blob;
+        my Blob $source = $!feed.Blob;
         my HTML::Canvas::Image $image .= new: :image-type<PNG>, :$source;
         $image.data-uri;
     }
@@ -345,13 +356,13 @@ class HTML::Canvas:ver<0.0.17>
         my $ctx = Cairo::Context.new($image);
         $ctx.rgb(1.0, 1.0, 1.0);
         $ctx.paint;
-        $ctx.set_source_surface(self.image, -$sx, -$sy);
+        $ctx.set_source_surface($!surface, -$sx, -$sy);
         $ctx.rectangle($sx, $sy, $sh, $sh);
         $ctx.paint;
         self!var: HTML::Canvas::ImageData.new: :$image, :$sx, :$sy, :$sw, :$sh;
     }
     method measureText(Str $text) {
-        my @measures = @!callback.map({.('measureText', $text)}).grep: *.so;
+        my @measures = @!callback.map({.('measureText', $text) || Empty});
         if @measures {
             given @measures.sum / +@measures -> $width {
                 my class TextMetrics { has Numeric $.width }.new: :$width
@@ -383,9 +394,9 @@ class HTML::Canvas:ver<0.0.17>
         $!path.close();
     }
 
-    method context(&do-markup) {
+    method context(&actions) {
         self._start;
-        do-markup(self);
+        self.&actions();
         self._finish;
     }
 
