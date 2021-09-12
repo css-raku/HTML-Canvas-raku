@@ -321,21 +321,10 @@ class HTML::Canvas:ver<0.0.18>
     BEGIN {
         for $?CLASS.^methods.grep(* ~~ API-Trait) -> &meth {
             my \name = &meth.name;
-            my Signature $sig = &meth.signature;
-            if $sig.arity == 2 && $sig.params[1].type ~~ Positional {
-                # e.g. self.setDash(@pat);
-                &meth.wrap: method (@a) is hidden-from-backtrace {
-                    my \rv = callsame();
-                    self!call(name, $@a);
-                    rv;
-                }
-            }
-            else {
-                &meth.wrap: method (*@a) is hidden-from-backtrace {
-                    my \rv = callsame();
-                    self!call(name, |@a);
-                    rv;
-                }
+            &meth.wrap: method (*@a) is hidden-from-backtrace {
+                my \rv = callsame();
+                self!call(name, |@a);
+                rv;
             }
         }
     }
