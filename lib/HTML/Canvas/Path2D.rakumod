@@ -41,7 +41,7 @@ method closePath {
 
 method to-js(Str, Str $var = 'path' --> Array) {
     my @js = 'var %s = new Path2D();'.sprintf($var);
-    for self.calls {
+    for @!calls {
         my $meth = .key;
         my $args = .value.map({to-json($_)}).join: ', ';
         @js.push: '%s.%s(%s);'.sprintf($var, $meth, $args);

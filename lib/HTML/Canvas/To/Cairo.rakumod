@@ -382,13 +382,14 @@ class HTML::Canvas::To::Cairo {
         default {
             # Something we can't handle; JPEG, GIF etc.
             # create place-holder
-            my Cairo::Image $image = Cairo::Image.create(Cairo::FORMAT_ARGB32, $width, $height);
+            my Cairo::Image $image = Cairo::Image.create(Cairo::FORMAT_ARGB32, $width // 10, $height // 10);
             my $ctx = Cairo::Context.new($image);
             $ctx.rgba(.9, .95, .95, .4);
             $ctx.paint;
             $image;
         }
     }
+    proto method drawImage(*@) {*}
     multi method drawImage( Drawable $obj,
                             Numeric \sx, Numeric \sy,
                             Numeric \sw, Numeric \sh,
@@ -419,8 +420,7 @@ class HTML::Canvas::To::Cairo {
             $!ctx.restore;
         }
     }
-    multi method drawImage(Drawable $obj, Numeric $dx, Numeric $dy, Numeric $dw?, Numeric $dh?) is default {
-
+    multi method drawImage(Drawable $obj, Numeric $dx, Numeric $dy, Numeric $dw?, Numeric $dh?) {
         my Numeric $width = $dw;
         my Numeric $height = $dh;
         my Cairo::Surface $surface = self!to-surface($obj, :$width, :$height);
@@ -433,7 +433,7 @@ class HTML::Canvas::To::Cairo {
         $!ctx.set_source_surface($surface);
         $!ctx.paint_with_alpha($!canvas.globalAlpha);
 
-	$!ctx.restore
+	$!ctx.restore;
     }
     method putImageData(HTML::Canvas::ImageData $image-data, Numeric $dx, Numeric $dy) {
         self.drawImage( $image-data, $dx, $dy)

@@ -69,7 +69,7 @@ test-page(
               ctx."{.key}"(|.value) for t.list;
               $html-transform = ctx.transformMatrix.list;
               ctx.font = "italic 5pt courier";
-              ctx.fillText("h#{++$n}:"~[$html-transform.map: *.fmt('%.2f')].perl, 0, 0);
+              ctx.fillText("h#{++$n}:"~[$html-transform.map: *.fmt('%.2f')].raku, 0, 0);
               ctx.strokeStyle = 'red';
               ctx.fillStyle = pat;
               ctx.fillRect(0,10,75,100);

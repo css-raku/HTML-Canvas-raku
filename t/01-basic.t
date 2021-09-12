@@ -1,6 +1,6 @@
 use v6;
 use Test;
-plan 7;
+plan 8;
 
 use HTML::Canvas;
 use HTML::Canvas::To::Cairo;
@@ -13,6 +13,9 @@ lives-ok { $canvas.rect(100,100, 50,20); }, "basic API call - lives";
 dies-ok { $canvas.rect(100,100, 50, "blah"); }, "incorrect API call - dies";
 dies-ok { $canvas.rect(100,100, 50); }, "incorrect API call - dies";
 dies-ok { $canvas.foo(42) }, "unknown call - dies";
+
+my @keys = $canvas.keys;
+ok @keys.first: 'scale';
 $canvas.fill;
 $canvas<scale>(2.0, 3.0);
 $canvas<font> = "30px Arial";

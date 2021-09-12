@@ -1,4 +1,5 @@
 {{$NEXT}}
+  - Fix .keys method to include all API functions
 
 0.0.18  2021-09-10T10:52:08+12:00
   - Add HTML::Canvas `$.surface` attribute. A multiple page

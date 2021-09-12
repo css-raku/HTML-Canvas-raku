@@ -21,7 +21,7 @@ class HTML::Canvas:ver<0.0.18>
     has CSS::Font::Descriptor @.font-face;
     has Cairo::Surface $.surface = Cairo::Image.create(Cairo::FORMAT_ARGB32, $!width, $!height);
     submethod TWEAK(
-        :$cache;
+        :$cache
     ) {
         # setup our primary feed
         my %o;
@@ -37,12 +37,21 @@ class HTML::Canvas:ver<0.0.18>
         %GraphicVars{$name} = $att;
     }
 
-    role API-Trait {  }
-
+    my %API;
     multi trait_mod:<is>(Method $m, :$api!) {
-        $m does API-Trait;
+        my \name = $m.name;
+
+        $m.wrap: method (*@a) is hidden-from-backtrace {
+            my \rv = callsame();
+            self!call(name, |@a);
+            rv;
+        }
+ 
+       %API{name} = True
+            unless name ~~ '_start'|'_finish';
     }
-    has HTML::Canvas::Path2D $.path is graphics handles<moveTo lineTo quadraticCurveTo bezierCurveTo arcTo arc rect closePath> .= new: :sync(self);
+    constant @PathAPI = <moveTo lineTo quadraticCurveTo bezierCurveTo arcTo arc rect closePath>;
+    has HTML::Canvas::Path2D $.path is graphics handles(@PathAPI) .= new: :sync(self);
     method subpath is DEPRECATED<path> { $.path.calls }
 
     method image { $!surface }
@@ -318,17 +327,6 @@ class HTML::Canvas:ver<0.0.18>
         $image.data-uri;
     }
 
-    BEGIN {
-        for $?CLASS.^methods.grep(* ~~ API-Trait) -> &meth {
-            my \name = &meth.name;
-            &meth.wrap: method (*@a) is hidden-from-backtrace {
-                my \rv = callsame();
-                self!call(name, |@a);
-                rv;
-            }
-        }
-    }
-
     method createLinearGradient(Numeric $x0, Numeric $y0, Numeric $x1, Numeric $y1) {
         self!var: HTML::Canvas::Gradient.new: :$x0, :$y0, :$x1, :$y1;
     }
@@ -556,7 +554,7 @@ class HTML::Canvas:ver<0.0.18>
 
     #++ Hash::Agnostic interface
     method new(|c) { self.bless: |c; }
-    method keys { self.^methods.grep(* ~~ API-Trait)>>.name }
+    method keys { (%API.keys.Slip, %GraphicVars.keys.Slip, @PathAPI.Slip).sort }
     multi method AT-KEY(LValue:D $_) is rw { self.can($_)[0](self) }
     multi method AT-KEY(Str:D $_) is rw {
         with self.can($_) {
