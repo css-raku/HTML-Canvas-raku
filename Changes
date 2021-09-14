@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+0.0.19  2021-09-15T07:01:43+12:00
   - Fix .keys method to include all API functions
 
 0.0.18  2021-09-10T10:52:08+12:00

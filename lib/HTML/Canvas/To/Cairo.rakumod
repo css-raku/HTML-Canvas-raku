@@ -389,7 +389,7 @@ class HTML::Canvas::To::Cairo {
             $image;
         }
     }
-    proto method drawImage(*@) {*}
+
     multi method drawImage( Drawable $obj,
                             Numeric \sx, Numeric \sy,
                             Numeric \sw, Numeric \sh,

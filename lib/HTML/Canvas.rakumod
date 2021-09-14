@@ -2,7 +2,7 @@ use v6;
 
 use Hash::Agnostic;
 
-class HTML::Canvas:ver<0.0.18>
+class HTML::Canvas:ver<0.0.19>
     does Hash::Agnostic {
 
     need Cairo;
