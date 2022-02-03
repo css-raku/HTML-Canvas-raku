@@ -71,7 +71,7 @@ $canvas.context: -> \ctx {
     draw-line(ctx, 400);
 }
 
-lives-ok {$canvas.image.write_png: "t/placement.png"};
+lives-ok {$canvas.image.write_png: "tmp/placement.png"};
 
 @html-body.push: "<hr/>" ~ $canvas.to-html( :width(612), :height(792) );
 my $html = "<html><body>" ~ @html-body.join ~ "</body></html>";
