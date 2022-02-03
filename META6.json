@@ -13,7 +13,7 @@
     "CSS::Font::Resources:ver<0.0.3+>",
     "Font::FreeType:ver<0.3.7+>",
     "HarfBuzz::Font::FreeType:ver<0.0.5+>",
-    "HarfBuzz::Shaper::Cairo",
+    "HarfBuzz::Shaper::Cairo:ver<0.0.3+>",
     "Text::FriBidi",
     "Hash::Agnostic",
     "JSON::Fast"
