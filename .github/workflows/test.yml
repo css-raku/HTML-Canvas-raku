@@ -28,8 +28,8 @@ jobs:
       - name: Install Library Dependencies
         run: |
           sudo apt-get install -y libfribidi-dev
-          wget https://github.com/harfbuzz/harfbuzz/archive/2.7.4.tar.gz
-          (tar xzf 2.7.4.tar.gz && cd harfbuzz-2.7.4 && ./autogen.sh && make && sudo make install)
+          wget https://github.com/harfbuzz/harfbuzz/archive/3.3.1.tar.gz
+          (tar xzf 3.3.1.tar.gz && cd harfbuzz-3.3.1 && ./autogen.sh && make && sudo make install)
           sudo ldconfig
       - name: Install Raku Dependencies
         run: |

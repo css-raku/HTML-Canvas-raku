@@ -11,7 +11,7 @@ class HTML::Canvas::To::Cairo {
     use HTML::Canvas::Path2D;
     use HTML::Canvas::Pattern;
     use HarfBuzz::Buffer;
-    use HarfBuzz::Font::FreeType;
+    use HarfBuzz::Font::Cairo;
     use HarfBuzz::Shaper::Cairo;
     use HarfBuzz::Raw::Defs :hb-direction;
     use Text::FriBidi::Defs :FriBidiPar;
@@ -25,7 +25,7 @@ class HTML::Canvas::To::Cairo {
         has %.image{Drawable};
         has %.gradient{HTML::Canvas::Gradient};
         has %.pattern{HTML::Canvas::Pattern};
-        has %.font;
+        has  HarfBuzz::Font::Cairo %.font;
     }
     class Font
         is CSS::Font {
@@ -40,32 +40,26 @@ class HTML::Canvas::To::Cairo {
         has Font::FreeType $!freetype .= new;
         has CSS::Font::Descriptor @.font-face;
 
-        method !cached-font(:$cache!) {
+        method cached-font(:$cache!) {
             my Source $source = .head
                  with Resources.sources(:font(self), :@!font-face);
             my $key = do with $source { .Str } else { '' };
 
             $cache.font{$key} //= do {
-                my $font-path = .IO.path with $source;
-                $font-path ||= do {
+                my Str $file = .IO.path with $source;
+                $file ||= do {
                     warn "falling back to mono-spaced font";
                     %?RESOURCES<font/FreeMono.ttf>.absolute;
                 }
-                my Font::FreeType::Face $ft-face = $!freetype.face($font-path);
-                my $font-obj = Cairo::Font.create($ft-face.raw, :free-type);
-                my HarfBuzz::Font::FreeType() $shaping-font = %( :$ft-face );
-                [$ft-face, $font-obj, $shaping-font];
+                HarfBuzz::Font::Cairo.new: :$file;
             };
         }
-        method font-obj(:$cache! --> Cairo::Font) { self!cached-font(:$cache)[1] }
-        method ft-face(:$cache! --> Font::FreeType::Face) { self!cached-font(:$cache)[0] }
-        method shaping-font(:$cache! --> HarfBuzz::Font::FreeType) { self!cached-font(:$cache)[2] }
     }
 
     has Font $!font .= new;
     has Cache $.cache;
-    method ft-face {
-        $!font.ft-face(:$!cache);
+    method current-font handles<ft-face cairo-font shaping-font> {
+        $!font.cached-font(:$!cache);
     }
 
     submethod TWEAK(:$cache) is hidden-from-backtrace {
@@ -227,7 +221,7 @@ class HTML::Canvas::To::Cairo {
     method font(Str $?) {
         $!font.css = $!canvas.css;
         $!ctx.set_font_size: self!font-size;
-        $!ctx.set_font_face: $!font.font-obj(:$!cache);
+        $!ctx.set_font_face: $.cairo-font;
     }
     method !baseline-shift {
 	my \t = $!ctx.text_extents("Q");
@@ -318,9 +312,9 @@ class HTML::Canvas::To::Cairo {
             !! FRIBIDI_PAR_LTR;
         my Text::FriBidi::Line $line .= new: :$text, :$direction;
         my HarfBuzz::Buffer() $buf = %( :text($line.Str), :direction(HB_DIRECTION_LTR));
-        given $!font.shaping-font(:$!cache) {
-            .size = $size;
-            HarfBuzz::Shaper::Cairo.new: :$buf, :font($_);
+        given self.current-font {
+            .shaping-font.size = $size;
+            .shaper($buf);
         }
     }
     method measureText(Str $text --> Numeric) {
