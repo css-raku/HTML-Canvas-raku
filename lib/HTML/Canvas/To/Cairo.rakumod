@@ -41,8 +41,7 @@ class HTML::Canvas::To::Cairo {
         has CSS::Font::Descriptor @.font-face;
 
         method cached-font(:$cache!) {
-            my Source $source = .head
-                 with Resources.sources(:font(self), :@!font-face);
+            my Source $source = Resources.source(:font(self), :@!font-face);
             my $key = do with $source { .Str } else { '' };
 
             $cache.font{$key} //= do {
@@ -257,19 +256,19 @@ class HTML::Canvas::To::Cairo {
     enum <x y>;
     method fillText(Str $text, Numeric $x0, Numeric $y0, Numeric $maxWidth?) {
         my HarfBuzz::Shaper::Cairo $shaper = self!shaper: :$text;
-	my ($dx, $dy) = self!align($shaper.text-advance[x]);
-        my $x = $x0 + $dx;
-        my $y = $y0 + $dy;
+	my @a := self!align($shaper.text-advance[x]);
+        my $x = $x0 + @a[x];
+        my $y = $y0 + @a[y];
         my Cairo::Glyphs $glyphs = $shaper.cairo-glyphs: :$x, :$y;
         $!ctx.show_glyphs($glyphs);
     }
     method strokeText(Str $text, Numeric $x0, Numeric $y0, Numeric $maxWidth?) {
         my HarfBuzz::Shaper::Cairo $shaper = self!shaper: :$text;
-	my ($dx, $dy) = self!align($shaper.text-advance[x]);
+	my @a := self!align($shaper.text-advance[x]);
         $!ctx.save;
 	$!ctx.new_path;
-        my $x = $x0 + $dx;
-        my $y = $y0 + $dy;
+        my $x = $x0 + @a[x];
+        my $y = $y0 + @a[y];
         my Cairo::Glyphs $glyphs = $shaper.cairo-glyphs: :$x, :$y;
         $!ctx.glyph_path($glyphs);
 	$!ctx.stroke;
@@ -306,14 +305,13 @@ class HTML::Canvas::To::Cairo {
         $!ctx.set_dash(@pattern, +@pattern, $!canvas.lineDashOffset)
     }
     method !shaper(Str:D :$text!) {
-        my $size = self!font-size();
         my UInt $direction = $!canvas.direction eq 'rtl'
             ?? FRIBIDI_PAR_RTL
             !! FRIBIDI_PAR_LTR;
         my Text::FriBidi::Line $line .= new: :$text, :$direction;
         my HarfBuzz::Buffer() $buf = %( :text($line.Str), :direction(HB_DIRECTION_LTR));
         given self.current-font {
-            .shaping-font.size = $size;
+            .shaping-font.size = self!font-size();
             .shaper($buf);
         }
     }

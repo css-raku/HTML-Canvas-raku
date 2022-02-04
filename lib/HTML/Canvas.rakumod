@@ -189,7 +189,7 @@ class HTML::Canvas:ver<0.0.20>
         );
     }
 
-    has CSS::Properties $.css is graphics = CSS::Properties.new( :background-color($!fillStyle), :color($!strokeStyle), :$!font,  );
+    has CSS::Properties $.css is graphics .= new( :background-color($!fillStyle), :color($!strokeStyle), :$!font,  );
     has @.gsave;
 
     method _start() is api {}
@@ -199,7 +199,7 @@ class HTML::Canvas:ver<0.0.20>
         $!path.flush;
 
         die "'save' unmatched by 'restore' at end of canvas context"
-        if @!gsave;
+            if @!gsave;
     }
     method save is api {
           my %gstate = %GraphicVars.pairs.map: {
@@ -248,10 +248,10 @@ class HTML::Canvas:ver<0.0.20>
             
         }
     }
-    method translate(Numeric $x, Numeric $y) is api {
+    method translate(Numeric \x, Numeric \y) is api {
         given @!transformMatrix {
-            .[4] += .[0] * $x + .[2] * $y;
-            .[5] += .[1] * $x + .[3] * $y;
+            .[4] += .[0] * x + .[2] * y;
+            .[5] += .[1] * x + .[3] * y;
         }
     }
     method transform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) is api {
