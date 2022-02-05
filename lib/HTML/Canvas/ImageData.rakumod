@@ -1,8 +1,11 @@
-use v6;
-use Cairo;
-use JSON::Fast;
+use HTML::Canvas::Graphic;
 
-class HTML::Canvas::ImageData {
+class HTML::Canvas::ImageData
+   does HTML::Canvas::Graphic {
+
+    use Cairo;
+    use JSON::Fast;
+
     has Cairo::Image $.image;
     has Numeric ($.sx, $.sy, $.sw, $.sh);
 

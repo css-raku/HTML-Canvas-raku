@@ -25,6 +25,7 @@
   "provides": {
     "HTML::Canvas": "lib/HTML/Canvas.rakumod",
     "HTML::Canvas::Gradient": "lib/HTML/Canvas/Gradient.rakumod",
+    "HTML::Canvas::Graphic": "lib/HTML/Canvas/Graphic.rakumod",
     "HTML::Canvas::Image": "lib/HTML/Canvas/Image.rakumod",
     "HTML::Canvas::ImageData": "lib/HTML/Canvas/ImageData.rakumod",
     "HTML::Canvas::Path2D": "lib/HTML/Canvas/Path2D.rakumod",

@@ -5,6 +5,7 @@ class HTML::Canvas::To::Cairo {
     use Color;
     use CSS::Font;
     use HTML::Canvas :FillRule;
+    use HTML::Canvas::Graphic;
     use HTML::Canvas::Gradient;
     use HTML::Canvas::Image;
     use HTML::Canvas::ImageData;
@@ -20,12 +21,11 @@ class HTML::Canvas::To::Cairo {
     has HTML::Canvas $.canvas is rw .= new;
     has Cairo::Context $.ctx;
 
-    my subset Drawable where HTML::Canvas|HTML::Canvas::Image|HTML::Canvas::ImageData;
     class Cache {
-        has %.image{Drawable};
+        has %.image;
         has %.gradient{HTML::Canvas::Gradient};
         has %.pattern{HTML::Canvas::Pattern};
-        has  HarfBuzz::Font::Cairo %.font;
+        has HarfBuzz::Font::Cairo %.font;
     }
     class Font
         is CSS::Font {
@@ -344,28 +344,29 @@ class HTML::Canvas::To::Cairo {
     method clip() {
         $!ctx.clip;
     }
-    method !canvas-to-surface(HTML::Canvas $sub-canvas, Numeric :$width!, Numeric :$height! ) {
-        $!cache.image{$sub-canvas} //= do {
+    method !canvas-to-surface(HTML::Canvas:D $sub-canvas, Numeric :$width!, Numeric :$height! ) {
+        $!cache.image{$sub-canvas.html-id} //= do {
             my $renderer = self.new: :$width, :$height, :$!cache;
             $sub-canvas.render($renderer);
             $renderer.surface;
         }
     }
-    method !to-surface(Drawable $_,
-                        :$width! is rw,
-                        :$height! is rw --> Cairo::Surface) {
+    method !to-surface(HTML::Canvas::Graphic:D $_,
+                       :$width! is rw,
+                       :$height! is rw --> Cairo::Surface) {
+        my $k := .html-id;
         when HTML::Canvas {
-            $width = $_ with .html-width;
-            $height = $_ with .html-height;
-            $!cache.image{$_} //= self!canvas-to-surface($_, :$width, :$height);
+            $width  = .html-width;
+            $height = .html-height;
+            $!cache.image{$k} //= self!canvas-to-surface($_, :$width, :$height);
         }
         when HTML::Canvas::ImageData {
             $width = .sw;
             $height = .sh;
-            $!cache.image.{$_} //= .image;
+            $!cache.image{$k} //= .image;
         }
         when .image-type eq 'PNG' {
-            with ($!cache.image{$_} //= Cairo::Image.create(.Blob)) {
+            with ($!cache.image{$k} //= Cairo::Image.create(.Blob)) {
                 $width = .width;
                 $height = .height;
                 $_
@@ -382,7 +383,7 @@ class HTML::Canvas::To::Cairo {
         }
     }
 
-    multi method drawImage( Drawable $obj,
+    multi method drawImage( HTML::Canvas::Graphic $obj,
                             Numeric \sx, Numeric \sy,
                             Numeric \sw, Numeric \sh,
                             Numeric \dx, Numeric \dy,
@@ -412,7 +413,7 @@ class HTML::Canvas::To::Cairo {
             $!ctx.restore;
         }
     }
-    multi method drawImage(Drawable $obj, Numeric $dx, Numeric $dy, Numeric $dw?, Numeric $dh?) {
+    multi method drawImage(HTML::Canvas::Graphic $obj, Numeric $dx, Numeric $dy, Numeric $dw?, Numeric $dh?) {
         my Numeric $width = $dw;
         my Numeric $height = $dh;
         my Cairo::Surface $surface = self!to-surface($obj, :$width, :$height);

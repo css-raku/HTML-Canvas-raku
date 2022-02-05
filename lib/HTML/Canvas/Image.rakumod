@@ -1,4 +1,7 @@
-class HTML::Canvas::Image {
+use HTML::Canvas::Graphic;
+
+class HTML::Canvas::Image
+    does HTML::Canvas::Graphic {
 
     use Base64::Native;
     my subset DataURI of Str where /^('data:' [<t=.ident> '/' <s=.ident>]? $<b64>=";base64"? $<start>=",") /;

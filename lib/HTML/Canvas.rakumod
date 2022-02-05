@@ -1,8 +1,10 @@
 use v6;
 
 use Hash::Agnostic;
+use HTML::Canvas::Graphic;
 
 class HTML::Canvas:ver<0.0.20>
+    does HTML::Canvas::Graphic
     does Hash::Agnostic {
 
     need Cairo;
@@ -20,14 +22,12 @@ class HTML::Canvas:ver<0.0.20>
     has $!feed;
     has CSS::Font::Descriptor @.font-face;
     has Cairo::Surface $.surface = Cairo::Image.create(Cairo::FORMAT_ARGB32, $!width, $!height);
-    submethod TWEAK(
-        :$cache
-    ) {
+    submethod TWEAK( $canvas: :$cache) {
         # setup our primary feed
         my %o;
         %o<cache> = $_ with $cache;
         my $class = (require ::('HTML::Canvas::To::Cairo'));
-        $!feed = $class.new: :canvas(self), |%o;
+        $!feed = $class.new: :$canvas, |%o;
     }
 
     # -- Graphics Variables --
@@ -305,10 +305,8 @@ class HTML::Canvas:ver<0.0.20>
         self!setup-stroke();
     }
     method drawImage(CanvasOrImage \image, Numeric \dx, Numeric \dy, *@args) is api {
-        self!register-node(image);
     }
     method putImageData(HTML::Canvas::ImageData \image-data, Numeric \dx, Numeric \dy, *@args) is api {
-        self!register-node(image-data);
     }
     method setLineDash(@!lineDash) is api {
     }
@@ -334,7 +332,6 @@ class HTML::Canvas:ver<0.0.20>
         self!var: HTML::Canvas::Gradient.new: :$x0, :$y0, :$r0, :$x1, :$y1, :$r1;
     }
     method createPattern(HTML::Canvas::Image $image, HTML::Canvas::Pattern::Repetition $repetition = 'repeat') {
-        self!register-node($image);
         self!var: HTML::Canvas::Pattern.new: :$image, :$repetition;
     }
     method getImageData(Numeric $sx, Numeric $sy, Numeric $sw, Numeric $sh) {
@@ -387,21 +384,6 @@ class HTML::Canvas:ver<0.0.20>
         self._finish;
     }
 
-    my role HTMLObj[Str $html-id] {
-        has Numeric $.html-width is rw;
-        has Numeric $.html-height is rw;
-        method html-id {$html-id}
-        method js-ref {
-            'document.getElementById("%s")'.sprintf(self.html-id);
-        }
-    }
-
-    method !register-node($obj) {
-        $obj.^mixin: HTMLObj[~ $obj.WHERE]
-            unless $obj.does(HTMLObj);
-        $obj;
-    }
-
     sub html-escape(Str $_) {
         .trans:
             /\&/ => '&amp;',
@@ -412,7 +394,6 @@ class HTML::Canvas:ver<0.0.20>
 
     #| lightweight html generation; canvas + javascript
     method to-html($obj = self, Numeric :$width = $obj.?width // Numeric, Numeric :$height = $obj.?height // Numeric, Str :$style='', |c) {
-        self!register-node($obj);
         $obj.html-width   = $_ with $width;
         $obj.html-height  = $_ with $height;
 
@@ -427,22 +408,17 @@ class HTML::Canvas:ver<0.0.20>
         }
     }
     method html(Str :$style, Str :$sep = "\n    ", |c) is default {
-        if self.does(HTMLObj) {
-            my $style-att  = do with $style { html-escape($_).fmt(' style="%s"') } else { '' };
-            my $width-att  = do with self.html-width  { ' width="%dpt"'.sprintf($_) } else { '' };
-            my $height-att = do with self.html-height { ' height="%dpt"'.sprintf($_) } else { '' };
+        my $style-att  = do with $style { html-escape($_).fmt(' style="%s"') } else { '' };
+        my $width-att  = do with self.html-width  { ' width="%dpt"'.sprintf($_) } else { '' };
+        my $height-att = do with self.html-height { ' height="%dpt"'.sprintf($_) } else { '' };
 
-            qq:to"END-HTML";
-            <canvas{$width-att}{$height-att} id="{self.html-id}"{$style-att}></canvas>
-            <script>
-                var ctx = {self.js-ref}.getContext("2d");
-                {self.js(:context<ctx>, :$sep, |c)}
-            </script>
-            END-HTML
-        }
-        else {
-            die 'please call .to-html( :$width, :$height) on this canvas, to initialize it';
-        }
+        qq:to"END-HTML";
+        <canvas{$width-att}{$height-att} id="{self.html-id}"{$style-att}></canvas>
+        <script>
+            var ctx = {self.js-ref}.getContext("2d");
+            {self.js(:context<ctx>, :$sep, |c)}
+        </script>
+        END-HTML
     }
 
     has %.var-num;
