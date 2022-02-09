@@ -10,9 +10,9 @@ use Cairo;
 my CSS::Font::Descriptor $arial .= new: :font-family<arial>, :src<url(resources/font/FreeMono.ttf)>;
 my HTML::Canvas $canvas .= new: :font-face[$arial];
 lives-ok { $canvas.rect(100,100, 50,20); }, "basic API call - lives";
-dies-ok { $canvas.rect(100,100, 50, "blah"); }, "incorrect API call - dies";
-dies-ok { $canvas.rect(100,100, 50); }, "incorrect API call - dies";
-dies-ok { $canvas.foo(42) }, "unknown call - dies";
+dies-ok  { $canvas.rect(100,100, 50, "blah"); }, "incorrect API call - dies";
+dies-ok  { $canvas.rect(100,100, 50); }, "incorrect API call - dies";
+dies-ok  { $canvas.foo(42) }, "unknown call - dies";
 
 my @keys = $canvas.keys;
 ok @keys.first: 'scale';

@@ -4,17 +4,26 @@ use JSON::Fast;
 
 has Pair @.calls handles<Bool>;
 has Bool $.closed;
-has $.sync;
-method close {$!closed = True}
+has $.canvas;
+
+method close {
+    $!closed = True
+}
+
 method flush {
     @!calls = ();
     $!closed = False;
 }
 
+method clone(|c) {
+    my @calls = @!calls.clone;
+    nextwith(:@calls, |c);
+}
+
 method !call(Str $op, @args) {
     @!calls.push: $op => @args;
     .calls.push: $op => @args
-        with $!sync;
+        with $!canvas;
 }
 
 method moveTo(Numeric \x, Numeric \y) {

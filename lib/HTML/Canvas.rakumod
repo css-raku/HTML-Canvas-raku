@@ -51,8 +51,8 @@ class HTML::Canvas:ver<0.1.0>
             unless name ~~ '_start'|'_finish';
     }
     constant @PathAPI = <moveTo lineTo quadraticCurveTo bezierCurveTo arcTo arc rect closePath>;
-    has HTML::Canvas::Path2D $.path is graphics handles(@PathAPI) .= new: :sync(self);
-    method subpath is DEPRECATED<path> { $.path.calls }
+    has HTML::Canvas::Path2D $.path is graphics handles(@PathAPI) .= new: :canvas(self);
+    method subpath is DEPRECATED<path> { $!path.calls }
 
     method image { $!surface }
     subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction'|'globalAlpha';
