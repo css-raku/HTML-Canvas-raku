@@ -11,7 +11,7 @@
     "Color",
     "CSS::Properties:ver<0.7.0+>",
     "CSS::Font::Resources:ver<0.0.8+>",
-    "FontConfig",  
+    "FontConfig",
     "Font::FreeType:ver<0.3.7+>",
     "HarfBuzz::Font::FreeType:ver<0.0.5+>",
     "HarfBuzz::Shaper::Cairo:ver<0.0.3+>",
@@ -47,5 +47,5 @@
   ],
   "test-depends": [
   ],
-  "version": "0.1.0"
+  "version": "0.1.1"
 }

@@ -1,5 +1,9 @@
 {{$NEXT}}
+
+0.1.1  2022-02-10T16:36:24+13:00
    - Ensure we do a deep clone of paths in canvas save()
+   - Add FontConfig, which is a dependency for CSS::Font::Resources
+    0.0.8+
 
 0.1.0  2022-02-06T07:29:38+13:00
    - Add HTML::Canvas::Graphic role 
