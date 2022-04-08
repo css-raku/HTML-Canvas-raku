@@ -26,8 +26,6 @@ sub place-text(\ctx) {
     ctx.fillText("Middle", 200, $y);
 }
 
-skip-rest "issue #4 test not completing";
-exit 0;
 
 $canvas.context: -> \ctx {
     my HTML::Canvas::Image \image .= open("t/images/crosshair-100x100.png");
@@ -56,19 +54,12 @@ $canvas.context: -> \ctx {
     ctx.drawImage(image,                       120, 200,   100, 100);
     draw-line(ctx, 200);
 
-    # drawImage 7 arguments
-    #                    sx, sy,    sw,  sh,    dx,  dy,   dw,  dh
-    ctx.drawImage(image,  0,  0,                10, 300,   100, 100);
-    ctx.drawImage(image,  0,  0,               120, 300,   100, 100);
-    ctx.drawImage(image,  10,10,               230, 300,   100, 100);
-    draw-line(ctx, 300);
-
     # drawImage 9 arguments
     #                    sx, sy,    sw,  sh,    dx,  dy,   dw,  dh
-    ctx.drawImage(image,  0,  0,   100, 100,    10, 400,   100, 100);
-    ctx.drawImage(image,  0,  0,   110, 110,   120, 400,   100, 100);
-    ctx.drawImage(image,  10,10,   110, 110,   230, 400,   100, 100);
-    draw-line(ctx, 400);
+    ctx.drawImage(image,  0,  0,   100, 100,    10, 300,   100, 100);
+    ctx.drawImage(image,  0,  0,   110, 110,   120, 300,   100, 100);
+    ctx.drawImage(image,  10,10,   110, 110,   230, 300,   100, 100);
+    draw-line(ctx, 300);
 }
 
 lives-ok {$canvas.image.write_png: "tmp/placement.png"};
