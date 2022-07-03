@@ -19,12 +19,12 @@ The module includes classes:
 
 # Install
 
-This package depends on Cairo, Font::FreeType, Text::FriBidi and HarfBuzz. Additional fonts may also be required on your system on your system:
+This package depends on Cairo, FontConfig, Font::FreeType, Text::FriBidi and HarfBuzz. Additional fonts may also be required on your system:
 
 - the [freetype](https://www.freetype.org/download.html) native library needs to be on your system to enable Font::FreeType installation
 - Text::FriBidi is required for handling of BiDirectional text.
 - the native `Cairo` library is also needed. See instructions at https://cairographics.org/download/.
-- Installation of the [fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) package is also currently required.
+- Installation of the [fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) native library is also required.
 
 # Example
 
@@ -218,15 +218,8 @@ Note that supported fonts may be backend dependant.
 
 ### Font System Loading
 
-Local fonts and fonts without matching `@font-face` font descriptors are resolved using fontconfig's fc-match utility. For example:
-
-    % fc-match 'arial;weight=bold'
-    DejaVuSans.ttf: "DejaVu Sans" "Book"
-
-If fc-match is unable to find a font. HTML::Canvas currently falls back to using a mono-spaced font (FreeMono).
-
-The font may need to be installed on your system and/or fontconfig may
-need additional configuration to ensure it finds the correct font.
+Local fonts and fonts without matching `@font-face` font descriptors are resolved using FontConfig. 
+If FontConfig fails to find a matching font, HTML::Canvas falls back to using a mono-spaced font (FreeMono).
 
 ## Methods
 
