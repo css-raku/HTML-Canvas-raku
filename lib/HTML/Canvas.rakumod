@@ -3,7 +3,7 @@ use v6;
 use Hash::Agnostic;
 use HTML::Canvas::Graphic;
 
-class HTML::Canvas:ver<0.1.1>
+class HTML::Canvas:ver<0.1.2>
     does HTML::Canvas::Graphic
     does Hash::Agnostic {
 
