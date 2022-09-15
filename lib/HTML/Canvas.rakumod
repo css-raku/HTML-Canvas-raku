@@ -56,7 +56,6 @@ class HTML::Canvas:ver<0.1.2>
 
     method image { $!surface }
     subset LValue of Str where 'dashPattern'|'fillStyle'|'font'|'lineCap'|'lineJoin'|'lineWidth'|'strokeStyle'|'textAlign'|'textBaseline'|'direction'|'globalAlpha';
-    my subset CanvasOrImage where HTML::Canvas|HTML::Canvas::Image;
     my subset FillRule is export(:FillRule) of Str where 'nonzero'|'evenodd';
 
     has Numeric @.transformMatrix is rw is graphics = [ 1, 0, 0, 1, 0, 0, ];
@@ -304,7 +303,7 @@ class HTML::Canvas:ver<0.1.2>
     method strokeText(Str $text, Numeric $x, Numeric $y, Numeric $max-width?) is api {
         self!setup-stroke();
     }
-    method drawImage(CanvasOrImage \image, Numeric \dx, Numeric \dy, *@args) is api {
+    method drawImage(HTML::Canvas::Graphic \image, Numeric \dx, Numeric \dy, *@args) is api {
     }
     method putImageData(HTML::Canvas::ImageData \image-data, Numeric \dx, Numeric \dy, *@args) is api {
     }
