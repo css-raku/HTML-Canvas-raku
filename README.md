@@ -397,4 +397,4 @@ Currently support for `getImageData` and `putImageData` (3 argument format) only
 
 ## Additional Rendering Backends
 
-- [HTML::Canvas::To::PDF](https://pdf-raku.github.io/HTML-Canvas-To-PDF-raku) - render to PDF, using the Perl 6 [PDF](https://pdf-raku.github.io) tool-chain.
+- [HTML::Canvas::To::PDF](https://pdf-raku.github.io/HTML-Canvas-To-PDF-raku) - render to PDF, using the Raku [PDF](https://pdf-raku.github.io) tool-chain.
