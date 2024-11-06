@@ -29,7 +29,7 @@ sub place-text(\ctx) {
 
 $canvas.context: -> \ctx {
     my HTML::Canvas::Image \image .= open("t/images/crosshair-100x100.png");
-    @html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
+    @html-body.push: $canvas.to-html: image, :style("visibility:hidden");
     ctx.font = '10pt ariel';
     ctx.translate(0, 20);
     place-text(ctx);

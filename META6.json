@@ -11,7 +11,7 @@
     "Color",
     "CSS::Properties:ver<0.7.0+>",
     "CSS::Font::Resources:ver<0.0.8+>",
-    "FontConfig",
+    "FontConfig:ver<0.1.5+>",
     "Font::FreeType:ver<0.3.7+>",
     "HarfBuzz::Font::FreeType:ver<0.0.5+>",
     "HarfBuzz::Shaper::Cairo:ver<0.0.3+>",
@@ -32,6 +32,7 @@
     "HTML::Canvas::Path2D": "lib/HTML/Canvas/Path2D.rakumod",
     "HTML::Canvas::Pattern": "lib/HTML/Canvas/Pattern.rakumod",
     "HTML::Canvas::To::Cairo": "lib/HTML/Canvas/To/Cairo.rakumod",
+    "HTML::Canvas::To::HTML": "lib/HTML/Canvas/To/HTML.rakumod",
     "HTML::Canvas::Tracer": "lib/HTML/Canvas/Tracer.rakumod"
   },
   "resources": [

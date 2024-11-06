@@ -117,7 +117,7 @@ my HTML::Canvas $canvas .= new;
 my @html-body;
 # add the image, as a hidden DOM item
 my HTML::Canvas::Image \image .= open("t/images/camelia-logo.png");
-@html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
+@html-body.push: $canvas.to-html: image, :style("visibility:hidden");
 # draw it
 $canvas.context: -> \ctx {
     ctx.drawImage(image, 10, 10  );  
@@ -362,7 +362,7 @@ my @html-body;
 my HTML::Canvas::Image \image .= open("t/images/crosshair-100x100.jpg");
 
 # save to HTML
-@html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
+@html-body.push: ctx.to-html: image, :style("visibility:hidden");
 # draw on the canvas
 ctx.drawImage(image,  20, 10,  50, 50);
 

@@ -10,8 +10,8 @@ my @html-body;
 
 my \jpg-image = HTML::Canvas::Image.open("t/images/crosshair-100x100.jpg");
 my \png-image = HTML::Canvas::Image.open("t/images/crosshair-100x100.png");
-@html-body.push: HTML::Canvas.to-html: jpg-image, :style("visibility:hidden");
-@html-body.push: HTML::Canvas.to-html: png-image, :style("visibility:hidden");
+@html-body.push: $canvas.to-html: jpg-image, :style("visibility:hidden");
+@html-body.push: $canvas.to-html: png-image, :style("visibility:hidden");
 
 my $y = 10;
 my \pad = 10;

@@ -46,7 +46,7 @@ sub test-page(&markup) {
 
 my \image = HTML::Canvas::Image.open("t/images/crosshair-100x100.png");
 
-@html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
+@html-body.push: $canvas.to-html: image, :style("visibility:hidden");
 
 test-page(
     -> \ctx {

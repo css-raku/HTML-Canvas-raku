@@ -535,9 +535,9 @@ test-sheet( -> \ctx {
 });
 
 my \image = HTML::Canvas::Image.open("t/images/camelia-logo.png");
-@html-body.push: HTML::Canvas.to-html: image, :style("visibility:hidden");
 
 test-sheet( -> \ctx {
+      @html-body.push: ctx.to-html: image, :style("visibility:hidden");
       ctx.fillText("Testing drawImage", 20, $y += textHeight);
       $y += pad + 10;
 
