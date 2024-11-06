@@ -392,12 +392,17 @@ class HTML::Canvas:ver<0.1.2>
     }
 
     #| lightweight html generation; canvas + javascript
-    method to-html($obj = self, Numeric :$width = $obj.?width // Numeric, Numeric :$height = $obj.?height // Numeric, Str :$style='', |c) {
+    multi method to-html(::?CLASS:D: *%opt) {
+        temp %!sym = ();
+        temp %!var-num = ();
+        self.to-html(self, |%opt);
+    }
+    multi method to-html($obj, Numeric :$width = $obj.?width // Numeric, Numeric :$height = $obj.?height // Numeric, Str :$style='', *%opt) {
         $obj.html-width   = $_ with $width;
         $obj.html-height  = $_ with $height;
 
         if $obj.can('html') {
-            $obj.html(:$style, |c);
+            $obj.html(:$style, |%opt);
         }
         elsif $obj.can('data-uri') {
             sprintf "<img id='%s' style='%s' src='%s' />\n".sprintf( $obj.html-id, html-escape($style), $obj.data-uri );
