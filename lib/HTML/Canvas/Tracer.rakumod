@@ -1,34 +1,30 @@
-use v6;
+unit class HTML::Canvas::Tracer;
 
-class HTML::Canvas::Tracer {
+has UInt $!indent = 0;
 
-    has UInt $!indent = 0;
+method callback {
+    sub ($op, |c) { self."{$op}"(|c); }
+}
 
-    method callback {
-        sub ($op, |c) { self."{$op}"(|c); }
+submethod TWEAK(:$canvas) {
+    with $canvas {
+        .callback.push: self.callback;
     }
+}
 
-    submethod TWEAK(:$canvas) {
-        with $canvas {
-            .callback.push: self.callback;
-        }
-    }
+method FALLBACK($name, *@args, *%opts) {
+    $!indent = 0 if $name eq '_start'|'_finish';
+    $!indent-- if $name eq 'restore' && $!indent;
 
-    method FALLBACK($name, *@args, *%opts) {
-	$!indent = 0 if $name eq '_start'|'_finish';
-	$!indent-- if $name eq 'restore' && $!indent;
+    $*ERR.print(('  ' x $!indent) ~ $name ~ '(');
 
-	$*ERR.print(('  ' x $!indent) ~ $name ~ '(');
+    my Str @pretty = @args».raku;
+    @pretty.push: ':%s(%s)'.sprintf( .key, .value.gist)
+        for %opts.pairs.sort; 
+    $*ERR.print( @pretty.join: ', ' );
 
-        my Str @pretty = @args».raku;
-        @pretty.push: ':%s(%s)'.sprintf( .key, .value.gist)
-            for %opts.pairs.sort; 
-	$*ERR.print( @pretty.join: ', ' );
+    $*ERR.say(');');
 
-	$*ERR.say(');');
-
-	$!indent++ if $name eq 'save';
-        Nil;
-    }
-
+    $!indent++ if $name eq 'save';
+    Nil;
 }
