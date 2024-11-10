@@ -1,7 +1,7 @@
-use HTML::Canvas::Graphic;
+class HTML::Canvas::ImageData {
 
-class HTML::Canvas::ImageData
-   does HTML::Canvas::Graphic {
+    use HTML::Canvas::Graphic;
+    also does HTML::Canvas::Graphic;
 
     use Cairo;
     use JSON::Fast;

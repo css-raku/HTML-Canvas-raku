@@ -1,7 +1,6 @@
 use v6;
-use HTML::Canvas::Image;
-
 class HTML::Canvas::Pattern {
+    use HTML::Canvas::Image;
     use JSON::Fast;
     subset Repetition of Str where 'repeat'|'repeat-x'|'repeat-y'|'no-repeat';
     has Repetition $.repetition = 'repeat';

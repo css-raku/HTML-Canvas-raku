@@ -23,7 +23,7 @@ multi method to-html(::?CLASS:D: *%opt) {
     temp %!var-num = ();
     self.to-html($!canvas, |%opt);
 }
-multi method to-html($obj, Numeric :$width = $obj.?width // Numeric, Numeric :$height = $obj.?height // Numeric, Str :$style='', *%opt) {
+multi method to-html(Any:D $obj, Numeric :$width = $obj.?width // Numeric, Numeric :$height = $obj.?height // Numeric, Str :$style='', *%opt) {
     $obj.html-width   = $_ with $width;
     $obj.html-height  = $_ with $height;
 
@@ -37,6 +37,7 @@ multi method to-html($obj, Numeric :$width = $obj.?width // Numeric, Numeric :$h
         die "unable to convert this object to HTML";
     }
 }
+
 method html(Str :$style, Str :$sep = "\n    ", |c) is default {
     my $style-att  = do with $style { html-escape($_).fmt(' style="%s"') } else { '' };
     my $width-att  = do with $!canvas.html-width  { ' width="%dpt"'.sprintf($_) } else { '' };
@@ -108,9 +109,9 @@ method js(Str :$context = 'ctx', :$sep = "\n") {
         }
         else {
             my @args = .value.map: {
-                when Str|Bool|Int { to-json($_) }
-                when Numeric  { to-json(.round(.0001)) }
-                when List { '[ ' ~ .map({to-json($_)}).join(', ') ~ ' ]' }
+                when Str|Bool|Int { .&to-json }
+                when Numeric  { .round(.0001).&to-json }
+                when List { '[ ' ~ .map(&to-json).join(', ') ~ ' ]' }
                 when %!sym{$_}:exists { %!sym{$_} }
                 when HTML::Canvas::Pattern|HTML::Canvas::Gradient|HTML::Canvas::ImageData|HTML::Canvas::Path2D {
                     self!var-ref($_, :$context, :@js);

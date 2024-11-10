@@ -3,12 +3,13 @@ plan 1;
 
 use HTML::Canvas;
 use HTML::Canvas::To::Cairo;
+use HTML::Canvas::To::HTML;
 use Cairo;
 
-constant $LRM = 0x200E.chr;
-constant $LRO = 0x202D.chr;
-constant $RLO = 0x202E.chr;
-constant $PDF = 0x202C.chr;
+constant $LRM = "\c[LEFT-TO-RIGHT MARK]";
+constant $LRO = "\c[LEFT-TO-RIGHT OVERRIDE]";
+constant $RLO = "\c[RIGHT-TO-LEFT OVERRIDE]";
+constant $PDF = "\c[POP DIRECTIONAL FORMATTING]";
 
 my HTML::Canvas $canvas .= new: :width(150), :height(100);
 my HTML::Canvas::To::Cairo $feed .= new: :width(650), :height(400), :$canvas;
@@ -45,14 +46,13 @@ $canvas.context: {
 
 # save canvas as PNG
 my Cairo::Surface $surface = $feed.surface;
-$surface.write_png: "tmp/direction.png";
+$surface.finish;
 
 # also save comparative HTML
 
 my $width = $feed.width;
 my $height = $feed.height;
-my $html = "<html><body>{ $canvas.to-html( :$width, :$height ) }</body></html>";
-"t/direction.html".IO.spurt: $html;
+"t/direction.html".IO.spurt: HTML::Canvas::To::HTML.new(:$canvas).html;
 
 pass();
 done-testing();

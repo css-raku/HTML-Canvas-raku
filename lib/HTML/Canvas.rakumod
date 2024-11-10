@@ -258,8 +258,8 @@ method translate(Numeric \x, Numeric \y) is api {
     }
 }
 method transform(Numeric \a, Numeric \b, Numeric \c, Numeric \d, Numeric \e, Numeric \f) is api {
-    @!transformMatrix = do given @!transformMatrix {
-        [
+    given @!transformMatrix {
+        $_ = [
             .[0] * a + .[2] * b,
             .[1] * a + .[3] * b,
 
