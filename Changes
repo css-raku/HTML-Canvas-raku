@@ -1,4 +1,6 @@
 {{$NEXT}}
+   - Create HTML::Canvas::To::HTML; treat HTML/JS
+     rendering as another backend.
 
 0.1.2  2022-07-04T11:02:35+12:00
    - Upload to zef ecosystem
