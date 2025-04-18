@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+0.1.3  2025-04-19T09:49:23+12:00
    - Create HTML::Canvas::To::HTML; treat HTML/JS
      rendering as another backend.
 
