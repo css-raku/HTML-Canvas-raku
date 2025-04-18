@@ -29,6 +29,7 @@ jobs:
           brew update
           brew install harfbuzz
           brew install fribidi
+          brew install freetype
           brew reinstall freetype
       - name: Install Raku Dependencies
         run: |

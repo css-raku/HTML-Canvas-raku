@@ -22,7 +22,7 @@ The module includes classes:
 This package depends on Cairo, FontConfig, Font::FreeType, Text::FriBidi and HarfBuzz. Additional fonts may also be required on your system:
 
 - the [freetype](https://www.freetype.org/download.html) native library needs to be on your system to enable Font::FreeType installation
-- Text::FriBidi is required for handling of BiDirectional text.
+- Text::FriBidi is required for handling of bi-directional text.
 - the native `Cairo` library is also needed. See instructions at https://cairographics.org/download/.
 - Installation of the [fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) native library is also required.
 
@@ -213,7 +213,7 @@ $surface.write_png: "tmp/ariel-ugly.png";
 
 Note that supported fonts may be backend dependant.
 
-- `HTML::Canvas::To::Cairo` supports almost all common font formats via the FreeType/Cairo itegration
+- `HTML::Canvas::To::Cairo` supports almost all common font formats via the FreeType/Cairo integration
 - `HTML::Canvas::To::PDF` supports a smaller set of font formats; Fonts with extensions `*.otf`, `*.ttf`, `*.cff`, `*.pfa`, `*.pfb` should work. But resources with extensions `*.woff`, `*.woff2`, and `*.eot` are ignored.
 
 ### Font System Loading
