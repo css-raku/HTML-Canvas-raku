@@ -1,4 +1,4 @@
-name: test
+name: test macos
 
 on:
   push:
@@ -13,9 +13,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - ubuntu-latest
           - macOS-latest
-          #- windows-latest
         raku-version:
           - 'latest'
           - '2023.02'
@@ -25,12 +23,6 @@ jobs:
       - uses: Raku/setup-raku@v1
         with:
           raku-version: ${{ matrix.raku-version }}
-      - name: Linux specific setup
-        if: contains(matrix.os, 'ubuntu')
-        run: |
-          sudo apt-get install -y libharfbuzz-dev
-          sudo apt-get install -y libfribidi-dev
-          sudo apt-get install -y libfreetype6-dev
       - name: macOS specific setup
         if: contains(matrix.os, 'macOS')
         run: |

@@ -1,0 +1,39 @@
+name: test
+
+on:
+  push:
+    branches:
+      - '*'
+    tags-ignore:
+      - '*'
+  pull_request:
+
+jobs:
+  raku:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+        raku-version:
+          - 'latest'
+          - '2023.02'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: Raku/setup-raku@v1
+        with:
+          raku-version: ${{ matrix.raku-version }}
+      - name: Linux specific setup
+        if: contains(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get install -y libharfbuzz-dev
+          sudo apt-get install -y libfribidi-dev
+          sudo apt-get install -y libfreetype6-dev
+      - name: Install Raku Dependencies
+        run: |
+          zef install --/test App::Prove6
+          zef --deps-only install .
+      - name: Run Tests
+        run: |
+          prove6 -I. t
+          zef install .
