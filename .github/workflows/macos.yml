@@ -33,7 +33,7 @@ jobs:
           brew reinstall freetype
           brew reinstall fontconfig
           brew install cairo
-     - name: Install Raku Dependencies
+      - name: Install Raku Dependencies
         run: |
           zef install --/test App::Prove6
           zef install MacOS::NativeLib
