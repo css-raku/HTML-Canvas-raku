@@ -420,10 +420,9 @@ multi method AT-KEY(LValue:D $_) is rw { self.can($_)[0](self) }
 multi method AT-KEY(Str:D $_) is rw {
     with self.can($_) {
         my &meth := .[0];
-        my &curried;
-        Proxy.new:
-          FETCH => -> $ { &curried //= -> |c { &meth(self, |c); } },
-          STORE => -> $, $val { &meth(self) = $val; }
+        sub FETCH($) { -> |c { &meth(self, |c) } }
+        sub STORE($, &val) { &meth(self) = &val }
+        Proxy.new: :&FETCH, :&STORE;
     }
     else {
         die X::Method::NotFound.new( :method($_), :typename(self.^name) )
