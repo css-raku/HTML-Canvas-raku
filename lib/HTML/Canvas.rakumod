@@ -418,10 +418,10 @@ method new(|c) { self.bless: |c; }
 method keys { (%API.keys.Slip, %GraphicVars.keys.Slip, @PathAPI.Slip).sort }
 multi method AT-KEY(LValue:D $_) is rw { self.can($_)[0](self) }
 multi method AT-KEY(Str:D $_) is rw {
-    with self.can($_) {
-        my &meth := .[0];
-        sub FETCH($) { -> |c { &meth(self, |c) } }
-        sub STORE($, &val) { &meth(self) = &val }
+    if self.can($_) -> @methods {
+        my &meth := @methods.head;
+        sub FETCH($) { -> |c { self.&meth(|c) } }
+        sub STORE($, &val) { self.&meth() = &val }
         Proxy.new: :&FETCH, :&STORE;
     }
     else {

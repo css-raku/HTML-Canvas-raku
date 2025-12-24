@@ -11,7 +11,8 @@ has Numeric $.r1;
 method type { with $!r0 // $!r1 { 'Radial' } else { 'Linear' } }
 
 my class ColorStop {
-    use CSS::Properties :&to-ast;
+    use CSS::Properties;
+    use CSS::Properties::Util :&to-ast;
     use Color;
     has Numeric $.offset;
     has Color $!color;
@@ -47,7 +48,7 @@ method to-js(Str $ctx, Str $var = 'grad' --> Array) {
     else {
         $!x0, $!y0, $!x1, $!y1;
     }
-    my $args-js = @args.map({ to-json($_) }).join: ", ";
+    my $args-js = @args.map({ .&to-json }).join: ", ";
     my @js = 'var %s = %s.create%sGradient(%s);'.sprintf($var, $ctx, self.type, $args-js);
     @js.push: .to-js($var)
         for @!colorStops;
