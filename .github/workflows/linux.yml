@@ -25,6 +25,7 @@ jobs:
           raku-version: ${{ matrix.raku-version }}
       - name: Linux specific setup
         run: |
+          sudo apt update
           sudo apt-get install -y libharfbuzz-dev
           sudo apt-get install -y libfribidi-dev
           sudo apt-get install -y libfreetype6-dev
