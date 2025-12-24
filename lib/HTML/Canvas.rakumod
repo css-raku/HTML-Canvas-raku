@@ -1,4 +1,4 @@
-unit class HTML::Canvas:ver<0.1.3>;
+unit class HTML::Canvas:ver<0.1.4>;
 
 use Hash::Agnostic;
 use HTML::Canvas::Graphic;

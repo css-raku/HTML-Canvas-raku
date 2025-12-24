@@ -1,5 +1,8 @@
 {{$NEXT}}
 
+0.1.4  2025-12-24T15:32:17+13:00
+   - Fix CSS::Properties imports for v0.10.2+
+
 0.1.3  2025-04-19T09:49:23+12:00
    - Create HTML::Canvas::To::HTML; treat HTML/JS
      rendering as another backend.
