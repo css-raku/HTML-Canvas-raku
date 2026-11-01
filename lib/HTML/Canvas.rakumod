@@ -24,11 +24,10 @@ has CSS::Font::Descriptor @.font-face;
 has Cairo::Surface $.surface = Cairo::Image.create(Cairo::FORMAT_ARGB32, $!width, $!height);
 submethod TWEAK(::?CLASS:D $canvas: :$cache) {
     # setup our cairo and html feeds
-    $!html = (require ::('HTML::Canvas::To::HTML')).new: :$canvas;
     my %o;
     %o<cache> = $_ with $cache;
-    my $class = (require ::('HTML::Canvas::To::Cairo'));
-    $!feed = $class.new: :$canvas, |%o;
+    $!html = (require ::('HTML::Canvas::To::HTML')).new: :$canvas;
+    $!feed = (require ::('HTML::Canvas::To::Cairo')).new: :$canvas, |%o;
 }
 
 multi method to-html(::?CLASS:D: |c) { $!html.to-html: |c }
@@ -349,7 +348,7 @@ method getImageData(Numeric $sx, Numeric $sy, Numeric $sw, Numeric $sh) {
     self!var: HTML::Canvas::ImageData.new: :$image, :$sx, :$sy, :$sw, :$sh;
 }
 method measureText(Str $text) {
-    my @measures = @!callback.map({.('measureText', $text) || Empty});
+    my @measures = @!callback.map: {.('measureText', $text) || Empty};
     if @measures {
         given @measures.sum / +@measures -> $width {
             my class TextMetrics { has Numeric $.width }.new: :$width
@@ -416,13 +415,15 @@ method render($renderer, :@calls = self.calls) {
 #++ Hash::Agnostic interface
 method new(|c) { self.bless: |c; }
 method keys { (%API.keys.Slip, %GraphicVars.keys.Slip, @PathAPI.Slip).sort }
-multi method AT-KEY(LValue:D $_) is rw { self.can($_)[0](self) }
-multi method AT-KEY(Str:D $_) is rw {
+method AT-KEY(Str:D $_) is rw {
     if self.can($_) -> @methods {
         my &meth := @methods.head;
-        sub FETCH($) { -> |c { self.&meth(|c) } }
-        sub STORE($, &val) { self.&meth() = &val }
-        Proxy.new: :&FETCH, :&STORE;
+        when LValue:D { self.&meth }
+        default {
+            sub FETCH($) { -> |c { self.&meth(|c) } }
+            sub STORE($, &val) { self.&meth() = &val }
+            Proxy.new: :&FETCH, :&STORE;
+        }
     }
     else {
         die X::Method::NotFound.new( :method($_), :typename(self.^name) )

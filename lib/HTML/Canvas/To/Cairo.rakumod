@@ -67,6 +67,7 @@ submethod TWEAK(:$cache) is hidden-from-backtrace {
     else {
         $!cache .= new;
     }
+
     $!ctx //= Cairo::Context.new(self.surface);
     with $!canvas {
         $!font.font-face = .font-face;
@@ -74,7 +75,7 @@ submethod TWEAK(:$cache) is hidden-from-backtrace {
     }
 }
 
-method surface handles<width height Blob> { $.canvas.surface }
+method surface returns Cairo::Surface:D handles<width height Blob> { $.canvas.surface }
 
 method render(HTML::Canvas $canvas --> Cairo::Surface) {
     my $width = $canvas.width // 128;
