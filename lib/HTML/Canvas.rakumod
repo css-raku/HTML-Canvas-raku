@@ -64,69 +64,62 @@ my subset FillRule is export(:FillRule) of Str where 'nonzero'|'evenodd';
 has Numeric @.transformMatrix is rw is graphics = [ 1, 0, 0, 1, 0, 0, ];
 has Numeric $.lineWidth is graphics = 1.0;
 method lineWidth is rw {
-    Proxy.new(
-        FETCH => sub ($) { $!lineWidth },
-        STORE => sub ($, $!lineWidth) {
+    sub FETCH($) { $!lineWidth },
+    sub STORE($, $!lineWidth) {
             self!call('lineWidth', $!lineWidth);
-        }
-    );
+    }
+    Proxy.new: :&FETCH, :&STORE;
 }
 
 has Numeric $.globalAlpha is graphics = 1.0;
 method globalAlpha is rw {
-    Proxy.new(
-        FETCH => sub ($) { $!globalAlpha },
-        STORE => sub ($, $!globalAlpha) {
-            self!call('globalAlpha', $!globalAlpha);
-        }
-    );
+    sub FETCH($) { $!globalAlpha },
+    sub STORE($, $!globalAlpha) {
+        self!call('globalAlpha', $!globalAlpha);
+    }
+    Proxy.new: :&FETCH, :&STORE;
 }
 
 has Numeric @.lineDash is graphics;
 method lineDash is rw {
-    Proxy.new(
-        FETCH => sub ($) { @!lineDash },
-        STORE => sub ($, \l) { self.setLineDash(l) },
-        )
+    sub FETCH($) { @!lineDash },
+    sub STORE($, \l) { self.setLineDash(l) }
+    Proxy.new: :&FETCH, :&STORE;
 }
 has Numeric $.lineDashOffset is graphics = 0.0;
 method lineDashOffset is rw {
-    Proxy.new(
-        FETCH => sub ($) { $!lineDashOffset },
-        STORE => sub ($, $!lineDashOffset) {
-            self!call('lineDashOffset', $!lineDashOffset);
-        }
-    );
+    sub FETCH($) { $!lineDashOffset },
+    sub STORE($, $!lineDashOffset) {
+        self!call('lineDashOffset', $!lineDashOffset);
+    }
+    Proxy.new: :&FETCH, :&STORE;
 }
 subset LineCap of Str where 'butt'|'round'|'square';
 has LineCap $.lineCap is graphics = 'butt';
 method lineCap is rw {
-    Proxy.new(
-        FETCH => sub ($) { $!lineCap },
-        STORE => sub ($, $!lineCap) {
-            self!call('lineCap', $!lineCap);
-        }
-    );
+    sub FETCH($) { $!lineCap },
+    sub STORE($, $!lineCap) {
+        self!call('lineCap', $!lineCap);
+    }
+    Proxy.new: :&FETCH, :&STORE;
 }
 subset LineJoin of Str where 'bevel'|'round'|'miter';
 has LineJoin $.lineJoin is graphics = 'bevel';
 method lineJoin is rw {
-    Proxy.new(
-        FETCH => sub ($) { $!lineJoin },
-        STORE => sub ($, $!lineJoin) {
-            self!call('lineJoin', $!lineJoin);
-        }
-    );
+    sub FETCH($) { $!lineJoin },
+    sub STORE($, $!lineJoin) {
+        self!call('lineJoin', $!lineJoin);
+    }
+    Proxy.new: :&FETCH, :&STORE;
 }
 has Str $.font is graphics = '10pt times-roman';
 method font is rw {
-    Proxy.new(
-        FETCH => sub ($) { $!font },
-        STORE => sub ($, Str $!font) {
-            $!css.font = $!font;
-            self!call('font', $!font);
-        }
-    );
+    sub FETCH($) { $!font },
+    sub STORE($, Str $!font) {
+        $!css.font = $!font;
+        self!call('font', $!font);
+    }
+    Proxy.new: :&FETCH, :&STORE;
 }
 #| browsers seem to be display fonts at 4/3 of actual size. Not sure
 #| if this should be treated as UI dependant.
@@ -137,58 +130,53 @@ method adjusted-font-size(Numeric $raw-size) {
 subset Baseline of Str where 'alphabetic'|'top'|'hanging'|'middle'|'ideographic'|'bottom';
 has Baseline $.textBaseline is graphics = 'alphabetic';
 method textBaseline is rw {
-    Proxy.new(
-        FETCH => sub ($) { $!textBaseline },
-        STORE => sub ($, Str $!textBaseline) {
-            self!call('textBaseline', $!textBaseline);
-        }
-    );
+    sub FETCH($) { $!textBaseline },
+    sub STORE($, Str $!textBaseline) {
+        self!call('textBaseline', $!textBaseline);
+    }
+    Proxy.new: :&FETCH, :&STORE;
 }
 
 subset TextAlignment of Str where 'start'|'end'|'left'|'right'|'center';
 has TextAlignment $.textAlign is graphics = 'start';
 method textAlign is rw {
-    Proxy.new(
-        FETCH => sub ($) { $!textAlign },
-        STORE => sub ($, Str $!textAlign) {
-            self!call('textAlign', $!textAlign);
-        }
-    );
+    sub FETCH($) { $!textAlign },
+    sub STORE($, Str $!textAlign) {
+        self!call('textAlign', $!textAlign);
+    }
+    Proxy.new: :&FETCH, :&STORE;
 }
 
 subset TextDirection of Str where 'ltr'|'rtl';
 has TextDirection $.direction is graphics = 'ltr';
 method direction is rw {
-    Proxy.new(
-        FETCH => sub ($) { $!direction },
-        STORE => sub ($, Str $!direction) {
+    sub FETCH($) { $!direction },
+    sub STORE($, Str $!direction) {
             self!call('direction', $!direction);
-        }
-    );
+    }
+    Proxy.new: :&FETCH, :&STORE;
 }
 
 subset ColorSpec where Str|HTML::Canvas::Gradient|HTML::Canvas::Pattern;
 has ColorSpec $.fillStyle is graphics = 'black';
 method fillStyle is rw {
-    Proxy.new(
-        FETCH => sub ($) { $!fillStyle },
-        STORE => sub ($, ColorSpec $!fillStyle) {
-            $!css.background-color = $!fillStyle
-                if $!fillStyle ~~ Str;
-            @!calls.push('fillStyle' => [$!fillStyle]);
-        }
-    );
+    sub FETCH($) { $!fillStyle },
+    sub STORE($, ColorSpec $!fillStyle) {
+        $!css.background-color = $!fillStyle
+            if $!fillStyle ~~ Str;
+        @!calls.push('fillStyle' => [$!fillStyle]);
+    }
+    Proxy.new: :&FETCH, :&STORE;
 }
 has ColorSpec $.strokeStyle is graphics = 'black';
 method strokeStyle is rw {
-    Proxy.new(
-        FETCH => sub ($) { $!strokeStyle },
-        STORE => sub ($, ColorSpec $!strokeStyle) {
-            $!css.color = $!strokeStyle
-                if $!strokeStyle ~~ Str;
-            @!calls.push('strokeStyle' => [$!strokeStyle]);
+    sub FETCH($) { $!strokeStyle },
+    sub STORE($, ColorSpec $!strokeStyle) {
+        $!css.color = $!strokeStyle
+            if $!strokeStyle ~~ Str;
+        @!calls.push('strokeStyle' => [$!strokeStyle]);
         }
-    );
+    Proxy.new: :&FETCH, :&STORE;
 }
 
 has CSS::Properties $.css is graphics .= new( :background-color($!fillStyle), :color($!strokeStyle), :$!font,  );
