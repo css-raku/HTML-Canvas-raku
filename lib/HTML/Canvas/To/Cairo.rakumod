@@ -55,19 +55,12 @@ class Font
 }
 
 has Font $!font .= new;
-has Cache $.cache;
+has Cache $.cache .= new;
 method current-font handles<ft-face cairo-font shaping-font> {
     $!font.cached-font(:$!cache);
 }
 
-submethod TWEAK(:$cache) is hidden-from-backtrace {
-    with $cache {
-        $!cache = $_;
-    }
-    else {
-        $!cache .= new;
-    }
-
+submethod TWEAK is hidden-from-backtrace {
     $!ctx //= Cairo::Context.new(self.surface);
     with $!canvas {
         $!font.font-face = .font-face;
